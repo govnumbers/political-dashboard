@@ -1,0 +1,19 @@
+{
+  "entity": "US · Trump Administration",
+  "pilot": true,
+  "metrics": [
+    { "id": "executive_orders", "name": "Executive orders signed", "category": "Executive Power",
+      "connector": "connectors/federal_register_eo.py", "source": "Federal Register API", "bucket": "AUTO", "cadence": "as signed" },
+    { "id": "national_debt", "name": "National debt", "category": "Public Finances",
+      "connector": "connectors/treasury_debt.py", "source": "U.S. Treasury Fiscal Data API", "bucket": "AUTO", "cadence": "daily" },
+    { "id": "inflation", "name": "Inflation (CPI-U, YoY)", "category": "Economy",
+      "connector": "connectors/bls_inflation.py", "source": "BLS Public API v2", "bucket": "AUTO", "cadence": "monthly" },
+    { "id": "unemployment", "name": "Unemployment rate", "category": "Economy",
+      "connector": "connectors/bls_unemployment.py", "source": "BLS Public API v2", "bucket": "AUTO", "cadence": "monthly" },
+    { "id": "gas_price", "name": "Gas price (regular)", "category": "Economy",
+      "connector": "connectors/eia_gas.py", "source": "EIA Open Data API v2 (key)", "bucket": "AUTO", "cadence": "weekly" },
+    { "id": "trade_deficit", "name": "Trade deficit (goods & services)", "category": "Economy",
+      "connector": "connectors/census_trade.py", "source": "Census Intl Trade API (key)", "bucket": "AUTO", "cadence": "monthly" }
+  ],
+  "_next": "9 more metrics defined in project doc '03 - Metric & Source Register' (incl. border encounters, which currently runs green)"
+}

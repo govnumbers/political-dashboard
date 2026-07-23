@@ -1,0 +1,13 @@
+{
+  "id": "trade_deficit",
+  "name": "Trade deficit (goods & services)",
+  "category": "Economy",
+  "value": 77.6,
+  "unit": "$B/mo",
+  "as_of": "2026-05",
+  "direction": "up_is_bad",
+  "baseline": { "label": "April 2026 (prior month, revised)", "value": 54.6 },
+  "source": { "name": "BEA / U.S. Census Bureau", "url": "https://www.bea.gov/data/intl-trade-investment/international-trade-goods-and-services" },
+  "cadence": "Monthly",
+  "note": "Monthly U.S. international trade deficit in goods and services."
+}
