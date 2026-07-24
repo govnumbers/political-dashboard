@@ -6,6 +6,8 @@
       "connector": "connectors/federal_register_eo.py", "source": "Federal Register API", "bucket": "AUTO", "cadence": "as signed" },
     { "id": "national_debt", "name": "National debt", "category": "Public Finances",
       "connector": "connectors/treasury_debt.py", "source": "U.S. Treasury Fiscal Data API", "bucket": "AUTO", "cadence": "daily" },
+    { "id": "budget_deficit", "name": "Federal budget deficit (fiscal-YTD)", "category": "Public Finances",
+      "connector": "connectors/treasury_deficit.py", "source": "U.S. Treasury MTS (Fiscal Data API)", "bucket": "AUTO", "cadence": "monthly" },
     { "id": "inflation", "name": "Inflation (CPI-U, YoY)", "category": "Economy",
       "connector": "connectors/bls_inflation.py", "source": "BLS Public API v2", "bucket": "AUTO", "cadence": "monthly" },
     { "id": "unemployment", "name": "Unemployment rate", "category": "Economy",
@@ -13,7 +15,11 @@
     { "id": "gas_price", "name": "Gas price (regular)", "category": "Economy",
       "connector": "connectors/eia_gas.py", "source": "EIA Open Data API v2 (key)", "bucket": "AUTO", "cadence": "weekly" },
     { "id": "trade_deficit", "name": "Trade deficit (goods & services)", "category": "Economy",
-      "connector": "connectors/census_trade.py", "source": "Census Intl Trade API (key)", "bucket": "AUTO", "cadence": "monthly" }
+      "connector": "connectors/census_trade.py", "source": "Census Intl Trade API (key)", "bucket": "AUTO", "cadence": "monthly" },
+    { "id": "border_encounters", "name": "Southwest border encounters", "category": "Immigration",
+      "connector": "connectors/cbp_border.py", "source": "CBP encounters CSV (landing-page scrape)", "bucket": "SEMI", "cadence": "monthly" },
+    { "id": "ice_detention", "name": "ICE detention population (ADP)", "category": "Immigration",
+      "connector": "connectors/ice_detention.py", "source": "ICE FY detentionStats.xlsx", "bucket": "SEMI", "cadence": "biweekly" }
   ],
-  "_next": "9 more metrics defined in project doc '03 - Metric & Source Register' (incl. border encounters, which currently runs green)"
+  "_next": "6 more metrics defined in project doc '03 - Metric & Source Register' (bills enacted, judges confirmed, clemency, war-powers notifications, S&P 500, approval rating). Every connector stores a full historical series and publishes through connectors/validators.py + connectors/common.py (bounds + max-jump validation, merge-don't-overwrite, freshness stamps)."
 }

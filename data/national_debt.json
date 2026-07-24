@@ -2,18 +2,12 @@
   "id": "national_debt",
   "name": "National debt",
   "category": "Public Finances",
-  "value": 39635799057233.84,
+  "value": 39221984586285.30,
   "unit": "USD",
-  "as_of": "2026-07-22",
+  "as_of": "2026-06-02",
   "direction": "up_is_bad",
-  "baseline": {
-    "label": "At inauguration (2025-01-17)",
-    "value": 36206593315575.15
-  },
-  "source": {
-    "name": "U.S. Treasury \u2014 Debt to the Penny",
-    "url": "https://fiscaldata.treasury.gov/datasets/debt-to-the-penny/debt-to-the-penny"
-  },
+  "baseline": { "label": "At inauguration (2025-01-17)", "value": 36206593315575.15 },
+  "source": { "name": "U.S. Treasury — Debt to the Penny", "url": "https://fiscaldata.treasury.gov/datasets/debt-to-the-penny/debt-to-the-penny" },
   "cadence": "Daily",
   "note": "Total public debt outstanding."
 }
