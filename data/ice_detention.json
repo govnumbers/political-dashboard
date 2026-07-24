@@ -1,0 +1,23 @@
+{
+  "id": "ice_detention",
+  "name": "ICE detention population (ADP)",
+  "category": "Immigration",
+  "value": 26767,
+  "unit": "avg daily",
+  "as_of": "2026-07",
+  "direction": "neutral",
+  "source": {
+    "name": "U.S. Immigration and Customs Enforcement",
+    "url": "https://www.ice.gov/detain/detention-management"
+  },
+  "cadence": "Biweekly",
+  "note": "National average daily population in ICE detention, fiscal-YTD (FY2025). This is an average, not a point-in-time headcount.",
+  "series": [
+    {
+      "date": "2026-07",
+      "value": 26767
+    }
+  ],
+  "last_checked": "2026-07-24",
+  "stale_after": "2026-08-30"
+}

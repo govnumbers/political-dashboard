@@ -2,13 +2,99 @@
   "id": "executive_orders",
   "name": "Executive orders signed",
   "category": "Executive Power",
-  "value": 269,
+  "value": 270,
   "unit": "orders",
-  "as_of": "2026-07-22",
+  "as_of": "2026-07-24",
   "since": "2025-01-20",
   "direction": "neutral",
-  "comparison": { "label": "Biden at the same point in his term", "value": 94 },
-  "source": { "name": "Federal Register", "url": "https://www.federalregister.gov/presidential-documents/executive-orders" },
+  "comparison": {
+    "label": "Biden at the same point in his term",
+    "value": 94
+  },
+  "source": {
+    "name": "Federal Register",
+    "url": "https://www.federalregister.gov/presidential-documents/executive-orders"
+  },
   "cadence": "As signed",
-  "note": "Executive orders signed by Donald Trump since inauguration (2025-01-20), vs Joe Biden over the equivalent window of his term."
+  "note": "Executive orders signed since inauguration, vs the prior president over the equivalent window.",
+  "series": [
+    {
+      "date": "2025-01",
+      "value": 46
+    },
+    {
+      "date": "2025-02",
+      "value": 76
+    },
+    {
+      "date": "2025-03",
+      "value": 109
+    },
+    {
+      "date": "2025-04",
+      "value": 143
+    },
+    {
+      "date": "2025-05",
+      "value": 157
+    },
+    {
+      "date": "2025-06",
+      "value": 166
+    },
+    {
+      "date": "2025-07",
+      "value": 181
+    },
+    {
+      "date": "2025-08",
+      "value": 198
+    },
+    {
+      "date": "2025-09",
+      "value": 209
+    },
+    {
+      "date": "2025-10",
+      "value": 210
+    },
+    {
+      "date": "2025-11",
+      "value": 217
+    },
+    {
+      "date": "2025-12",
+      "value": 225
+    },
+    {
+      "date": "2026-01",
+      "value": 235
+    },
+    {
+      "date": "2026-02",
+      "value": 244
+    },
+    {
+      "date": "2026-03",
+      "value": 254
+    },
+    {
+      "date": "2026-04",
+      "value": 258
+    },
+    {
+      "date": "2026-05",
+      "value": 263
+    },
+    {
+      "date": "2026-06",
+      "value": 269
+    },
+    {
+      "date": "2026-07",
+      "value": 270
+    }
+  ],
+  "last_checked": "2026-07-24",
+  "stale_after": "2026-08-05"
 }
