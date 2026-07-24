@@ -1,0 +1,13 @@
+{
+  "id": "unemployment",
+  "name": "Unemployment rate",
+  "category": "Economy",
+  "value": 4.3,
+  "unit": "%",
+  "as_of": "2026-05",
+  "direction": "up_is_bad",
+  "baseline": { "label": "At inauguration (Jan 2025)", "value": 4.0 },
+  "source": { "name": "Bureau of Labor Statistics", "url": "https://www.bls.gov/news.release/empsit.nr0.htm" },
+  "cadence": "Monthly",
+  "note": "Unemployment rate (U-3), seasonally adjusted."
+}

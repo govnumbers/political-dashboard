@@ -1,0 +1,13 @@
+{
+  "id": "gas_price",
+  "name": "Gas price (regular)",
+  "category": "Economy",
+  "value": 4.146,
+  "unit": "$/gal",
+  "as_of": "2026-06-08",
+  "direction": "up_is_bad",
+  "baseline": { "label": "At inauguration (Jan 2025)", "value": 3.10 },
+  "source": { "name": "EIA / FRED (GASREGW)", "url": "https://fred.stlouisfed.org/series/GASREGW" },
+  "cadence": "Weekly",
+  "note": "US average regular gasoline, per gallon. Inauguration baseline is approximate pending exact connector pull."
+}
