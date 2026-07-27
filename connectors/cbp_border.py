@@ -59,26 +59,33 @@ def main():
     url = newest_csv_url()
     r = requests.get(url, headers=UA, timeout=60)
     r.raise_for_status()
-    reader = csv.reader(io.StringIO(r.text))
-    rows = list(reader)
-    header = [h.strip().lower() for h in rows[0]]
+    rows = list(csv.reader(io.StringIO(r.text)))
 
-    def col(*names):
-        for i, h in enumerate(header):
-            if any(n in h for n in names):
-                return i
-        return None
+    # Find the header row (CBP sometimes prepends title/blank rows). It's the
+    # first row that has both a fiscal-year column and an encounter-count column.
+    def find_cols(cells):
+        low = [str(c).strip().lower() for c in cells]
 
-    fy_i, mon_i, cnt_i = col("fiscal year"), col("month"), col("encounter count", "count")
-    region_i = col("land border region", "region")
-    if None in (fy_i, mon_i, cnt_i):
-        raise RuntimeError(f"unexpected CBP CSV header: {rows[0]}")
+        def col(*names):
+            for i, h in enumerate(low):
+                if any(n in h for n in names):
+                    return i
+            return None
+        return col("fiscal year", "fiscal yr"), col("month"), col("encounter count", "count")
 
+    header_idx, fy_i, mon_i, cnt_i = None, None, None, None
+    for i, row in enumerate(rows[:15]):
+        fy_i, mon_i, cnt_i = find_cols(row)
+        if None not in (fy_i, mon_i, cnt_i):
+            header_idx = i
+            break
+    if header_idx is None:
+        raise RuntimeError(f"could not find header row in CBP CSV; first rows: {rows[:3]}")
+
+    # This is the Southwest-only (SBO) file, so no region filtering is needed.
     totals = {}
-    for row in rows[1:]:
+    for row in rows[header_idx + 1:]:
         if not row or len(row) <= max(fy_i, mon_i, cnt_i):
-            continue
-        if region_i is not None and row[region_i] and "southwest" not in row[region_i].lower():
             continue
         try:
             fy = int(re.sub(r"\D", "", row[fy_i]))

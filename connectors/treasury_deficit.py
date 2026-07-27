@@ -1,17 +1,16 @@
 #!/usr/bin/env python3
 """Federal budget deficit (fiscal-year-to-date) — U.S. Treasury Monthly Treasury
-Statement (MTS), Table 1 'Summary of Receipts, Outlays, and the Deficit/Surplus'.
-Keyless (same Fiscal Data API family as Debt to the Penny).
+Statement (MTS), Table 1. Keyless (same Fiscal Data API family as Debt to the Penny).
 
-The MTS deficit is naturally a fiscal-YTD figure that resets each October, and
-the table conveniently carries the same period a year earlier as a built-in
-comparison. Amounts are reported in millions; we convert to $B.
+Verified structure (mts_table_1): each row is a period, identified by
+`classification_desc` (month names, plus a "Year-to-Date" row and "FY YYYY"
+rows). The net deficit/surplus for that period is in `current_month_dfct_sur_amt`
+(reported in whole dollars; positive = deficit, i.e. outlays > receipts). We take
+the "Year-to-Date" row at each record_date to get the running fiscal-YTD deficit,
+convert to $B, and compare to the same fiscal position a year earlier.
 
-Robustness: this connector could not be live-tested from the build sandbox
-(government APIs are egress-blocked there), so it DETECTS the relevant fields
-and the deficit row dynamically rather than hard-coding exact field strings. If
-Treasury's schema differs, the read fails cleanly and the validators/loud-fail
-keep last-good — no bad number reaches the site."""
+The series resets each October (new fiscal year), which is expected and handled
+by the validator's wider max-jump for this metric."""
 import os
 import sys
 import requests
@@ -23,57 +22,37 @@ API = "https://api.fiscaldata.treasury.gov/services/api/fiscal_service/v1/accoun
 HISTORY_START = "2017-01-01"
 
 
-def _find_key(row, *must_contain):
-    for k in row:
-        kl = k.lower()
-        if all(t in kl for t in must_contain):
-            return k
-    return None
-
-
 def main():
     r = requests.get(API, params={
+        "fields": "record_date,classification_desc,current_month_dfct_sur_amt",
         "filter": f"record_date:gte:{HISTORY_START}",
         "sort": "record_date",
         "page[size]": 10000,
     }, timeout=60)
     r.raise_for_status()
     data = r.json()["data"]
-    if not data:
-        raise RuntimeError("MTS returned no rows")
 
-    # deficit/surplus summary rows only
-    deficit_rows = [row for row in data
-                    if "deficit" in row.get("classification_desc", "").lower()]
-    if not deficit_rows:
-        raise RuntimeError("could not locate a Deficit/Surplus row in mts_table_1 "
-                           f"(classifications seen: {sorted({d.get('classification_desc','') for d in data})[:8]})")
-
-    sample = deficit_rows[-1]
-    fytd_key = _find_key(sample, "current", "fytd", "amt") or _find_key(sample, "fytd", "amt")
-    prior_key = _find_key(sample, "prior", "fytd", "amt")
-    if not fytd_key:
-        raise RuntimeError(f"no fiscal-YTD amount field found; keys were {list(sample)}")
+    ytd = [row for row in data
+           if row.get("classification_desc", "").strip().lower() == "year-to-date"]
+    if not ytd:
+        raise RuntimeError("no 'Year-to-Date' rows in mts_table_1 "
+                           f"(classifications: {sorted({d.get('classification_desc','') for d in data})[:12]})")
 
     series = []
-    for row in deficit_rows:
+    for row in ytd:
         try:
-            val = abs(float(row[fytd_key])) / 1000.0  # millions -> $B, deficit magnitude
+            val = float(row["current_month_dfct_sur_amt"]) / 1e9  # whole dollars -> $B
         except (TypeError, ValueError, KeyError):
             continue
         series.append({"date": row["record_date"][:7], "value": round(val, 1)})
     series.sort(key=lambda p: p["date"])
     if not series:
-        raise RuntimeError("parsed zero deficit points from mts_table_1")
+        raise RuntimeError("parsed zero year-to-date deficit points from mts_table_1")
 
     latest = series[-1]
-    comparison = None
-    if prior_key:
-        try:
-            comparison = {"label": "Same period, prior fiscal year",
-                          "value": round(abs(float(sample[prior_key])) / 1000.0, 1)}
-        except (TypeError, ValueError):
-            comparison = None
+    # same fiscal position one year earlier (both are Oct-through-<month> cumulatives)
+    yoy_key = f"{int(latest['date'][:4]) - 1}{latest['date'][4:]}"
+    prior = next((p["value"] for p in series if p["date"] == yoy_key), None)
 
     out = {
         "id": "budget_deficit", "name": "Federal budget deficit (fiscal-YTD)",
@@ -84,8 +63,8 @@ def main():
         "cadence": "Monthly",
         "note": "Cumulative federal budget deficit so far this fiscal year (resets each October).",
     }
-    if comparison:
-        out["comparison"] = comparison
+    if prior is not None:
+        out["comparison"] = {"label": "Same period, prior fiscal year", "value": prior}
     publish(out, series=series)
 
 

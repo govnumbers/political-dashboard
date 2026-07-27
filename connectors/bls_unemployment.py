@@ -26,8 +26,15 @@ def main():
     r.raise_for_status()
     rows = r.json()["Results"]["series"][0]["data"]
 
-    series = [{"date": f"{int(d['year'])}-{int(d['period'][1:]):02d}", "value": float(d["value"])}
-              for d in rows if d["period"].startswith("M")]
+    series = []
+    for d in rows:
+        if not d["period"].startswith("M"):
+            continue
+        try:
+            v = float(d["value"])
+        except (ValueError, TypeError):
+            continue  # BLS uses '-' for a suppressed/not-yet-released month
+        series.append({"date": f"{int(d['year'])}-{int(d['period'][1:]):02d}", "value": v})
     series.sort(key=lambda p: p["date"])
 
     latest = series[-1]

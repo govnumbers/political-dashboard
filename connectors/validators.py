@@ -30,7 +30,7 @@ BOUNDS = {
     "trade_deficit":     {"min": 10.0,   "max": 250.0,   "max_jump": 70.0,   "unit": "$B/mo"},
     # --- Public Finances ---
     "national_debt":     {"min": 3.0e13, "max": 8.0e13,  "max_jump": 1.2e12, "unit": "USD, day-over-day"},
-    "budget_deficit":    {"min": 0.0,    "max": 4000.0,  "max_jump": 900.0,  "unit": "$B, fiscal-YTD"},
+    "budget_deficit":    {"min": 0.0,    "max": 4000.0,  "max_jump": 2200.0, "unit": "$B, fiscal-YTD (resets each Oct)"},
     # --- Executive Power ---
     "executive_orders":  {"min": 0.0,    "max": 3000.0,  "max_jump": 500.0,  "unit": "cumulative count"},
     # --- Immigration ---

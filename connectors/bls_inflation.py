@@ -26,8 +26,14 @@ def main():
     r = requests.post(API, json=payload, timeout=30)
     r.raise_for_status()
     rows = r.json()["Results"]["series"][0]["data"]
-    idx = {(int(d["year"]), int(d["period"][1:])): float(d["value"])
-           for d in rows if d["period"].startswith("M")}
+    idx = {}
+    for d in rows:
+        if not d["period"].startswith("M"):
+            continue
+        try:
+            idx[(int(d["year"]), int(d["period"][1:]))] = float(d["value"])
+        except (ValueError, TypeError):
+            continue  # BLS uses '-' for a suppressed/not-yet-released month
 
     # YoY % for every month whose year-ago index is present
     series = []

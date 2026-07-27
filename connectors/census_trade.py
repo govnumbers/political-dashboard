@@ -24,7 +24,9 @@ BASE_KEY = "2025-01"  # inauguration month
 
 def main():
     key = os.environ.get("CENSUS_API_KEY")
-    params = {"get": "BAL_VAL_MO,time", "CTY_CODE": "-", "time": "from 2017-01"}
+    # Mirror the previously-working request (get list matters to the FT900 endpoint);
+    # just widen the time range for deep history.
+    params = {"get": "CTY_CODE,ALL_VAL_MO,BAL_VAL_MO,time", "CTY_CODE": "-", "time": "from 2017-01"}
     if key:
         params["key"] = key  # optional: raises rate limits
     r = requests.get(API, params=params, timeout=30)
