@@ -1,0 +1,167 @@
+{
+  "id": "border_encounters",
+  "name": "Southwest border encounters",
+  "category": "Immigration",
+  "value": 12901,
+  "unit": "per month",
+  "as_of": "2026-06",
+  "direction": "neutral",
+  "source": {
+    "name": "U.S. Customs and Border Protection",
+    "url": "https://www.cbp.gov/document/stats/southwest-land-border-encounters"
+  },
+  "cadence": "Monthly",
+  "note": "Monthly Southwest land border encounters. Counts events, not unique people; composition shifts at the May 2023 Title 42 \u2192 Title 8 change.",
+  "comparison": {
+    "label": "Same month, prior year",
+    "value": 9300
+  },
+  "series": [
+    {
+      "date": "2022-10",
+      "value": 231529
+    },
+    {
+      "date": "2022-11",
+      "value": 235173
+    },
+    {
+      "date": "2022-12",
+      "value": 252315
+    },
+    {
+      "date": "2023-01",
+      "value": 157358
+    },
+    {
+      "date": "2023-02",
+      "value": 156630
+    },
+    {
+      "date": "2023-03",
+      "value": 193249
+    },
+    {
+      "date": "2023-04",
+      "value": 211992
+    },
+    {
+      "date": "2023-05",
+      "value": 206690
+    },
+    {
+      "date": "2023-06",
+      "value": 144556
+    },
+    {
+      "date": "2023-10",
+      "value": 240927
+    },
+    {
+      "date": "2023-11",
+      "value": 242399
+    },
+    {
+      "date": "2023-12",
+      "value": 301981
+    },
+    {
+      "date": "2024-01",
+      "value": 176195
+    },
+    {
+      "date": "2024-02",
+      "value": 189913
+    },
+    {
+      "date": "2024-03",
+      "value": 189359
+    },
+    {
+      "date": "2024-04",
+      "value": 179737
+    },
+    {
+      "date": "2024-05",
+      "value": 170716
+    },
+    {
+      "date": "2024-06",
+      "value": 130415
+    },
+    {
+      "date": "2024-10",
+      "value": 106316
+    },
+    {
+      "date": "2024-11",
+      "value": 94183
+    },
+    {
+      "date": "2024-12",
+      "value": 96033
+    },
+    {
+      "date": "2025-01",
+      "value": 61445
+    },
+    {
+      "date": "2025-02",
+      "value": 11710
+    },
+    {
+      "date": "2025-03",
+      "value": 11011
+    },
+    {
+      "date": "2025-04",
+      "value": 12023
+    },
+    {
+      "date": "2025-05",
+      "value": 12450
+    },
+    {
+      "date": "2025-06",
+      "value": 9300
+    },
+    {
+      "date": "2025-10",
+      "value": 11704
+    },
+    {
+      "date": "2025-11",
+      "value": 10959
+    },
+    {
+      "date": "2025-12",
+      "value": 9992
+    },
+    {
+      "date": "2026-01",
+      "value": 9732
+    },
+    {
+      "date": "2026-02",
+      "value": 9613
+    },
+    {
+      "date": "2026-03",
+      "value": 11734
+    },
+    {
+      "date": "2026-04",
+      "value": 12855
+    },
+    {
+      "date": "2026-05",
+      "value": 13538
+    },
+    {
+      "date": "2026-06",
+      "value": 12901
+    }
+  ],
+  "last_checked": "2026-07-27",
+  "stale_after": "2026-09-08"
+}
