@@ -22,9 +22,7 @@ CONNECTORS = [
     "bls_unemployment.py",
     "eia_gas.py",
     "census_trade.py",
-    # "cbp_border.py",  # deferred: CBP hides its CSV links behind a script and
-    #                   # renames the file monthly; needs a focused fix with the
-    #                   # real file in hand. Re-enable once cbp_border.py is verified.
+    "cbp_border.py",   # verified against the real June-2026 file (Jul 2026)
     "ice_detention.py",
 ]
 
