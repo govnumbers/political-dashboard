@@ -6,11 +6,11 @@
 Stores a deep monthly series (since 2017); merges each run. Value converted from
 millions USD to $B/month and shown as a positive deficit magnitude.
 
-Census works KEYLESS at low volume (1 call/run), so this runs with or without
-CENSUS_API_KEY — the key only raises rate limits. (Contrast with gas/EIA, which
-requires a key.) NOTE: on the first live run, verify the FT900 fields/params
-below against the current endpoint — Census occasionally revises the timeseries
-path; a bad read is caught by the validators."""
+Requires a free CENSUS_API_KEY (the FT900 endpoint rejects keyless calls with a
+non-JSON error). Without it the connector skips cleanly (keeps last-good, stays
+green), like gas/EIA. NOTE: on the first live run with a key, verify the FT900
+fields/params below against the current endpoint — Census occasionally revises
+the timeseries path; a bad read is caught by the validators."""
 import os
 import sys
 import requests
@@ -24,11 +24,13 @@ BASE_KEY = "2025-01"  # inauguration month
 
 def main():
     key = os.environ.get("CENSUS_API_KEY")
-    # Mirror the previously-working request (get list matters to the FT900 endpoint);
-    # just widen the time range for deep history.
-    params = {"get": "CTY_CODE,ALL_VAL_MO,BAL_VAL_MO,time", "CTY_CODE": "-", "time": "from 2017-01"}
-    if key:
-        params["key"] = key  # optional: raises rate limits
+    if not key:
+        print("  – trade_deficit: CENSUS_API_KEY not set; skipping (keeping last-good). "
+              "Add the secret (free) to make this metric live.")
+        return
+    # get-list contents matter to the FT900 endpoint; widen time range for deep history.
+    params = {"get": "CTY_CODE,ALL_VAL_MO,BAL_VAL_MO,time", "CTY_CODE": "-",
+              "time": "from 2017-01", "key": key}
     r = requests.get(API, params=params, timeout=30)
     r.raise_for_status()
     rows = r.json()
