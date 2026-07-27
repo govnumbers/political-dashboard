@@ -24,7 +24,7 @@ HISTORY_START = "2017-01-01"
 
 def main():
     r = requests.get(API, params={
-        "fields": "record_date,record_fiscal_year,classification_desc,current_month_dfct_sur_amt",
+        "fields": "record_date,line_code_nbr,classification_desc,current_month_dfct_sur_amt",
         "filter": f"record_date:gte:{HISTORY_START}",
         "sort": "record_date",
         "page[size]": 10000,
@@ -32,19 +32,16 @@ def main():
     r.raise_for_status()
     data = r.json()["data"]
 
-    def fy_of(record_date):  # US fiscal year: Oct–Sep
-        y, m = int(record_date[:4]), int(record_date[5:7])
-        return y + 1 if m >= 10 else y
-
-    # mts_table_1 carries several "Year-to-Date" rows per date (current FY plus a
-    # prior-year comparison). Keep only the row whose fiscal year matches the
-    # record's own fiscal year → the current fiscal-YTD deficit.
+    # mts_table_1 has multiple "Year-to-Date" rows per date. Verified via the
+    # receipts/outlays behind each: line 280 = the CURRENT fiscal-year-to-date
+    # total (Oct→current month); line 140 = the PRIOR full fiscal year (shown for
+    # comparison). record_fiscal_year tags both with the report year, so it can't
+    # distinguish them — the line code can. Select line 280.
     ytd = [row for row in data
            if row.get("classification_desc", "").strip().lower() == "year-to-date"
-           and str(row.get("record_fiscal_year", "")).strip() == str(fy_of(row["record_date"]))]
+           and str(row.get("line_code_nbr", "")).strip() == "280"]
     if not ytd:
-        raise RuntimeError("no current-FY 'Year-to-Date' rows in mts_table_1 "
-                           f"(classifications: {sorted({d.get('classification_desc','') for d in data})[:12]})")
+        raise RuntimeError("no line-280 'Year-to-Date' rows in mts_table_1")
 
     series = []
     for row in ytd:
