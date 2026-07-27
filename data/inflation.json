@@ -6,8 +6,422 @@
   "unit": "%",
   "as_of": "2026-06",
   "direction": "up_is_bad",
-  "target": { "label": "Federal Reserve target", "value": 2.0 },
-  "source": { "name": "Bureau of Labor Statistics", "url": "https://www.bls.gov/cpi/" },
+  "target": {
+    "label": "Federal Reserve target",
+    "value": 2.0
+  },
+  "source": {
+    "name": "Bureau of Labor Statistics",
+    "url": "https://www.bls.gov/cpi/"
+  },
   "cadence": "Monthly",
-  "note": "Consumer Price Index for All Urban Consumers, all items, change over the prior 12 months."
+  "note": "Consumer Price Index for All Urban Consumers, all items, change over the prior 12 months.",
+  "series": [
+    {
+      "date": "2018-01",
+      "value": 2.1
+    },
+    {
+      "date": "2018-02",
+      "value": 2.2
+    },
+    {
+      "date": "2018-03",
+      "value": 2.4
+    },
+    {
+      "date": "2018-04",
+      "value": 2.5
+    },
+    {
+      "date": "2018-05",
+      "value": 2.8
+    },
+    {
+      "date": "2018-06",
+      "value": 2.9
+    },
+    {
+      "date": "2018-07",
+      "value": 2.9
+    },
+    {
+      "date": "2018-08",
+      "value": 2.7
+    },
+    {
+      "date": "2018-09",
+      "value": 2.3
+    },
+    {
+      "date": "2018-10",
+      "value": 2.5
+    },
+    {
+      "date": "2018-11",
+      "value": 2.2
+    },
+    {
+      "date": "2018-12",
+      "value": 1.9
+    },
+    {
+      "date": "2019-01",
+      "value": 1.6
+    },
+    {
+      "date": "2019-02",
+      "value": 1.5
+    },
+    {
+      "date": "2019-03",
+      "value": 1.9
+    },
+    {
+      "date": "2019-04",
+      "value": 2.0
+    },
+    {
+      "date": "2019-05",
+      "value": 1.8
+    },
+    {
+      "date": "2019-06",
+      "value": 1.6
+    },
+    {
+      "date": "2019-07",
+      "value": 1.8
+    },
+    {
+      "date": "2019-08",
+      "value": 1.7
+    },
+    {
+      "date": "2019-09",
+      "value": 1.7
+    },
+    {
+      "date": "2019-10",
+      "value": 1.8
+    },
+    {
+      "date": "2019-11",
+      "value": 2.1
+    },
+    {
+      "date": "2019-12",
+      "value": 2.3
+    },
+    {
+      "date": "2020-01",
+      "value": 2.5
+    },
+    {
+      "date": "2020-02",
+      "value": 2.3
+    },
+    {
+      "date": "2020-03",
+      "value": 1.5
+    },
+    {
+      "date": "2020-04",
+      "value": 0.3
+    },
+    {
+      "date": "2020-05",
+      "value": 0.1
+    },
+    {
+      "date": "2020-06",
+      "value": 0.6
+    },
+    {
+      "date": "2020-07",
+      "value": 1.0
+    },
+    {
+      "date": "2020-08",
+      "value": 1.3
+    },
+    {
+      "date": "2020-09",
+      "value": 1.4
+    },
+    {
+      "date": "2020-10",
+      "value": 1.2
+    },
+    {
+      "date": "2020-11",
+      "value": 1.2
+    },
+    {
+      "date": "2020-12",
+      "value": 1.4
+    },
+    {
+      "date": "2021-01",
+      "value": 1.4
+    },
+    {
+      "date": "2021-02",
+      "value": 1.7
+    },
+    {
+      "date": "2021-03",
+      "value": 2.6
+    },
+    {
+      "date": "2021-04",
+      "value": 4.2
+    },
+    {
+      "date": "2021-05",
+      "value": 5.0
+    },
+    {
+      "date": "2021-06",
+      "value": 5.4
+    },
+    {
+      "date": "2021-07",
+      "value": 5.4
+    },
+    {
+      "date": "2021-08",
+      "value": 5.3
+    },
+    {
+      "date": "2021-09",
+      "value": 5.4
+    },
+    {
+      "date": "2021-10",
+      "value": 6.2
+    },
+    {
+      "date": "2021-11",
+      "value": 6.8
+    },
+    {
+      "date": "2021-12",
+      "value": 7.0
+    },
+    {
+      "date": "2022-01",
+      "value": 7.5
+    },
+    {
+      "date": "2022-02",
+      "value": 7.9
+    },
+    {
+      "date": "2022-03",
+      "value": 8.5
+    },
+    {
+      "date": "2022-04",
+      "value": 8.3
+    },
+    {
+      "date": "2022-05",
+      "value": 8.6
+    },
+    {
+      "date": "2022-06",
+      "value": 9.1
+    },
+    {
+      "date": "2022-07",
+      "value": 8.5
+    },
+    {
+      "date": "2022-08",
+      "value": 8.3
+    },
+    {
+      "date": "2022-09",
+      "value": 8.2
+    },
+    {
+      "date": "2022-10",
+      "value": 7.7
+    },
+    {
+      "date": "2022-11",
+      "value": 7.1
+    },
+    {
+      "date": "2022-12",
+      "value": 6.5
+    },
+    {
+      "date": "2023-01",
+      "value": 6.4
+    },
+    {
+      "date": "2023-02",
+      "value": 6.0
+    },
+    {
+      "date": "2023-03",
+      "value": 5.0
+    },
+    {
+      "date": "2023-04",
+      "value": 4.9
+    },
+    {
+      "date": "2023-05",
+      "value": 4.0
+    },
+    {
+      "date": "2023-06",
+      "value": 3.0
+    },
+    {
+      "date": "2023-07",
+      "value": 3.2
+    },
+    {
+      "date": "2023-08",
+      "value": 3.7
+    },
+    {
+      "date": "2023-09",
+      "value": 3.7
+    },
+    {
+      "date": "2023-10",
+      "value": 3.2
+    },
+    {
+      "date": "2023-11",
+      "value": 3.1
+    },
+    {
+      "date": "2023-12",
+      "value": 3.4
+    },
+    {
+      "date": "2024-01",
+      "value": 3.1
+    },
+    {
+      "date": "2024-02",
+      "value": 3.2
+    },
+    {
+      "date": "2024-03",
+      "value": 3.5
+    },
+    {
+      "date": "2024-04",
+      "value": 3.4
+    },
+    {
+      "date": "2024-05",
+      "value": 3.3
+    },
+    {
+      "date": "2024-06",
+      "value": 3.0
+    },
+    {
+      "date": "2024-07",
+      "value": 2.9
+    },
+    {
+      "date": "2024-08",
+      "value": 2.5
+    },
+    {
+      "date": "2024-09",
+      "value": 2.4
+    },
+    {
+      "date": "2024-10",
+      "value": 2.6
+    },
+    {
+      "date": "2024-11",
+      "value": 2.7
+    },
+    {
+      "date": "2024-12",
+      "value": 2.9
+    },
+    {
+      "date": "2025-01",
+      "value": 3.0
+    },
+    {
+      "date": "2025-02",
+      "value": 2.8
+    },
+    {
+      "date": "2025-03",
+      "value": 2.4
+    },
+    {
+      "date": "2025-04",
+      "value": 2.3
+    },
+    {
+      "date": "2025-05",
+      "value": 2.4
+    },
+    {
+      "date": "2025-06",
+      "value": 2.7
+    },
+    {
+      "date": "2025-07",
+      "value": 2.7
+    },
+    {
+      "date": "2025-08",
+      "value": 2.9
+    },
+    {
+      "date": "2025-09",
+      "value": 3.0
+    },
+    {
+      "date": "2025-11",
+      "value": 2.7
+    },
+    {
+      "date": "2025-12",
+      "value": 2.7
+    },
+    {
+      "date": "2026-01",
+      "value": 2.4
+    },
+    {
+      "date": "2026-02",
+      "value": 2.4
+    },
+    {
+      "date": "2026-03",
+      "value": 3.3
+    },
+    {
+      "date": "2026-04",
+      "value": 3.8
+    },
+    {
+      "date": "2026-05",
+      "value": 4.2
+    },
+    {
+      "date": "2026-06",
+      "value": 3.5
+    }
+  ],
+  "last_checked": "2026-07-27",
+  "stale_after": "2026-08-24"
 }
