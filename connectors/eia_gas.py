@@ -1,41 +1,45 @@
 #!/usr/bin/env python3
-"""Gas price (US regular retail) — EIA Open Data API v2.
-Needs a free EIA_API_KEY (https://www.eia.gov/opendata/register.php).
-Series: weekly US regular all-formulations retail price, $/gal.
+"""Gas price (US regular retail) — via FRED series GASREGW (keyless).
 
-If the key is not set the connector SKIPS cleanly (keeps last-good, exits 0) so
-the board stays green until you opt in — it goes live the moment EIA_API_KEY is
-added as a repo secret."""
+GASREGW is the EIA's weekly U.S. regular all-formulations retail gasoline price,
+redistributed by the St. Louis Fed's FRED. FRED's CSV endpoint needs no API key,
+so this metric self-updates with nothing to sign up for or manage. (Underlying
+data is still EIA; FRED is just the keyless delivery.)"""
 import os
 import sys
+import csv
+import io
 import requests
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from common import publish  # noqa: E402
 
-API = "https://api.eia.gov/v2/petroleum/pri/gnd/data/"
-SERIES = "EMM_EPMR_PTE_NUS_DPG"
+API = "https://fred.stlouisfed.org/graph/fredgraph.csv"
+SERIES = "GASREGW"
 TERM_START = "2025-01-13"   # first weekly obs on/after inauguration week
+UA = {"User-Agent": "govnumbers-dashboard/1.0 (+https://political-dashboard-323.pages.dev)"}
+
+
+def fred_series(series_id):
+    r = requests.get(API, params={"id": series_id}, headers=UA, timeout=45)
+    r.raise_for_status()
+    rows = list(csv.reader(io.StringIO(r.text)))
+    out = []
+    for row in rows[1:]:                      # row[0]=date, row[1]=value; '.' = missing
+        if len(row) < 2 or row[1] in (".", ""):
+            continue
+        try:
+            out.append((row[0], float(row[1])))
+        except ValueError:
+            continue
+    return out
 
 
 def main():
-    key = os.environ.get("EIA_API_KEY")
-    if not key:
-        print("  – gas_price: EIA_API_KEY not set; skipping (keeping last-good). "
-              "Add the secret to make this metric live.")
-        return
-    params = {
-        "api_key": key, "frequency": "weekly", "data[0]": "value",
-        "facets[series][]": SERIES,
-        "sort[0][column]": "period", "sort[0][direction]": "desc",
-        "length": 700,   # ~13 years weekly (store deep)
-    }
-    r = requests.get(API, params=params, timeout=30)
-    r.raise_for_status()
-    rows = r.json()["response"]["data"]  # newest first
-
-    series = [{"date": x["period"], "value": round(float(x["value"]), 3)}
-              for x in rows if x.get("value") is not None]
+    raw = fred_series(SERIES)
+    if not raw:
+        raise RuntimeError("FRED returned no GASREGW observations")
+    series = [{"date": d, "value": round(v, 3)} for d, v in raw]   # weekly, YYYY-MM-DD
     series.sort(key=lambda p: p["date"])
 
     latest = series[-1]
@@ -45,8 +49,8 @@ def main():
         "value": latest["value"], "unit": "$/gal", "as_of": latest["date"],
         "direction": "up_is_bad",
         "baseline": {"label": "At inauguration (Jan 2025)", "value": base},
-        "source": {"name": "U.S. Energy Information Administration",
-                   "url": "https://www.eia.gov/petroleum/gasdiesel/"},
+        "source": {"name": "U.S. Energy Information Administration (via FRED)",
+                   "url": "https://fred.stlouisfed.org/series/GASREGW"},
         "cadence": "Weekly", "note": "US average regular gasoline, per gallon.",
     }
     publish(out, series=series)

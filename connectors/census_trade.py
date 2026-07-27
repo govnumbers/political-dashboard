@@ -1,49 +1,42 @@
 #!/usr/bin/env python3
-"""Trade deficit (goods & services) — U.S. Census Bureau International Trade API
-(FT900). Monthly total balance. Needs a free CENSUS_API_KEY
-(https://api.census.gov/data/key_signup.html).
+"""Trade deficit (goods & services) — via FRED series BOPGSTB (keyless).
 
-Stores a deep monthly series (since 2017); merges each run. Value converted from
-millions USD to $B/month and shown as a positive deficit magnitude.
-
-Requires a free CENSUS_API_KEY (the FT900 endpoint rejects keyless calls with a
-non-JSON error). Without it the connector skips cleanly (keeps last-good, stays
-green), like gas/EIA. NOTE: on the first live run with a key, verify the FT900
-fields/params below against the current endpoint — Census occasionally revises
-the timeseries path; a bad read is caught by the validators."""
+BOPGSTB is the U.S. Census/BEA monthly Trade Balance in Goods and Services
+(balance-of-payments basis, seasonally adjusted, millions USD), redistributed by
+FRED. FRED's CSV endpoint needs no API key, so this self-updates with nothing to
+manage. The balance is negative (a deficit); we show it as a positive $B
+magnitude to match the card. (Underlying data is Census/BEA; FRED is delivery.)"""
 import os
 import sys
+import csv
+import io
 import requests
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from common import publish  # noqa: E402
 
-API = "https://api.census.gov/data/timeseries/intltrade/ft900"
-BASE_KEY = "2025-01"  # inauguration month
+API = "https://fred.stlouisfed.org/graph/fredgraph.csv"
+SERIES = "BOPGSTB"
+BASE_KEY = "2025-01"   # inauguration month
+UA = {"User-Agent": "govnumbers-dashboard/1.0 (+https://political-dashboard-323.pages.dev)"}
 
 
 def main():
-    key = os.environ.get("CENSUS_API_KEY")
-    if not key:
-        print("  – trade_deficit: CENSUS_API_KEY not set; skipping (keeping last-good). "
-              "Add the secret (free) to make this metric live.")
-        return
-    # get-list contents matter to the FT900 endpoint; widen time range for deep history.
-    params = {"get": "CTY_CODE,ALL_VAL_MO,BAL_VAL_MO,time", "CTY_CODE": "-",
-              "time": "from 2017-01", "key": key}
-    r = requests.get(API, params=params, timeout=30)
+    r = requests.get(API, params={"id": SERIES}, headers=UA, timeout=45)
     r.raise_for_status()
-    rows = r.json()
-    header, data = rows[0], rows[1:]
-    bal_i, time_i = header.index("BAL_VAL_MO"), header.index("time")
+    rows = list(csv.reader(io.StringIO(r.text)))
 
     series = []
-    for row in data:
+    for row in rows[1:]:                       # row[0]=YYYY-MM-01, row[1]=millions (negative)
+        if len(row) < 2 or row[1] in (".", ""):
+            continue
         try:
-            series.append({"date": row[time_i], "value": round(abs(float(row[bal_i])) / 1000, 1)})
-        except (TypeError, ValueError):
+            series.append({"date": row[0][:7], "value": round(abs(float(row[1])) / 1000, 1)})
+        except ValueError:
             continue
     series.sort(key=lambda p: p["date"])
+    if not series:
+        raise RuntimeError("FRED returned no BOPGSTB observations")
 
     latest = series[-1]
     base = next((p["value"] for p in series if p["date"] == BASE_KEY), None)
@@ -55,8 +48,8 @@ def main():
         "category": "Economy", "value": latest["value"], "unit": "$B/mo", "as_of": latest["date"],
         "direction": "up_is_bad",
         "baseline": baseline,
-        "source": {"name": "BEA / U.S. Census Bureau",
-                   "url": "https://www.bea.gov/data/intl-trade-investment/international-trade-goods-and-services"},
+        "source": {"name": "U.S. Census Bureau / BEA (via FRED)",
+                   "url": "https://fred.stlouisfed.org/series/BOPGSTB"},
         "cadence": "Monthly", "note": "Monthly U.S. international trade deficit in goods and services.",
     }
     publish(out, series=series)
