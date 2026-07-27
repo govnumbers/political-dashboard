@@ -40,7 +40,9 @@ STALE_DAYS = {
     "as-signed": 12,
     "dai": 5,          # daily (debt)
     "week": 14,        # weekly (gas)
-    "month": 55,       # monthly releases (CPI, jobs, trade, border) land 2-6 wks after month-end
+    "month": 70,       # monthly: must clear the SLOWEST reporter (trade lags ~5-6 wks),
+                       # so a current latest-available figure never false-flags; still
+                       # catches a genuinely missed monthly release (~one full cycle late).
 }
 DEFAULT_STALE_DAYS = 45
 

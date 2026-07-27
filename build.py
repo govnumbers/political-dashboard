@@ -25,7 +25,7 @@ ORDER = [
     "executive_orders",
     "border_encounters", "ice_detention",
 ]
-STALE_DAYS = {"biweek": 30, "as signed": 12, "as-signed": 12, "dai": 5, "week": 14, "month": 55}
+STALE_DAYS = {"biweek": 30, "as signed": 12, "as-signed": 12, "dai": 5, "week": 14, "month": 70}
 DEFAULT_STALE_DAYS = 45
 
 
