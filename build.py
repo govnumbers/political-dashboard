@@ -193,7 +193,10 @@ def tile(m):
     elif m["id"] == "ice_detention":
         hero = num(m["value"])
         sub = m["note"]
-        delta = '<span class="delta neutral">Average daily population in ICE detention</span>'
+        if m.get("currently_detained"):
+            delta = f'<span class="delta neutral">Currently detained (point-in-time): {num(m["currently_detained"])}</span>'
+        else:
+            delta = '<span class="delta neutral">Average daily population in ICE detention</span>'
 
     # ---- v2 expansion cards (28 Jul 2026) ----
     elif m["id"] == "grocery_prices":

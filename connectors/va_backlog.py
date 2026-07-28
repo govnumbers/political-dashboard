@@ -9,8 +9,12 @@ because the backlog can fall while total pending doesn't.
 The workbook's layout is label-based, not position-based, and this could not
 be live-tested from the build sandbox — parser searches every sheet for the
 labelled rows and raises on ambiguity (safe-fail). The inauguration baseline
-is fetched live from the first MMWR file of the term (week of Jan 27, 2025)
-once, then reused from the stored series."""
+is fetched live from the first weekly file of the term (week ending Sat
+Jan 25, 2025) once, then reused from the stored series.
+
+FIRST-RUN FIX (28 Jul 2026): files are named for the week-ending SATURDAY
+(MMWR-07-04-2026.xlsx = Sat Jul 4), not the Monday they're posted — verified
+against the live index. First run guessed Mondays and found nothing."""
 import os
 import sys
 import io
@@ -21,20 +25,22 @@ import requests
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from common import publish, load_existing, UA  # noqa: E402
 
-URL_FMT = "https://www.benefits.va.gov/REPORTS/mmwr/{y}/MMWR-{m:02d}-{d:02d}-{y}.xlsx"
-BASELINE_DATE = datetime.date(2025, 1, 27)   # first Monday report of the term
+URL_FMT = "https://www.benefits.va.gov/REPORTS/mmwr/{y}/MMWR-{m:02d}-{d:02d}-{y}.{ext}"
+BASELINE_DATE = datetime.date(2025, 1, 25)   # first week-ending Saturday of the term
 
 
-def recent_mondays(today, n=6):
-    d = today - datetime.timedelta(days=today.weekday())  # this week's Monday
+def recent_saturdays(today, n=10):
+    """Most recent week-ending Saturdays, newest first. Mon=0..Sat=5."""
+    d = today - datetime.timedelta(days=(today.weekday() - 5) % 7)
     return [d - datetime.timedelta(weeks=i) for i in range(n)]
 
 
 def fetch_workbook_for(date):
-    url = URL_FMT.format(y=date.year, m=date.month, d=date.day)
-    r = requests.get(url, headers=UA, timeout=90)
-    if r.status_code == 200 and r.content[:2] == b"PK":   # xlsx magic
-        return url, r.content
+    for ext in ("xlsx", "xlsm"):   # some vintages are macro-enabled .xlsm
+        url = URL_FMT.format(y=date.year, m=date.month, d=date.day, ext=ext)
+        r = requests.get(url, headers=UA, timeout=90)
+        if r.status_code == 200 and r.content[:2] == b"PK":   # zip magic (xlsx/xlsm)
+            return url, r.content
     return None, None
 
 
@@ -73,13 +79,14 @@ def extract_counts(content):
 def main():
     today = datetime.date.today()
     url = content = None
-    for monday in recent_mondays(today):
-        url, content = fetch_workbook_for(monday)
+    for saturday in recent_saturdays(today):
+        url, content = fetch_workbook_for(saturday)
         if content:
-            file_date = monday
+            file_date = saturday
             break
     if not content:
-        raise RuntimeError("no recent VA Monday Morning Workload Report found")
+        raise RuntimeError("no recent VA Monday Morning Workload Report found "
+                           "(tried the last 10 week-ending Saturdays, .xlsx and .xlsm)")
 
     backlog, total = extract_counts(content)
 
@@ -107,7 +114,7 @@ def main():
                 "overall pending doesn't.",
     }
     if baseline is not None:
-        out["baseline"] = {"label": "At inauguration (week of Jan 27, 2025)", "value": baseline}
+        out["baseline"] = {"label": "At inauguration (week ending Jan 25, 2025)", "value": baseline}
     publish(out, series=[{"date": file_date.isoformat(), "value": backlog}])
 
 

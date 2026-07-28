@@ -195,8 +195,40 @@ ok((app, dis, n, as_of) == (40.0, 56.0, 3, "2026-07-25"),
    "approval: latest-per-pollster, Trump-only, simple mean, as_of = newest poll")
 
 import ice_removals
-ok(ice_removals._cal_date("Oct", None, 2026) == "2025-10", "ICE removals: Oct in FY2026 -> Oct 2025")
-ok(ice_removals._cal_date("Jun", None, 2026) == "2026-06", "ICE removals: Jun in FY2026 -> Jun 2026")
+_fyr, _tot, _famu = ice_removals.removals_from_rows([
+    [None] * 13 + ["ICE Removals: FY2026"],
+    [None] * 13 + ["Removals", None, "Total"],
+    [None] * 13 + ["Total", None, 356389],
+    [None] * 13 + ["Removals with a FAMU Identifier", None, 36548],
+])
+ok((_fyr, _tot, _famu) == (2026, 356389, 36548),
+   "ICE removals: FYTD block parses (real FY26 layout)")
+
+_adp_rows = ([["Name", "Addr", "City", "St", "Zip", "AOR", "Type", "M/F", "ALOS",
+               "Level A", "Level B", "Level C", "Level D",
+               "Male Crim", "Male Non-Crim", "Female Crim", "Female Non-Crim"]]
+             + [[f"Fac{i}", "", "", "", "", "", "", "", 1.0,
+                 10, 20, 30, 40, 25, 25, 25, 25] for i in range(25)]
+             + [["Total", "", "", "", "", "", "", "", None,
+                 999999, 0, 0, 0, 0, 0, 0, 0]])
+_adp, _n = ice_detention.adp_from_rows(_adp_rows)
+ok((_adp, _n) == (2500, 25), "ICE detention: Level A-D summed, Total row skipped, cross-check ok")
+
+
+def _bad_adp():
+    bad = [r[:] for r in _adp_rows]
+    bad[1][13] = 500   # corrupt the criminality split
+    ice_detention.adp_from_rows(bad)
+
+
+ok(raises_runtime(_bad_adp), "ICE detention: split-mismatch raises (safe-fail)")
+
+import va_backlog
+_sats = va_backlog.recent_saturdays(datetime.date(2026, 7, 28))   # a Tuesday
+ok(_sats[0] == datetime.date(2026, 7, 25) and all(s.weekday() == 5 for s in _sats),
+   "VA: file dates are week-ending Saturdays (fix for the Monday guess)")
+ok(va_backlog.recent_saturdays(datetime.date(2026, 7, 25))[0] == datetime.date(2026, 7, 25),
+   "VA: a Saturday maps to itself")
 
 print("== stale_days override ==")
 with tempfile.TemporaryDirectory() as td:

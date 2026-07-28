@@ -1,20 +1,23 @@
 #!/usr/bin/env python3
-"""ICE removals & returns — from the SAME per-FY workbook as ice_detention
-(FY{yy}_detentionStats.xlsx); since mid-2025 it carries removals data.
+"""ICE removals — from the SAME workbook as ice_detention (one download serves
+both connectors' fetch logic; each runs standalone).
+
+LAYOUT (learned from the real FY26 workbook, 28 Jul 2026): removals live as a
+small labelled block in the top-right of the 'Detention FY*' sheet —
+"ICE Removals: FY2026" / "Total" = fiscal-YTD removals (356,389 on the Jul-20
+snapshot, data through Jul 11), plus a family-unit (FAMU) sub-count (36,548).
+One FYTD figure per snapshot; the stored series accumulates a monthly point
+that updates in place, like ice_detention. The Footnotes sheet's
+"Removals data are updated through MM/DD/YYYY" line becomes as_of.
 
 LABELLING RULE (locked in project doc 03): this is "ICE's published workbook
 figure" and is NEVER reconciled to press-release "deportation" totals, which
-mix ICE removals with CBP returns/expulsions counted differently.
+mix ICE removals with CBP actions counted differently.
 
-Like ice_detention this could not be live-tested from the build sandbox
-(ice.gov egress-blocked) and the workbook's tab layout has churned before —
-the parser keys on sheet/header NAMES and is fully safe-fail: any ambiguity
-raises, no card updates, the run goes red. Known source risk: ICE paused
-publication for 56 days in early 2026 (stale_days is set to tolerate a normal
-gap but flag a prolonged one).
-
-Cross-president context is a static FY2024 baseline from the ICE ERO FY2024
-Annual Report (271,484 removals) — the workbook series itself starts FY2025."""
+Cross-president context: static FY2024 baseline from the ICE ERO FY2024 Annual
+Report (271,484 removals) — the workbook series itself starts in FY2025.
+Known source risk: ICE paused publication for 56 days in early 2026
+(stale_days tolerates a normal gap but flags a prolonged one)."""
 import os
 import sys
 import io
@@ -23,109 +26,83 @@ import datetime
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from common import publish  # noqa: E402
-from ice_detention import fetch_workbook  # noqa: E402  (same download, reused)
+from ice_detention import fetch_workbook, through_date  # noqa: E402
 
 FY2024_REMOVALS = 271484   # ICE ERO FY2024 Annual Report (static comparator)
-MONTH_PAT = re.compile(
-    r"^(oct|nov|dec|jan|feb|mar|apr|may|jun|jul|aug|sep)[a-z]*[\s\-]*(\d{2,4})?$", re.I)
-MONTH_NUM = {"jan": 1, "feb": 2, "mar": 3, "apr": 4, "may": 5, "jun": 6,
-             "jul": 7, "aug": 8, "sep": 9, "oct": 10, "nov": 11, "dec": 12}
 
 
-def _cal_date(mon_abbr, yr, fy):
-    """Month abbreviation (+optional explicit year) within fiscal year fy ->
-    'YYYY-MM'. Oct-Dec belong to the prior calendar year when no year given."""
-    m = MONTH_NUM[mon_abbr[:3].lower()]
-    if yr:
-        y = int(yr)
-        y += 2000 if y < 100 else 0
-    else:
-        y = fy - 1 if m >= 10 else fy
-    return f"{y}-{m:02d}"
+def _num(x):
+    if x is None:
+        return None
+    try:
+        return int(float(str(x).replace(",", "")))
+    except ValueError:
+        return None
 
 
-def find_removals(wb, fy):
-    """Search sheets whose name mentions removals. Returns (series, fytd_total).
-    Tries a monthly layout first (a month-label column next to a numeric
-    removals column); falls back to a labelled FYTD total cell. Raises if the
-    workbook offers neither."""
-    sheets = [ws for ws in wb.worksheets if "remov" in ws.title.lower()]
-    if not sheets:
-        # some vintages put removals inside a combined stats sheet
-        sheets = [ws for ws in wb.worksheets]
-
-    for ws in sheets:
-        rows = [[(c if c is not None else "") for c in r]
-                for r in ws.iter_rows(values_only=True)]
-
-        # --- attempt 1: monthly rows (label col + numeric col under a 'removal'/'total' header)
-        for hi, row in enumerate(rows[:25]):
-            labels = [str(c).strip().lower() for c in row]
-            if not any("remov" in l for l in labels):
+def removals_from_rows(rows):
+    """rows of a 'Detention FY*' sheet. Returns (fy_year, fytd_total, famu).
+    Anchored on the literal "ICE Removals: FY____" heading; raises if absent."""
+    for ri, r in enumerate(rows):
+        for ci, c in enumerate(r):
+            if c is None:
                 continue
-            val_cols = [i for i, l in enumerate(labels) if "remov" in l]
-            target = next((i for i in val_cols if "total" in labels[i]), val_cols[-1])
-            points = []
-            for r in rows[hi + 1:]:
-                if not r or target >= len(r):
-                    continue
-                first = r[0]
-                date_key = None
-                if isinstance(first, (datetime.datetime, datetime.date)):
-                    date_key = f"{first.year}-{first.month:02d}"   # real date cell
-                else:
-                    m = MONTH_PAT.match(str(first).strip().lower())
-                    if m:
-                        date_key = _cal_date(m.group(1), m.group(2), fy)
-                if not date_key:
-                    continue
-                try:
-                    v = float(r[target])
-                except (TypeError, ValueError):
-                    continue
-                if v >= 0:
-                    points.append({"date": date_key, "value": int(v)})
-            if len(points) >= 2:
-                dedup = {p["date"]: p["value"] for p in points}
-                series = [{"date": d, "value": dedup[d]} for d in sorted(dedup)]
-                return series, sum(dedup.values())
-
-        # --- attempt 2: a labelled total cell ("total removals ... 123,456")
-        for r in rows:
-            joined = [str(c).strip() for c in r]
-            for i, cell in enumerate(joined):
-                if re.search(r"total\s+removals", cell, re.I):
-                    for c in r[i + 1:]:
-                        try:
-                            v = float(c)
-                            if v > 0:
-                                return None, int(v)
-                        except (TypeError, ValueError):
-                            continue
-    raise RuntimeError("could not locate removals data in the ICE workbook "
-                       "(tab layout may have changed — inspect manually)")
+            m = re.match(r"\s*ICE Removals:\s*FY\s*(\d{4})", str(c), re.I)
+            if not m:
+                continue
+            fy_year = int(m.group(1))
+            total = famu = None
+            for rr in rows[ri + 1: ri + 8]:
+                seg = list(rr[max(0, ci - 1): ci + 7])
+                lbl = next((str(x).strip().lower() for x in seg
+                            if x is not None and str(x).strip()), "")
+                nums = [n for n in (_num(x) for x in seg) if n is not None]
+                if lbl == "total" and nums:
+                    total = nums[0]
+                elif "famu" in lbl and nums:
+                    famu = nums[0]
+            if total:
+                return fy_year, total, famu
+    raise RuntimeError("'ICE Removals: FY____' block not found (layout changed — inspect manually)")
 
 
 def main():
     from openpyxl import load_workbook
     fy, url, content = fetch_workbook()
     wb = load_workbook(io.BytesIO(content), data_only=True, read_only=True)
-    series, fytd = find_removals(wb, fy)
 
-    as_of = datetime.date.today().strftime("%Y-%m")
+    det = [ws for ws in wb.worksheets if re.match(r"\s*detention fy", ws.title, re.I)]
+    fy_year = fytd = famu = None
+    for ws in det or wb.worksheets:
+        try:
+            fy_year, fytd, famu = removals_from_rows(
+                [list(r) for r in ws.iter_rows(values_only=True)])
+            break
+        except RuntimeError:
+            continue
+    if fytd is None:
+        raise RuntimeError("could not locate removals data in the ICE workbook "
+                           "(tab layout may have changed — inspect manually)")
+
+    as_of = through_date(wb, "Removals") or datetime.date.today().isoformat()
+    note = (f"Removals recorded in ICE's published statistics workbook, FY{fy_year} to date. "
+            "Official workbook figure — not comparable to press-release 'deportation' totals, "
+            "which mix in CBP actions.")
+    if famu:
+        note += f" Includes {famu:,} with a family-unit identifier."
+
     out = {
-        "id": "ice_removals", "name": "ICE removals & returns (fiscal-YTD)",
+        "id": "ice_removals", "name": "ICE removals (fiscal-YTD)",
         "category": "Immigration", "value": fytd, "unit": "people", "as_of": as_of,
         "direction": "neutral",
         "comparison": {"label": "FY2024 full year (prior administration)", "value": FY2024_REMOVALS},
         "source": {"name": "U.S. Immigration and Customs Enforcement",
                    "url": "https://www.ice.gov/detain/detention-management"},
-        "cadence": "Biweekly", "stale_days": 75,
-        "note": f"Removals and returns in ICE's published statistics workbook, FY{fy} to date. "
-                "Official workbook figure — not comparable to press-release 'deportation' totals, "
-                "which mix in CBP actions. ICE has paused publication before (56 days in early 2026).",
+        "cadence": "Biweekly", "stale_days": 75, "note": note,
     }
-    publish(out, series=series or [{"date": as_of, "value": fytd}])
+    if famu:
+        out["famu_removals"] = famu
+    publish(out, series=[{"date": as_of[:7], "value": fytd}])
 
 
 if __name__ == "__main__":

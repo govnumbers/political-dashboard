@@ -11,8 +11,14 @@ ending in the last 14 days (widened to 30 if fewer than three), one value per
 pollster (latest poll wins) so prolific pollsters don't dominate.
 
 Verified structure (Jul 2026): GET api.votehub.com/polls?poll_type=approval ->
-[{subject: "Donald Trump", pollster, end_date: "YYYY-MM-DD",
-  answers: [{choice: "Approve", pct: 47.0}, {choice: "Disapprove", ...}]}]"""
+bare JSON array (no pagination metadata), OLDEST FIRST, mixed subjects
+(Trump, Congress, ...): [{subject: "Donald Trump", pollster,
+end_date: "YYYY-MM-DD", answers: [{choice: "Approve", pct: 47.0}, ...]}]
+
+FIRST-RUN FIX (28 Jul 2026): because the array is oldest-first, a small
+`limit` truncates away the RECENT polls (limit=500 topped out at Jun 2026).
+So: request effectively-everything, filter client-side, and hard-fail if the
+newest usable poll is over 45 days old rather than publish a stale number."""
 import os
 import sys
 import datetime
@@ -68,13 +74,20 @@ def average_polls(polls, today, window_days=14, min_polls=3):
 
 
 def main():
-    r = requests.get(API, params={"poll_type": "approval", "limit": 500},
-                     headers=UA, timeout=60)
+    # oldest-first array with no pagination — a small limit cuts off the
+    # PRESENT, so ask for effectively everything and filter client-side
+    r = requests.get(API, params={"poll_type": "approval", "limit": 100000},
+                     headers=UA, timeout=120)
     r.raise_for_status()
     js = r.json()
     polls = js if isinstance(js, list) else (js.get("polls") or js.get("results")
                                              or js.get("data") or [])
     app, dis, n, as_of = average_polls(polls, datetime.date.today())
+
+    age = (datetime.date.today() - datetime.date.fromisoformat(as_of)).days
+    if age > 45:
+        raise RuntimeError(f"newest usable approval poll is {age} days old — "
+                           "feed looks stale or truncated; not publishing")
 
     out = {
         "id": "approval_rating", "name": "Presidential approval",
