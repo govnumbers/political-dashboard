@@ -74,9 +74,15 @@ def average_polls(polls, today, window_days=14, min_polls=3):
 
 
 def main():
-    # oldest-first array with no pagination — a small limit cuts off the
-    # PRESENT, so ask for effectively everything and filter client-side
-    r = requests.get(API, params={"poll_type": "approval", "limit": 100000},
+    # SECOND-RUN FIX (28 Jul 2026): the API has NO pagination and caps large
+    # limits server-side (a big `limit` still topped out at Jun-2026 polls).
+    # The documented route (votehub.com/polls/api) is date filtering:
+    # `from_date` = "polls whose end date is on or after this date", plus a
+    # `subject` filter — so ask precisely for recent Trump approval polls.
+    from_date = (datetime.date.today() - datetime.timedelta(days=45)).isoformat()
+    r = requests.get(API, params={"poll_type": "approval",
+                                  "subject": "donald-trump",
+                                  "from_date": from_date},
                      headers=UA, timeout=120)
     r.raise_for_status()
     js = r.json()

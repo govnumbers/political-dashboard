@@ -229,6 +229,18 @@ ok(_sats[0] == datetime.date(2026, 7, 25) and all(s.weekday() == 5 for s in _sat
    "VA: file dates are week-ending Saturdays (fix for the Monday guess)")
 ok(va_backlog.recent_saturdays(datetime.date(2026, 7, 25))[0] == datetime.date(2026, 7, 25),
    "VA: a Saturday maps to itself")
+_va = va_backlog.counts_from_rows([
+    [None] * 6,
+    [None, None, None, "SPECIAL MISSION SELECTOR", "#\nPending",
+     "#\nPending\n> 125 Days", "%\nPending\n> 125 Days", "ADP"],
+    [None] * 6,
+    [394, 1, None, "Northeast District", 32097, 2923, 0.091, 57.5],
+    [100, None, None, "Compensation Total", 591684, 68297, 0.115, 64.32],
+])
+ok(_va == (68297, 591684),
+   "VA: '# Pending > 125' column + 'Compensation Total' row wins over districts (real 2026 layout)")
+ok(va_backlog.counts_from_rows([["nothing", "here"]]) is None,
+   "VA: sheet without the metric columns returns None (moves on)")
 
 print("== stale_days override ==")
 with tempfile.TemporaryDirectory() as td:

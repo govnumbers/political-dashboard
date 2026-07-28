@@ -44,36 +44,70 @@ def fetch_workbook_for(date):
     return None, None
 
 
-def extract_counts(content):
-    """Find (backlog, total_pending) via labelled rows across all sheets.
-    backlog: a row whose label contains 'backlog'; total: a row mentioning
-    pending claims/inventory. Takes the first numeric in the labelled row."""
-    from openpyxl import load_workbook
-    wb = load_workbook(io.BytesIO(content), data_only=True, read_only=True)
-    backlog = total = None
+def _norm(c):
+    return re.sub(r"\s+", " ", str(c)).strip().lower() if c is not None else ""
 
-    def first_number(cells):
-        for c in cells:
-            try:
-                v = float(c)
-                if v >= 0:
-                    return int(v)
-            except (TypeError, ValueError):
-                continue
+
+def _to_num(x):
+    try:
+        v = float(x)
+        return int(round(v)) if v >= 0 else None
+    except (TypeError, ValueError):
         return None
 
-    for ws in wb.worksheets:
-        for r in ws.iter_rows(values_only=True):
-            label = " ".join(str(c) for c in r[:3] if c is not None).lower()
-            if backlog is None and "backlog" in label:
-                backlog = first_number(r)
-            if total is None and re.search(r"(total|pending)\s+(claims|inventory)|claims\s+pending", label):
-                total = first_number(r)
-        if backlog is not None and total is not None:
-            break
-    if backlog is None:
-        raise RuntimeError("no 'backlog' row found in VA MMWR workbook (layout changed?)")
-    return backlog, total
+
+def counts_from_rows(rows):
+    """(backlog, total_pending) from one sheet's rows, or None if this sheet
+    doesn't carry the metric columns.
+
+    Verified against the real 2026-07-25 file: 'Rating Bundle - SOJ' headers
+    its metric columns '# Pending' / '# Pending > 125 Days' (cells contain
+    literal newlines, so whitespace is normalised) and the national figure is
+    the 'Compensation Total' row. The word 'backlog' no longer appears
+    anywhere in the workbook — the >125-days column IS the official backlog
+    definition, and the card's unit says so."""
+    for hi, row in enumerate(rows[:15]):
+        labels = [_norm(c) for c in row]
+        bcol = next((i for i, l in enumerate(labels) if l.startswith("# pending > 125")), None)
+        if bcol is None:
+            continue
+        tcol = next((i for i, l in enumerate(labels) if l == "# pending"), None)
+
+        def row_rank(r):
+            lbl = " ".join(_norm(c) for c in r[:bcol] if isinstance(c, str))
+            if "compensation total" in lbl:
+                return 0                      # the headline national row
+            if "national" in lbl or lbl.endswith("total"):
+                return 1
+            return 2
+
+        candidates = [(row_rank(r), idx, r)
+                      for idx, r in enumerate(rows[hi + 1: hi + 60])
+                      if bcol < len(r) and _to_num(r[bcol]) is not None]
+        if not candidates:
+            continue
+        _, _, best = min(candidates, key=lambda t: (t[0], t[1]))
+        backlog = _to_num(best[bcol])
+        total = _to_num(best[tcol]) if (tcol is not None and tcol < len(best)) else None
+        if backlog and backlog >= 500 and (total is None or backlog <= total):
+            return backlog, total
+    return None
+
+
+def extract_counts(content):
+    """(backlog, total_pending) from the workbook; prefers the Rating Bundle
+    sheets (the official backlog basis), falls back to any sheet carrying the
+    '# Pending > 125' columns (e.g. 'Transformation'). Raises if none do."""
+    from openpyxl import load_workbook
+    wb = load_workbook(io.BytesIO(content), data_only=True, read_only=True)
+    ordered = sorted(wb.worksheets,
+                     key=lambda ws: 0 if "rating bundle" in ws.title.lower() else 1)
+    for ws in ordered:
+        got = counts_from_rows([list(r) for r in ws.iter_rows(values_only=True)])
+        if got:
+            return got
+    raise RuntimeError("no '# Pending > 125' column with a plausible national row "
+                       "found in VA MMWR workbook (layout changed?)")
 
 
 def main():
