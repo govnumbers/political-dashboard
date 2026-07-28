@@ -45,7 +45,7 @@ def main():
     latest = series[-1]
     base = next((p["value"] for p in series if p["date"] >= TERM_START), series[0]["value"])
     out = {
-        "id": "gas_price", "name": "Gas price (regular)", "category": "Economy",
+        "id": "gas_price", "name": "Gas price (regular)", "category": "Cost of Living",
         "value": latest["value"], "unit": "$/gal", "as_of": latest["date"],
         "direction": "up_is_bad",
         "baseline": {"label": "At inauguration (Jan 2025)", "value": base},

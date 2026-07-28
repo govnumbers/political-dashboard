@@ -17,15 +17,40 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 DATA = os.path.join(HERE, "data")
 OUT = os.path.join(HERE, "site", "index.html")
 
-TOTAL_PLANNED = 15
-CATEGORY_ORDER = ["Economy", "Public Finances", "Executive Power", "Immigration"]
-ORDER = [
-    "inflation", "unemployment", "gas_price", "trade_deficit",
-    "national_debt", "budget_deficit",
-    "executive_orders",
-    "border_encounters", "ice_detention",
+TOTAL_PLANNED = 23   # v2 register (project doc 03), locked 28 Jul 2026
+CATEGORY_ORDER = [
+    "Cost of Living", "Economy & Jobs", "Trade & Tariffs", "Public Finances",
+    "Immigration", "Health & Safety Net", "Executive Power & Governance",
 ]
-STALE_DAYS = {"biweek": 30, "as signed": 12, "as-signed": 12, "dai": 5, "week": 14, "month": 70}
+ORDER = [
+    "inflation", "grocery_prices", "gas_price",
+    "real_gdp", "unemployment", "real_wages", "federal_workforce",
+    "tariff_revenue", "effective_tariff_rate", "trade_deficit",
+    "national_debt", "budget_deficit", "interest_on_debt",
+    "border_encounters", "ice_removals", "ice_detention",
+    "overdose_deaths", "measles_cases", "medicaid_enrollment", "va_claims_backlog",
+    "executive_orders", "judges_confirmed", "approval_rating",
+]
+# Canonical id -> v2 category. Applied at load so the board groups correctly
+# even from data files written before the category migration (the connectors
+# also stamp the new names; this makes the grouping deterministic either way).
+CATEGORIES = {
+    "inflation": "Cost of Living", "grocery_prices": "Cost of Living", "gas_price": "Cost of Living",
+    "real_gdp": "Economy & Jobs", "unemployment": "Economy & Jobs",
+    "real_wages": "Economy & Jobs", "federal_workforce": "Economy & Jobs",
+    "tariff_revenue": "Trade & Tariffs", "effective_tariff_rate": "Trade & Tariffs",
+    "trade_deficit": "Trade & Tariffs",
+    "national_debt": "Public Finances", "budget_deficit": "Public Finances",
+    "interest_on_debt": "Public Finances",
+    "border_encounters": "Immigration", "ice_removals": "Immigration", "ice_detention": "Immigration",
+    "overdose_deaths": "Health & Safety Net", "measles_cases": "Health & Safety Net",
+    "medicaid_enrollment": "Health & Safety Net", "va_claims_backlog": "Health & Safety Net",
+    "executive_orders": "Executive Power & Governance",
+    "judges_confirmed": "Executive Power & Governance",
+    "approval_rating": "Executive Power & Governance",
+}
+STALE_DAYS = {"biweek": 30, "as signed": 12, "as-signed": 12, "as confirmed": 14,
+              "dai": 5, "week": 14, "month": 70, "quarter": 130}
 DEFAULT_STALE_DAYS = 45
 
 
@@ -170,6 +195,160 @@ def tile(m):
         sub = m["note"]
         delta = '<span class="delta neutral">Average daily population in ICE detention</span>'
 
+    # ---- v2 expansion cards (28 Jul 2026) ----
+    elif m["id"] == "grocery_prices":
+        hero = f'{m["value"]}%'
+        sub = m["note"]
+        if m.get("baseline"):
+            base = m["baseline"]; gap = m["value"] - base["value"]
+            tone = "bad" if gap > 0 else "good"; arrow = "&#9650;" if gap > 0 else "&#9660;"
+            delta = f'<span class="delta {tone}">{arrow} {abs(gap):.1f} pts vs {base["value"]}% at inauguration</span>'
+            bars = render_bars([("Now (YoY)", m["value"], f'{m["value"]}%', "critical" if gap > 0 else "good"),
+                                ("Inauguration", base["value"], f'{base["value"]}%', "muted")], accent)
+
+    elif m["id"] == "real_gdp":
+        hero = f'{m["value"]:+.1f}%'
+        sub = m["note"]
+        if m.get("comparison") and m.get("term_avg") is not None:
+            comp = m["comparison"]
+            delta = (f'<span class="delta neutral">Term average {m["term_avg"]:+.1f}% · '
+                     f'{comp["label"]}: {comp["value"]:+.1f}%</span>')
+            bars = render_bars([("This term", m["term_avg"], f'{m["term_avg"]:+.1f}%', "accent"),
+                                ("Biden", comp["value"], f'{comp["value"]:+.1f}%', "muted")], accent)
+
+    elif m["id"] == "real_wages":
+        hero = f'${m["value"]:,.0f}'
+        sub = m["note"]
+        if m.get("baseline"):
+            base = m["baseline"]; diff = m["value"] - base["value"]
+            pct = diff / base["value"] * 100 if base["value"] else 0
+            tone = "good" if diff > 0 else ("bad" if diff < 0 else "neutral")
+            arrow = "&#9650;" if diff > 0 else ("&#9660;" if diff < 0 else "")
+            delta = f'<span class="delta {tone}">{arrow} {pct:+.1f}% since the inauguration quarter (${base["value"]:,.0f})</span>'
+            bars = render_bars([("Now", m["value"], f'${m["value"]:,.0f}', "accent"),
+                                ("Q1 2025", base["value"], f'${base["value"]:,.0f}', "muted")], accent)
+
+    elif m["id"] == "federal_workforce":
+        hero = f'{m["value"]:,.0f}k'
+        sub = m["note"]
+        if m.get("baseline"):
+            base = m["baseline"]; diff = m["value"] - base["value"]
+            pct = diff / base["value"] * 100 if base["value"] else 0
+            arrow = "&#9650;" if diff > 0 else "&#9660;"
+            delta = f'<span class="delta neutral">{arrow} {abs(diff):,.0f}k ({pct:+.1f}%) since inauguration ({base["value"]:,.0f}k)</span>'
+            bars = render_bars([("Now", m["value"], f'{m["value"]:,.0f}k', "accent"),
+                                ("Inauguration", base["value"], f'{base["value"]:,.0f}k', "muted")], accent)
+
+    elif m["id"] == "tariff_revenue":
+        hero = f'${m["value"]:,.0f}B'
+        sub = m["note"]
+        rows = [("This FY, gross", m["value"], f'${m["value"]:,.0f}B', "accent")]
+        if m.get("net_fytd") is not None:
+            rows.append(("This FY, net", m["net_fytd"], f'${m["net_fytd"]:,.0f}B', "muted"))
+        if m.get("comparison"):
+            comp = m["comparison"]
+            rows.append(("Prior FY, gross", comp["value"], f'${comp["value"]:,.0f}B', "muted"))
+            pieces = [f'prior FY gross ${comp["value"]:,.0f}B']
+            if m.get("net_fytd") is not None:
+                pieces.insert(0, f'net after refunds ${m["net_fytd"]:,.0f}B')
+            delta = f'<span class="delta neutral">Gross fiscal-YTD · {" · ".join(pieces)}</span>'
+        bars = render_bars(rows, accent)
+
+    elif m["id"] == "effective_tariff_rate":
+        hero = f'{m["value"]:.1f}%'
+        sub = m["note"]
+        if m.get("baseline"):
+            base = m["baseline"]
+            delta = f'<span class="delta neutral">vs {base["value"]:.1f}% at inauguration</span>'
+            bars = render_bars([("Now", m["value"], f'{m["value"]:.1f}%', "accent"),
+                                ("Inauguration", base["value"], f'{base["value"]:.1f}%', "muted")], accent)
+
+    elif m["id"] == "interest_on_debt":
+        hero = f'${m["value"]:,.0f}B'
+        sub = m["note"]
+        if m.get("comparison"):
+            comp = m["comparison"]; diff = m["value"] - comp["value"]
+            tone = "bad" if diff > 0 else "good"; arrow = "&#9650;" if diff > 0 else "&#9660;"
+            delta = f'<span class="delta {tone}">{arrow} ${abs(diff):,.0f}B vs the same point last fiscal year (${comp["value"]:,.0f}B)</span>'
+            bars = render_bars([("This FY", m["value"], f'${m["value"]:,.0f}B', "critical"),
+                                ("Prior FY", comp["value"], f'${comp["value"]:,.0f}B', "muted")], accent)
+
+    elif m["id"] == "ice_removals":
+        hero = num(m["value"])
+        sub = m["note"]
+        if m.get("comparison"):
+            comp = m["comparison"]
+            delta = f'<span class="delta neutral">FY2024 full year (prior administration): {num(comp["value"])}</span>'
+            bars = render_bars([("This FY so far", m["value"], num(m["value"]), "accent"),
+                                ("FY2024 total", comp["value"], num(comp["value"]), "muted")], accent)
+
+    elif m["id"] == "overdose_deaths":
+        hero = num(m["value"])
+        sub = m["note"]
+        if m.get("baseline"):
+            base = m["baseline"]; diff = m["value"] - base["value"]
+            pct = diff / base["value"] * 100 if base["value"] else 0
+            tone = "bad" if diff > 0 else "good"; arrow = "&#9650;" if diff > 0 else "&#9660;"
+            delta = f'<span class="delta {tone}">{arrow} {num(abs(diff))} ({pct:+.0f}%) vs the 12 months ending at inauguration</span>'
+            bars = render_bars([("Latest 12 mo", m["value"], num(m["value"]), "critical" if diff > 0 else "good"),
+                                ("To Jan 2025", base["value"], num(base["value"]), "muted")], accent)
+
+    elif m["id"] == "measles_cases":
+        hero = num(m["value"])
+        sub = m["note"].split(" — ")[0] + "."
+        if m.get("comparison"):
+            comp = m["comparison"]; diff = m["value"] - comp["value"]
+            if diff > 0:
+                delta = f'<span class="delta bad">&#9650; already above {comp["label"].lower()} ({num(comp["value"])})</span>'
+            else:
+                delta = f'<span class="delta neutral">{comp["label"]}: {num(comp["value"])}</span>'
+            bars = render_bars([("This year so far", m["value"], num(m["value"]), "critical" if diff > 0 else "accent"),
+                                (comp["label"], comp["value"], num(comp["value"]), "muted")], accent)
+
+    elif m["id"] == "medicaid_enrollment":
+        hero = f'{m["value"] / 1e6:.1f}M'
+        sub = m["note"]
+        if m.get("baseline"):
+            base = m["baseline"]; diff = m["value"] - base["value"]
+            arrow = "&#9650;" if diff > 0 else "&#9660;"
+            delta = f'<span class="delta neutral">{arrow} {abs(diff) / 1e6:.1f}M since Dec 2024 ({base["value"] / 1e6:.1f}M)</span>'
+            bars = render_bars([("Now", m["value"], f'{m["value"] / 1e6:.1f}M', "accent"),
+                                ("Dec 2024", base["value"], f'{base["value"] / 1e6:.1f}M', "muted")], accent)
+
+    elif m["id"] == "va_claims_backlog":
+        hero = num(m["value"])
+        sub = m["note"]
+        if m.get("total_pending"):
+            sub += f' Total pending now: {num(m["total_pending"])}.'
+        if m.get("baseline"):
+            base = m["baseline"]; diff = m["value"] - base["value"]
+            pct = diff / base["value"] * 100 if base["value"] else 0
+            tone = "bad" if diff > 0 else "good"; arrow = "&#9650;" if diff > 0 else "&#9660;"
+            delta = f'<span class="delta {tone}">{arrow} {num(abs(diff))} ({pct:+.0f}%) since inauguration</span>'
+            bars = render_bars([("Now", m["value"], num(m["value"]), "critical" if diff > 0 else "good"),
+                                ("Inauguration", base["value"], num(base["value"]), "muted")], accent)
+
+    elif m["id"] == "judges_confirmed":
+        hero = num(m["value"])
+        sub = m["note"]
+        if m.get("comparison"):
+            comp = m["comparison"]; diff = m["value"] - comp["value"]
+            delta = f'<span class="delta neutral">{diff:+,.0f} vs his first term at the same point ({num(comp["value"])})</span>'
+            rows = [("This term", m["value"], num(m["value"]), "accent"),
+                    ("Term 1", comp["value"], num(comp["value"]), "muted")]
+            if m.get("biden_same_point") is not None:
+                rows.append(("Biden", m["biden_same_point"], num(m["biden_same_point"]), "muted"))
+            bars = render_bars(rows, accent)
+
+    elif m["id"] == "approval_rating":
+        hero = f'{m["value"]:.0f}%'
+        sub = m["note"]
+        if m.get("disapprove") is not None:
+            net = m.get("net", m["value"] - m["disapprove"])
+            delta = f'<span class="delta neutral">Disapprove {m["disapprove"]:.0f}% · net {net:+.0f}</span>'
+            bars = render_bars([("Approve", m["value"], f'{m["value"]:.0f}%', "accent"),
+                                ("Disapprove", m["disapprove"], f'{m["disapprove"]:.0f}%', "muted")], accent)
+
     else:
         hero = str(m.get("value", ""))
 
@@ -199,6 +378,9 @@ def build():
     for f in glob.glob(os.path.join(DATA, "*.json")):
         try:
             d = json.load(open(f))
+            # canonical v2 category (deterministic grouping even from data
+            # files written before the Jul-2026 category migration)
+            d["category"] = CATEGORIES.get(d["id"], d.get("category", ""))
             loaded[d["id"]] = d
         except Exception as e:
             print(f"  ! skipping {f}: {e}")

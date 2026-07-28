@@ -69,7 +69,7 @@ def main():
 
     out = {
         "id": "executive_orders", "name": "Executive orders signed",
-        "category": "Executive Power", "value": trump, "unit": "orders",
+        "category": "Executive Power & Governance", "value": trump, "unit": "orders",
         "as_of": today.isoformat(), "since": TERM_START.isoformat(),
         "direction": "neutral",
         "comparison": {"label": "Biden at the same point in his term", "value": biden},

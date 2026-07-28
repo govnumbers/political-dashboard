@@ -45,7 +45,7 @@ def main():
                 {"label": f"{series[-2]['date']} (prior month)", "value": series[-2]["value"]})
     out = {
         "id": "trade_deficit", "name": "Trade deficit (goods & services)",
-        "category": "Economy", "value": latest["value"], "unit": "$B/mo", "as_of": latest["date"],
+        "category": "Trade & Tariffs", "value": latest["value"], "unit": "$B/mo", "as_of": latest["date"],
         "direction": "up_is_bad",
         "baseline": baseline,
         "source": {"name": "U.S. Census Bureau / BEA (via FRED)",

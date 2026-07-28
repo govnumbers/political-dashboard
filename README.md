@@ -1,6 +1,6 @@
 # Political Data Platform — Pilot
 
-A curated, source-linked dashboard of the Trump administration's record. Pilot = 9 of 15 planned metrics (4 economic, 2 public-finance, 1 executive-power, 2 immigration).
+A curated, source-linked dashboard of the Trump administration's record. v2 register: 23 metrics across 7 categories (Cost of Living, Economy & Jobs, Trade & Tariffs, Public Finances, Immigration, Health & Safety Net, Executive Power & Governance) — all keyless, all with deep stored history.
 
 ## Structure
 ```
@@ -34,9 +34,8 @@ open site/index.html
 2. Connect the repo to **Cloudflare Pages**, output directory `site/` (free, unlimited bandwidth).
 3. The included Actions workflow refreshes data daily and pushes; Pages redeploys automatically.
 4. Repo secrets (Settings → Secrets and variables → Actions):
-   - `BLS_API_KEY` — optional; raises the BLS rate limit and widens the history window.
-   - `EIA_API_KEY` — **required to make the gas-price metric live** (free: https://www.eia.gov/opendata/register.php). Absent → the connector skips cleanly and keeps last-good.
-   - `CENSUS_API_KEY` — **required to make the trade-deficit metric live** (free: https://api.census.gov/data/key_signup.html). Absent → skips cleanly.
+   - **None required.** All 23 connectors run keyless (FRED, Treasury Fiscal Data, CDC, CMS, FJC, Federal Register, VoteHub, and the CBP/ICE/VA/CDC-page scrapes).
+   - `BLS_API_KEY` — optional; raises the BLS rate limit and widens the CPI/unemployment history window.
 5. To get the loud-fail emails, make sure GitHub Actions failure notifications are on for the owner account (Settings → Notifications → Actions).
 
 ## Adding a metric (the workflow)

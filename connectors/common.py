@@ -43,8 +43,45 @@ STALE_DAYS = {
     "month": 70,       # monthly: must clear the SLOWEST reporter (trade lags ~5-6 wks),
                        # so a current latest-available figure never false-flags; still
                        # catches a genuinely missed monthly release (~one full cycle late).
+    "as confirmed": 14,  # cumulative count refreshed every run (judges) — catches pipeline death
+    "quarter": 130,    # quarterly (GDP, real wages): the next quarter's first estimate
+                       # lands ~4 months after the reported quarter ends.
 }
 DEFAULT_STALE_DAYS = 45
+
+# --- shared fetch helpers (used by the FRED-family connectors) ---------------
+FRED_CSV = "https://fred.stlouisfed.org/graph/fredgraph.csv"
+UA = {"User-Agent": "govnumbers-dashboard/1.0 (+https://political-dashboard-323.pages.dev)"}
+
+
+def fred_series(series_id, timeout=45):
+    """Fetch a FRED series via the keyless CSV endpoint.
+    Returns [(date_str, float_value), ...] ascending; '.' rows (missing obs,
+    e.g. the never-published Oct-2025 CPI) are skipped, never interpolated."""
+    import csv as _csv
+    import io as _io
+    import requests as _requests
+    r = _requests.get(FRED_CSV, params={"id": series_id}, headers=UA, timeout=timeout)
+    r.raise_for_status()
+    out = []
+    for row in list(_csv.reader(_io.StringIO(r.text)))[1:]:
+        if len(row) < 2 or row[1] in (".", ""):
+            continue
+        try:
+            out.append((row[0], float(row[1])))
+        except ValueError:
+            continue
+    if not out:
+        raise RuntimeError(f"FRED returned no observations for {series_id}")
+    return out
+
+
+def quarter_month(fred_date):
+    """FRED stamps quarterly obs with the quarter's FIRST day (2026-01-01 = Q1).
+    Return the quarter's LAST month as 'YYYY-MM' (2026-01-01 -> '2026-03') so
+    stored dates reflect when the quarter actually ended (freshness math)."""
+    y, m = int(fred_date[:4]), int(fred_date[5:7])
+    return f"{y}-{m + 2:02d}"
 
 
 def today_iso():
@@ -152,7 +189,15 @@ def publish(out, series=None):
 
     # --- freshness stamps ---
     out["last_checked"] = today_iso()
-    out["stale_after"] = _stale_after(out["as_of"], out.get("cadence", ""))
+    if out.get("stale_days"):
+        # Per-metric override for series that publish far behind real time
+        # (overdose deaths ~5 months, Medicaid ~4, ICE workbook gaps): the
+        # cadence-based clock would false-flag a perfectly current
+        # latest-available figure.
+        out["stale_after"] = (_effective_date(out["as_of"])
+                              + datetime.timedelta(days=int(out["stale_days"]))).isoformat()
+    else:
+        out["stale_after"] = _stale_after(out["as_of"], out.get("cadence", ""))
 
     with open(_path(mid), "w") as f:
         json.dump(out, f, indent=2)

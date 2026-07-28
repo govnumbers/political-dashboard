@@ -8,6 +8,10 @@ Reliability contract (see project doc 00 — Reliability hardening):
     validators, etc.) we exit non-zero AFTER building, so the GitHub Actions run
     goes red and GitHub emails the repo owner. A green run means everything
     refreshed cleanly; a red run means "look at me" while the site stays up.
+
+Order note: ice_removals reuses ice_detention's workbook-fetch helper but each
+runs standalone; tariff_rate reuses treasury_tariffs' fetch. The SEMI scrapers
+run last so the cheap API connectors always land first in the log.
 """
 import subprocess
 import sys
@@ -15,6 +19,7 @@ import os
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 CONNECTORS = [
+    # --- v1 nine (live since Jul 2026) ---
     "federal_register_eo.py",
     "treasury_debt.py",
     "treasury_deficit.py",
@@ -24,6 +29,22 @@ CONNECTORS = [
     "census_trade.py",
     "cbp_border.py",   # verified against the real June-2026 file (Jul 2026)
     "ice_detention.py",
+    # --- v2 expansion: keyless-API set ---
+    "fred_groceries.py",
+    "fred_gdp.py",
+    "fred_real_wages.py",
+    "fred_federal_workforce.py",
+    "treasury_tariffs.py",
+    "treasury_interest.py",
+    "tariff_rate.py",          # computed: MTS duties ÷ FRED goods imports
+    "cdc_overdoses.py",
+    "cms_medicaid.py",
+    "fjc_judges.py",
+    # --- v2 expansion: SEMI set (scrapes/workbooks; safe-fail) ---
+    "ice_removals.py",         # same ICE workbook as ice_detention
+    "va_backlog.py",
+    "cdc_measles.py",
+    "votehub_approval.py",
 ]
 
 

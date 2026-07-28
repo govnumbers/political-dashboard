@@ -23,19 +23,36 @@ class ValidationError(Exception):
 # min / max = absolute plausible bounds for the published value.
 # max_jump  = largest plausible |change| vs the previous stored observation.
 BOUNDS = {
-    # --- Economy ---
+    # --- Cost of Living ---
     "inflation":         {"min": -5.0,   "max": 25.0,    "max_jump": 4.0,    "unit": "% YoY"},
-    "unemployment":      {"min": 1.0,    "max": 30.0,    "max_jump": 4.0,    "unit": "%"},
+    "grocery_prices":    {"min": -10.0,  "max": 30.0,    "max_jump": 5.0,    "unit": "% YoY (food at home)"},
     "gas_price":         {"min": 1.0,    "max": 12.0,    "max_jump": 1.5,    "unit": "$/gal wk-over-wk"},
+    # --- Economy & Jobs ---
+    "unemployment":      {"min": 1.0,    "max": 30.0,    "max_jump": 4.0,    "unit": "%"},
+    "real_gdp":          {"min": -40.0,  "max": 45.0,    "max_jump": 40.0,   "unit": "% SAAR (COVID quarters hit ±33)"},
+    "real_wages":        {"min": 250.0,  "max": 550.0,   "max_jump": 25.0,   "unit": "$/wk, 1982-84 dollars"},
+    "federal_workforce": {"min": 1500.0, "max": 4000.0,  "max_jump": 400.0,  "unit": "thousand employees (Oct-2025 dropped 179k in one month)"},
+    # --- Trade & Tariffs ---
+    "tariff_revenue":    {"min": 0.0,    "max": 800.0,   "max_jump": 400.0,  "unit": "$B gross, fiscal-YTD (resets each Oct)"},
+    "effective_tariff_rate": {"min": 0.0, "max": 40.0,   "max_jump": 10.0,   "unit": "% of goods imports"},
     "trade_deficit":     {"min": 10.0,   "max": 250.0,   "max_jump": 70.0,   "unit": "$B/mo"},
     # --- Public Finances ---
     "national_debt":     {"min": 3.0e13, "max": 8.0e13,  "max_jump": 1.2e12, "unit": "USD, day-over-day"},
     "budget_deficit":    {"min": 0.0,    "max": 3000.0,  "max_jump": 2200.0, "unit": "$B, fiscal-YTD (resets each Oct)"},
-    # --- Executive Power ---
-    "executive_orders":  {"min": 0.0,    "max": 3000.0,  "max_jump": 500.0,  "unit": "cumulative count"},
+    "interest_on_debt":  {"min": 0.0,    "max": 3000.0,  "max_jump": 1800.0, "unit": "$B, fiscal-YTD (resets each Oct)"},
     # --- Immigration ---
     "border_encounters": {"min": 0.0,    "max": 500000.0,"max_jump": 250000.0,"unit": "encounters/mo"},
+    "ice_removals":      {"min": 0.0,    "max": 1500000.0,"max_jump": 500000.0,"unit": "people, fiscal-YTD (resets each Oct; lumpy publication)"},
     "ice_detention":     {"min": 0.0,    "max": 150000.0,"max_jump": 50000.0,"unit": "ADP"},
+    # --- Health & Safety Net ---
+    "overdose_deaths":   {"min": 20000.0,"max": 200000.0,"max_jump": 15000.0,"unit": "deaths, trailing 12 months"},
+    "measles_cases":     {"min": 0.0,    "max": 60000.0, "max_jump": 6000.0, "unit": "confirmed cases, YTD"},
+    "medicaid_enrollment": {"min": 4.0e7,"max": 1.3e8,   "max_jump": 6.0e6,  "unit": "people"},
+    "va_claims_backlog": {"min": 500.0,  "max": 1.0e6,   "max_jump": 200000.0,"unit": "claims >125 days"},
+    # --- Executive Power & Governance ---
+    "executive_orders":  {"min": 0.0,    "max": 3000.0,  "max_jump": 500.0,  "unit": "cumulative count"},
+    "judges_confirmed":  {"min": 0.0,    "max": 600.0,   "max_jump": 60.0,   "unit": "cumulative count"},
+    "approval_rating":   {"min": 15.0,   "max": 85.0,    "max_jump": 12.0,   "unit": "% approve (poll aggregate)"},
 }
 
 

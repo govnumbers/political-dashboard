@@ -45,7 +45,7 @@ def main():
     latest = series[-1]
     out = {
         "id": "inflation", "name": "Inflation (CPI-U, year over year)",
-        "category": "Economy", "value": latest["value"], "unit": "%", "as_of": latest["date"],
+        "category": "Cost of Living", "value": latest["value"], "unit": "%", "as_of": latest["date"],
         "direction": "up_is_bad",
         "target": {"label": "Federal Reserve target", "value": 2.0},
         "source": {"name": "Bureau of Labor Statistics", "url": "https://www.bls.gov/cpi/"},
