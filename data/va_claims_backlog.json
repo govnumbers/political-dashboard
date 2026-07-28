@@ -1,0 +1,28 @@
+{
+  "id": "va_claims_backlog",
+  "name": "VA claims backlog",
+  "category": "Health & Safety Net",
+  "value": 68297,
+  "unit": "claims >125 days",
+  "as_of": "2026-07-25",
+  "direction": "up_is_bad",
+  "total_pending": 591684,
+  "source": {
+    "name": "Dept. of Veterans Affairs \u2014 Monday Morning Workload Report",
+    "url": "https://www.benefits.va.gov/reports/detailed_claims_data.asp"
+  },
+  "cadence": "Weekly",
+  "note": "Disability-compensation rating claims pending more than 125 days (VA's backlog definition). Total pending shown for context \u2014 the backlog can fall while overall pending doesn't.",
+  "baseline": {
+    "label": "At inauguration (week ending Jan 25, 2025)",
+    "value": 257253
+  },
+  "series": [
+    {
+      "date": "2026-07-25",
+      "value": 68297
+    }
+  ],
+  "last_checked": "2026-07-28",
+  "stale_after": "2026-08-08"
+}
