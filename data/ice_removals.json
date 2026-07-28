@@ -1,0 +1,29 @@
+{
+  "id": "ice_removals",
+  "name": "ICE removals (fiscal-YTD)",
+  "category": "Immigration",
+  "value": 356389,
+  "unit": "people",
+  "as_of": "2026-07-11",
+  "direction": "neutral",
+  "comparison": {
+    "label": "FY2024 full year (prior administration)",
+    "value": 271484
+  },
+  "source": {
+    "name": "U.S. Immigration and Customs Enforcement",
+    "url": "https://www.ice.gov/detain/detention-management"
+  },
+  "cadence": "Biweekly",
+  "stale_days": 75,
+  "note": "Removals recorded in ICE's published statistics workbook, FY2026 to date. Official workbook figure \u2014 not comparable to press-release 'deportation' totals, which mix in CBP actions. Includes 36,548 with a family-unit identifier.",
+  "famu_removals": 36548,
+  "series": [
+    {
+      "date": "2026-07",
+      "value": 356389
+    }
+  ],
+  "last_checked": "2026-07-28",
+  "stale_after": "2026-09-24"
+}
