@@ -1,201 +1,292 @@
 {
-  "id": "unemployment",
-  "name": "Unemployment rate",
-  "category": "Economy & Jobs",
-  "value": 4.2,
-  "unit": "%",
+  "id": "tariff_revenue",
+  "name": "Tariff revenue (customs duties, fiscal-YTD)",
+  "category": "Trade & Tariffs",
+  "value": 244.3,
+  "unit": "$B",
   "as_of": "2026-06",
-  "direction": "up_is_bad",
-  "baseline": {
-    "label": "At inauguration (Jan 2025)",
-    "value": 4.0
-  },
+  "direction": "neutral",
+  "net_fytd": 163.0,
+  "month_gross": 23.6,
+  "month_net": -25.6,
   "source": {
-    "name": "Bureau of Labor Statistics",
-    "url": "https://www.bls.gov/news.release/empsit.nr0.htm"
+    "name": "U.S. Treasury \u2014 Monthly Treasury Statement",
+    "url": "https://fiscaldata.treasury.gov/datasets/monthly-treasury-statement/receipts-of-the-u-s-government"
   },
   "cadence": "Monthly",
-  "note": "Unemployment rate (U-3), seasonally adjusted.",
+  "note": "Customs duties collected this fiscal year (resets each October). Gross collections; net of refunds $163B. Courts ordered large tariff refunds in 2026, so both are shown \u2014 either alone misleads.",
+  "comparison": {
+    "label": "Same period last fiscal year (gross)",
+    "value": 113.3
+  },
   "series": [
     {
+      "date": "2015-03",
+      "value": 18.2
+    },
+    {
+      "date": "2015-04",
+      "value": 21.8
+    },
+    {
+      "date": "2015-05",
+      "value": 24.4
+    },
+    {
+      "date": "2015-06",
+      "value": 27.5
+    },
+    {
+      "date": "2015-07",
+      "value": 31.3
+    },
+    {
+      "date": "2015-08",
+      "value": 34.3
+    },
+    {
+      "date": "2015-09",
+      "value": 37.7
+    },
+    {
+      "date": "2015-10",
+      "value": 3.6
+    },
+    {
+      "date": "2015-11",
+      "value": 6.6
+    },
+    {
+      "date": "2015-12",
+      "value": 9.6
+    },
+    {
+      "date": "2016-01",
+      "value": 12.8
+    },
+    {
+      "date": "2016-02",
+      "value": 15.5
+    },
+    {
+      "date": "2016-03",
+      "value": 18.5
+    },
+    {
+      "date": "2016-04",
+      "value": 21.5
+    },
+    {
+      "date": "2016-05",
+      "value": 24.1
+    },
+    {
+      "date": "2016-06",
+      "value": 27.0
+    },
+    {
+      "date": "2016-07",
+      "value": 30.2
+    },
+    {
+      "date": "2016-08",
+      "value": 33.2
+    },
+    {
+      "date": "2016-09",
+      "value": 36.5
+    },
+    {
+      "date": "2016-10",
+      "value": 3.2
+    },
+    {
+      "date": "2016-11",
+      "value": 6.3
+    },
+    {
+      "date": "2016-12",
+      "value": 9.2
+    },
+    {
       "date": "2017-01",
-      "value": 4.7
+      "value": 12.4
     },
     {
       "date": "2017-02",
-      "value": 4.6
+      "value": 15.0
     },
     {
       "date": "2017-03",
-      "value": 4.4
+      "value": 17.8
     },
     {
       "date": "2017-04",
-      "value": 4.4
+      "value": 20.9
     },
     {
       "date": "2017-05",
-      "value": 4.4
+      "value": 23.5
     },
     {
       "date": "2017-06",
-      "value": 4.3
+      "value": 26.5
     },
     {
       "date": "2017-07",
-      "value": 4.3
+      "value": 29.8
     },
     {
       "date": "2017-08",
-      "value": 4.4
+      "value": 32.9
     },
     {
       "date": "2017-09",
-      "value": 4.3
+      "value": 36.3
     },
     {
       "date": "2017-10",
-      "value": 4.2
+      "value": 3.4
     },
     {
       "date": "2017-11",
-      "value": 4.2
+      "value": 6.6
     },
     {
       "date": "2017-12",
-      "value": 4.1
+      "value": 9.8
     },
     {
       "date": "2018-01",
-      "value": 4.0
+      "value": 13.1
     },
     {
       "date": "2018-02",
-      "value": 4.1
+      "value": 16.0
     },
     {
       "date": "2018-03",
-      "value": 4.0
+      "value": 19.2
     },
     {
       "date": "2018-04",
-      "value": 4.0
+      "value": 22.7
     },
     {
       "date": "2018-05",
-      "value": 3.8
+      "value": 25.8
     },
     {
       "date": "2018-06",
-      "value": 4.0
+      "value": 29.4
     },
     {
       "date": "2018-07",
-      "value": 3.8
+      "value": 33.7
     },
     {
       "date": "2018-08",
-      "value": 3.8
+      "value": 38.3
     },
     {
       "date": "2018-09",
-      "value": 3.7
+      "value": 43.1
     },
     {
       "date": "2018-10",
-      "value": 3.8
+      "value": 5.8
     },
     {
       "date": "2018-11",
-      "value": 3.8
+      "value": 12.3
     },
     {
       "date": "2018-12",
-      "value": 3.9
+      "value": 18.4
     },
     {
       "date": "2019-01",
-      "value": 4.0
+      "value": 25.1
     },
     {
       "date": "2019-02",
-      "value": 3.8
+      "value": 30.5
     },
     {
       "date": "2019-03",
-      "value": 3.8
+      "value": 35.9
     },
     {
       "date": "2019-04",
-      "value": 3.7
+      "value": 41.4
     },
     {
       "date": "2019-05",
-      "value": 3.6
+      "value": 46.5
     },
     {
       "date": "2019-06",
-      "value": 3.6
+      "value": 52.3
     },
     {
       "date": "2019-07",
-      "value": 3.7
+      "value": 59.1
     },
     {
       "date": "2019-08",
-      "value": 3.6
+      "value": 66.3
     },
     {
       "date": "2019-09",
-      "value": 3.5
+      "value": 73.5
     },
     {
       "date": "2019-10",
-      "value": 3.6
+      "value": 8.1
     },
     {
       "date": "2019-11",
-      "value": 3.6
+      "value": 15.5
     },
     {
       "date": "2019-12",
-      "value": 3.6
+      "value": 22.4
     },
     {
       "date": "2020-01",
-      "value": 3.6
+      "value": 29.7
     },
     {
       "date": "2020-02",
-      "value": 3.5
+      "value": 36.4
     },
     {
       "date": "2020-03",
-      "value": 4.4
+      "value": 41.8
     },
     {
       "date": "2020-04",
-      "value": 14.8
+      "value": 46.5
     },
     {
       "date": "2020-05",
-      "value": 13.2
+      "value": 51.0
     },
     {
       "date": "2020-06",
-      "value": 11.0
+      "value": 56.3
     },
     {
       "date": "2020-07",
-      "value": 10.2
+      "value": 62.2
     },
     {
       "date": "2020-08",
-      "value": 8.4
+      "value": 68.7
     },
     {
       "date": "2020-09",
-      "value": 7.8
+      "value": 75.6
     },
     {
       "date": "2020-10",
@@ -203,271 +294,275 @@
     },
     {
       "date": "2020-11",
-      "value": 6.7
+      "value": 13.6
     },
     {
       "date": "2020-12",
-      "value": 6.7
+      "value": 20.3
     },
     {
       "date": "2021-01",
-      "value": 6.4
+      "value": 26.8
     },
     {
       "date": "2021-02",
-      "value": 6.2
+      "value": 33.6
     },
     {
       "date": "2021-03",
-      "value": 6.1
+      "value": 40.5
     },
     {
       "date": "2021-04",
-      "value": 6.1
+      "value": 48.2
     },
     {
       "date": "2021-05",
-      "value": 5.8
+      "value": 55.2
     },
     {
       "date": "2021-06",
-      "value": 5.9
+      "value": 62.9
     },
     {
       "date": "2021-07",
-      "value": 5.4
+      "value": 70.8
     },
     {
       "date": "2021-08",
-      "value": 5.1
+      "value": 78.6
     },
     {
       "date": "2021-09",
-      "value": 4.7
+      "value": 87.0
     },
     {
       "date": "2021-10",
-      "value": 4.5
+      "value": 8.4
     },
     {
       "date": "2021-11",
-      "value": 4.1
+      "value": 16.8
     },
     {
       "date": "2021-12",
-      "value": 3.9
+      "value": 25.4
     },
     {
       "date": "2022-01",
-      "value": 4.0
+      "value": 34.3
     },
     {
       "date": "2022-02",
-      "value": 3.9
+      "value": 42.9
     },
     {
       "date": "2022-03",
-      "value": 3.7
+      "value": 51.5
     },
     {
       "date": "2022-04",
-      "value": 3.7
+      "value": 61.1
     },
     {
       "date": "2022-05",
-      "value": 3.6
+      "value": 69.6
     },
     {
       "date": "2022-06",
-      "value": 3.6
+      "value": 78.6
     },
     {
       "date": "2022-07",
-      "value": 3.5
+      "value": 87.6
     },
     {
       "date": "2022-08",
-      "value": 3.6
+      "value": 96.7
     },
     {
       "date": "2022-09",
-      "value": 3.5
+      "value": 106.1
     },
     {
       "date": "2022-10",
-      "value": 3.6
+      "value": 8.7
     },
     {
       "date": "2022-11",
-      "value": 3.6
+      "value": 16.4
     },
     {
       "date": "2022-12",
-      "value": 3.5
+      "value": 23.8
     },
     {
       "date": "2023-01",
-      "value": 3.5
+      "value": 31.4
     },
     {
       "date": "2023-02",
-      "value": 3.6
+      "value": 38.2
     },
     {
       "date": "2023-03",
-      "value": 3.5
+      "value": 44.8
     },
     {
       "date": "2023-04",
-      "value": 3.4
+      "value": 51.5
     },
     {
       "date": "2023-05",
-      "value": 3.6
+      "value": 58.2
     },
     {
       "date": "2023-06",
-      "value": 3.6
+      "value": 65.4
     },
     {
       "date": "2023-07",
-      "value": 3.5
+      "value": 72.7
     },
     {
       "date": "2023-08",
-      "value": 3.7
+      "value": 79.5
     },
     {
       "date": "2023-09",
-      "value": 3.7
+      "value": 86.6
     },
     {
       "date": "2023-10",
-      "value": 3.9
+      "value": 7.3
     },
     {
       "date": "2023-11",
-      "value": 3.7
+      "value": 14.0
     },
     {
       "date": "2023-12",
-      "value": 3.8
+      "value": 20.4
     },
     {
       "date": "2024-01",
-      "value": 3.7
+      "value": 27.4
     },
     {
       "date": "2024-02",
-      "value": 3.9
+      "value": 34.1
     },
     {
       "date": "2024-03",
-      "value": 3.9
+      "value": 40.8
     },
     {
       "date": "2024-04",
-      "value": 3.9
+      "value": 47.9
     },
     {
       "date": "2024-05",
-      "value": 3.9
+      "value": 54.0
     },
     {
       "date": "2024-06",
-      "value": 4.1
+      "value": 60.8
     },
     {
       "date": "2024-07",
-      "value": 4.2
+      "value": 68.4
     },
     {
       "date": "2024-08",
-      "value": 4.2
+      "value": 76.0
     },
     {
       "date": "2024-09",
-      "value": 4.1
+      "value": 83.8
     },
     {
       "date": "2024-10",
-      "value": 4.1
+      "value": 7.9
     },
     {
       "date": "2024-11",
-      "value": 4.2
+      "value": 15.3
     },
     {
       "date": "2024-12",
-      "value": 4.1
+      "value": 22.7
     },
     {
       "date": "2025-01",
-      "value": 4.0
+      "value": 30.6
     },
     {
       "date": "2025-02",
-      "value": 4.2
+      "value": 38.3
     },
     {
       "date": "2025-03",
-      "value": 4.2
+      "value": 47.0
     },
     {
       "date": "2025-04",
-      "value": 4.2
+      "value": 63.3
     },
     {
       "date": "2025-05",
-      "value": 4.3
+      "value": 86.1
     },
     {
       "date": "2025-06",
-      "value": 4.1
+      "value": 113.3
     },
     {
       "date": "2025-07",
-      "value": 4.3
+      "value": 141.7
     },
     {
       "date": "2025-08",
-      "value": 4.3
+      "value": 171.9
     },
     {
       "date": "2025-09",
-      "value": 4.4
+      "value": 202.4
+    },
+    {
+      "date": "2025-10",
+      "value": 33.1
     },
     {
       "date": "2025-11",
-      "value": 4.5
+      "value": 64.8
     },
     {
       "date": "2025-12",
-      "value": 4.4
+      "value": 94.2
     },
     {
       "date": "2026-01",
-      "value": 4.3
+      "value": 123.7
     },
     {
       "date": "2026-02",
-      "value": 4.4
+      "value": 150.9
     },
     {
       "date": "2026-03",
-      "value": 4.3
+      "value": 174.9
     },
     {
       "date": "2026-04",
-      "value": 4.3
+      "value": 198.8
     },
     {
       "date": "2026-05",
-      "value": 4.3
+      "value": 220.7
     },
     {
       "date": "2026-06",
-      "value": 4.2
+      "value": 244.3
     }
   ],
   "last_checked": "2026-07-28",

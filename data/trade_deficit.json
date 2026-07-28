@@ -1,7 +1,7 @@
 {
   "id": "trade_deficit",
   "name": "Trade deficit (goods & services)",
-  "category": "Economy",
+  "category": "Trade & Tariffs",
   "value": 77.6,
   "unit": "$B/mo",
   "as_of": "2026-05",

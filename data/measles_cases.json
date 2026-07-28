@@ -1,0 +1,72 @@
+{
+  "id": "measles_cases",
+  "name": "Measles cases (2026 to date)",
+  "category": "Health & Safety Net",
+  "value": 2318,
+  "unit": "confirmed cases",
+  "as_of": "2026-07-23",
+  "direction": "up_is_bad",
+  "source": {
+    "name": "CDC \u2014 measles cases and outbreaks",
+    "url": "https://www.cdc.gov/measles/data-research/index.html"
+  },
+  "cadence": "Weekly",
+  "stale_days": 45,
+  "note": "Confirmed cases reported to CDC, year to date, dated by CDC's own 'as of' line \u2014 if this card flags stale, CDC has stopped updating. Measles was declared eliminated in the US in 2000; 2025's total was the worst since 1992.",
+  "comparison": {
+    "label": "Full year 2025",
+    "value": 2288
+  },
+  "series": [
+    {
+      "date": "2015-12",
+      "value": 188
+    },
+    {
+      "date": "2016-12",
+      "value": 86
+    },
+    {
+      "date": "2017-12",
+      "value": 120
+    },
+    {
+      "date": "2018-12",
+      "value": 375
+    },
+    {
+      "date": "2019-12",
+      "value": 1274
+    },
+    {
+      "date": "2020-12",
+      "value": 13
+    },
+    {
+      "date": "2021-12",
+      "value": 49
+    },
+    {
+      "date": "2022-12",
+      "value": 121
+    },
+    {
+      "date": "2023-12",
+      "value": 59
+    },
+    {
+      "date": "2024-12",
+      "value": 285
+    },
+    {
+      "date": "2025-12",
+      "value": 2288
+    },
+    {
+      "date": "2026-12",
+      "value": 2318
+    }
+  ],
+  "last_checked": "2026-07-28",
+  "stale_after": "2026-09-06"
+}
