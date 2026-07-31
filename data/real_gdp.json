@@ -2,12 +2,12 @@
   "id": "real_gdp",
   "name": "Real GDP growth",
   "category": "Economy & Jobs",
-  "value": 2.1,
+  "value": 1.5,
   "unit": "% (annualized)",
-  "as_of": "2026-03",
+  "as_of": "2026-06",
   "direction": "up_is_good",
-  "term_avg": 2.0,
-  "term_quarters": 5,
+  "term_avg": 1.9,
+  "term_quarters": 6,
   "source": {
     "name": "Bureau of Economic Analysis (via FRED)",
     "url": "https://fred.stlouisfed.org/series/A191RL1Q225SBEA"
@@ -15,8 +15,8 @@
   "cadence": "Quarterly",
   "note": "Quarter-on-quarter growth of inflation-adjusted GDP, annualized. Estimates are revised; 2025 quarters were whipsawed by tariff-driven import swings.",
   "comparison": {
-    "label": "Biden, first 5 quarters (avg)",
-    "value": 4.4
+    "label": "Biden, first 6 quarters (avg)",
+    "value": 3.8
   },
   "series": [
     {
@@ -1282,8 +1282,12 @@
     {
       "date": "2026-03",
       "value": 2.1
+    },
+    {
+      "date": "2026-06",
+      "value": 1.5
     }
   ],
-  "last_checked": "2026-07-30",
-  "stale_after": "2026-08-08"
+  "last_checked": "2026-07-31",
+  "stale_after": "2026-11-07"
 }
