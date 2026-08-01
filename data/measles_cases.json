@@ -2,9 +2,9 @@
   "id": "measles_cases",
   "name": "Measles cases (2026 to date)",
   "category": "Health & Safety Net",
-  "value": 2318,
+  "value": 2371,
   "unit": "confirmed cases",
-  "as_of": "2026-07-23",
+  "as_of": "2026-07-30",
   "direction": "up_is_bad",
   "source": {
     "name": "CDC \u2014 measles cases and outbreaks",
@@ -64,9 +64,9 @@
     },
     {
       "date": "2026-12",
-      "value": 2318
+      "value": 2371
     }
   ],
-  "last_checked": "2026-07-31",
-  "stale_after": "2026-09-06"
+  "last_checked": "2026-08-01",
+  "stale_after": "2026-09-13"
 }

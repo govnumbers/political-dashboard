@@ -2,9 +2,9 @@
   "id": "medicaid_enrollment",
   "name": "Medicaid & CHIP enrollment",
   "category": "Health & Safety Net",
-  "value": 74294361,
+  "value": 73871024,
   "unit": "people",
-  "as_of": "2026-03",
+  "as_of": "2026-04",
   "direction": "neutral",
   "source": {
     "name": "Centers for Medicare & Medicaid Services",
@@ -15,7 +15,7 @@
   "note": "Total people enrolled in Medicaid and CHIP, summed from state reports to CMS (~4-month lag; states revise).",
   "baseline": {
     "label": "Dec 2024",
-    "value": 79162078
+    "value": 79154413
   },
   "series": [
     {
@@ -252,67 +252,67 @@
     },
     {
       "date": "2022-03",
-      "value": 88205478
+      "value": 88205543
     },
     {
       "date": "2022-04",
-      "value": 88629727
+      "value": 88618332
     },
     {
       "date": "2022-05",
-      "value": 89121366
+      "value": 89121422
     },
     {
       "date": "2022-06",
-      "value": 89601664
+      "value": 89601770
     },
     {
       "date": "2022-07",
-      "value": 90267383
+      "value": 90267541
     },
     {
       "date": "2022-08",
-      "value": 90839370
+      "value": 90839515
     },
     {
       "date": "2022-09",
-      "value": 91303544
+      "value": 91303624
     },
     {
       "date": "2022-10",
-      "value": 91755899
+      "value": 91756020
     },
     {
       "date": "2022-11",
-      "value": 92247407
+      "value": 92247502
     },
     {
       "date": "2022-12",
-      "value": 92796673
+      "value": 92796804
     },
     {
       "date": "2023-01",
-      "value": 93400721
+      "value": 93390923
     },
     {
       "date": "2023-02",
-      "value": 93815289
+      "value": 93815367
     },
     {
       "date": "2023-03",
-      "value": 94363390
+      "value": 94363487
     },
     {
       "date": "2023-04",
-      "value": 94663019
+      "value": 94663177
     },
     {
       "date": "2023-05",
-      "value": 94385167
+      "value": 94382975
     },
     {
       "date": "2023-06",
-      "value": 93252073
+      "value": 93250866
     },
     {
       "date": "2023-07",
@@ -320,133 +320,137 @@
     },
     {
       "date": "2023-08",
-      "value": 90877931
+      "value": 90872732
     },
     {
       "date": "2023-09",
-      "value": 89303579
+      "value": 89324153
     },
     {
       "date": "2023-10",
-      "value": 88123415
+      "value": 88133532
     },
     {
       "date": "2023-11",
-      "value": 86706667
+      "value": 86705436
     },
     {
       "date": "2023-12",
-      "value": 85761481
+      "value": 85759432
     },
     {
       "date": "2024-01",
-      "value": 84853454
+      "value": 84852148
     },
     {
       "date": "2024-02",
-      "value": 84189023
+      "value": 84188344
     },
     {
       "date": "2024-03",
-      "value": 83454503
+      "value": 83454108
     },
     {
       "date": "2024-04",
-      "value": 82398708
+      "value": 82398620
     },
     {
       "date": "2024-05",
-      "value": 81479121
+      "value": 81478859
     },
     {
       "date": "2024-06",
-      "value": 80592329
+      "value": 80579272
     },
     {
       "date": "2024-07",
-      "value": 80250597
+      "value": 80250165
     },
     {
       "date": "2024-08",
-      "value": 80174477
+      "value": 80174285
     },
     {
       "date": "2024-09",
-      "value": 80017754
+      "value": 80017528
     },
     {
       "date": "2024-10",
-      "value": 79843162
+      "value": 79843160
     },
     {
       "date": "2024-11",
-      "value": 79597971
+      "value": 79590878
     },
     {
       "date": "2024-12",
-      "value": 79162078
+      "value": 79154413
     },
     {
       "date": "2025-01",
-      "value": 79393536
+      "value": 79393563
     },
     {
       "date": "2025-02",
-      "value": 79296495
+      "value": 79296711
     },
     {
       "date": "2025-03",
-      "value": 79127297
+      "value": 79127275
     },
     {
       "date": "2025-04",
-      "value": 78875273
+      "value": 78875371
     },
     {
       "date": "2025-05",
-      "value": 78551179
+      "value": 78551131
     },
     {
       "date": "2025-06",
-      "value": 78223264
+      "value": 78223314
     },
     {
       "date": "2025-07",
-      "value": 78028646
+      "value": 78028690
     },
     {
       "date": "2025-08",
-      "value": 77736256
+      "value": 77727587
     },
     {
       "date": "2025-09",
-      "value": 77486188
+      "value": 77486316
     },
     {
       "date": "2025-10",
-      "value": 77208947
+      "value": 77209178
     },
     {
       "date": "2025-11",
-      "value": 76473554
+      "value": 76473683
     },
     {
       "date": "2025-12",
-      "value": 76230910
+      "value": 76231195
     },
     {
       "date": "2026-01",
-      "value": 75821175
+      "value": 75826423
     },
     {
       "date": "2026-02",
-      "value": 75459780
+      "value": 75488005
     },
     {
       "date": "2026-03",
-      "value": 74294361
+      "value": 74742186
+    },
+    {
+      "date": "2026-04",
+      "value": 73871024
     }
   ],
-  "last_checked": "2026-07-31",
-  "stale_after": "2026-09-27"
+  "last_checked": "2026-08-01",
+  "stale_after": "2026-10-27"
 }
