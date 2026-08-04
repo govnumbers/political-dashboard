@@ -28,11 +28,42 @@ from common import publish, load_existing, UA  # noqa: E402
 URL_FMT = "https://www.benefits.va.gov/REPORTS/mmwr/{y}/MMWR-{m:02d}-{d:02d}-{y}.{ext}"
 BASELINE_DATE = datetime.date(2025, 1, 25)   # first week-ending Saturday of the term
 
+# One-time weekly-archive backfill (phase 7): the MMWR files stay online back
+# to ~2018 at the same URL pattern. Each daily run fills up to CHUNK missing
+# week-ending Saturdays (newest first), so the full curve — including the 418k
+# peak of Jan 2024 — draws itself in over ~2 weeks of runs without ever making
+# a single run heavy. Dates that 404 twice are remembered in the data file
+# (archive_missing) and never re-tried; a backfill problem can never break the
+# current week's publish.
+ARCHIVE_START = datetime.date(2018, 1, 6)    # first week-ending Saturday of 2018
+CHUNK = 30
+
 
 def recent_saturdays(today, n=10):
     """Most recent week-ending Saturdays, newest first. Mon=0..Sat=5."""
     d = today - datetime.timedelta(days=(today.weekday() - 5) % 7)
     return [d - datetime.timedelta(weeks=i) for i in range(n)]
+
+
+def saturdays_between(start, end):
+    """Every week-ending Saturday in [start, end], ascending."""
+    d = start + datetime.timedelta(days=(5 - start.weekday()) % 7)
+    out = []
+    while d <= end:
+        out.append(d)
+        d += datetime.timedelta(weeks=1)
+    return out
+
+
+def backfill_targets(existing, today, chunk=CHUNK):
+    """Missing archive Saturdays to attempt this run: not already stored, not
+    known-missing, newest first, capped at `chunk`."""
+    have = {p["date"] for p in (existing or {}).get("series", [])}
+    known_missing = set((existing or {}).get("archive_missing", []))
+    latest = today - datetime.timedelta(days=7)   # current week handled by the live fetch
+    todo = [d for d in saturdays_between(ARCHIVE_START, latest)
+            if d.isoformat() not in have and d.isoformat() not in known_missing]
+    return sorted(todo, reverse=True)[:chunk]
 
 
 def fetch_workbook_for(date):
@@ -149,7 +180,31 @@ def main():
     }
     if baseline is not None:
         out["baseline"] = {"label": "At inauguration (week ending Jan 25, 2025)", "value": baseline}
-    publish(out, series=[{"date": file_date.isoformat(), "value": backlog}])
+
+    # --- chunked archive backfill (never allowed to break the live publish) ---
+    points = [{"date": file_date.isoformat(), "value": backlog}]
+    missing = set((existing or {}).get("archive_missing", []))
+    targets = backfill_targets(existing, today)
+    filled = 0
+    for d in targets:
+        try:
+            _, c = fetch_workbook_for(d)
+            if not c:
+                missing.add(d.isoformat())
+                continue
+            b, _t = extract_counts(c)
+            points.append({"date": d.isoformat(), "value": b})
+            filled += 1
+        except Exception as e:                                    # noqa: BLE001
+            missing.add(d.isoformat())
+            print(f"  ! va_backlog: archive {d} unparseable ({e}) — marked missing, moving on")
+    if targets:
+        print(f"  ✓ va_backlog: archive backfill {filled}/{len(targets)} weeks this run"
+              f" ({len(missing)} permanently unavailable so far)")
+    if missing:
+        out["archive_missing"] = sorted(missing)
+
+    publish(out, series=points)
 
 
 if __name__ == "__main__":

@@ -26,10 +26,11 @@ import re
 import sys
 import csv
 import io
+import datetime
 import requests
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from common import publish  # noqa: E402
+from common import publish, load_existing  # noqa: E402
 
 LANDING = "https://www.cbp.gov/document/stats/southwest-land-border-encounters"
 BASE = "https://www.cbp.gov"
@@ -40,7 +41,10 @@ MONTHS = {m: i for i, m in enumerate(
 UA = {"User-Agent": "govnumbers-dashboard/1.0 (+https://political-dashboard-323.pages.dev)"}
 
 
-def newest_csv_url():
+def csv_urls():
+    """All Southwest-encounters CSV links on the landing page, newest first,
+    absolute. [0] is the current monthly file; the rest are older/archived
+    files used by the one-time history backfill."""
     r = requests.get(LANDING, headers=UA, timeout=45)
     r.raise_for_status()
     matches = CSV_RE.findall(r.text)          # document order; CBP lists newest month first
@@ -48,8 +52,28 @@ def newest_csv_url():
     ordered = [m for m in matches if not (m in seen or seen.add(m))]
     if not ordered:
         raise RuntimeError("no Southwest-encounters CSV link found on CBP landing page")
-    best = ordered[0]
-    return best if best.startswith("http") else BASE + best
+    return [u if u.startswith("http") else BASE + u for u in ordered]
+
+
+def newest_csv_url():
+    return csv_urls()[0]
+
+
+def needs_archive(series_dates):
+    """True while the stored series has the known holes the archive can fill:
+    months before Oct 2022 (Biden's first 21 months) or the Jul–Sep months of
+    closed fiscal years that CBP's current file omits."""
+    have = set(series_dates)
+    if not have:
+        return True
+    if min(have) > "2021-02":
+        return True
+    latest_year = int(max(have)[:4])
+    for y in range(2021, latest_year):
+        for m in ("07", "08", "09"):
+            if f"{y}-{m}" not in have:
+                return True
+    return False
 
 
 def cal_month(fy, mon_abbr):
@@ -99,14 +123,37 @@ def parse_csv(text):
 
 
 def main():
-    url = newest_csv_url()
-    r = requests.get(url, headers=UA, timeout=60)
+    urls = csv_urls()
+    r = requests.get(urls[0], headers=UA, timeout=60)
     r.raise_for_status()
     totals = parse_csv(r.text)
+    if not totals:
+        raise RuntimeError("parsed zero monthly totals from CBP CSV")
+
+    # --- one-time archive backfill (phase 7): older files on the same landing
+    # page carry the months the current file omits (pre-Oct-2022 and closed-FY
+    # Jul–Sep). Attempted at most every 30 days while holes remain; the newest
+    # file's numbers always win on overlap; merge-don't-overwrite + revision
+    # logging in common.py guard the store. Failure only skips the enhancement.
+    existing = load_existing("border_encounters")
+    stored_dates = [p["date"] for p in (existing or {}).get("series", [])]
+    last_try = (existing or {}).get("archive_checked", "")
+    cutoff = (datetime.date.today() - datetime.timedelta(days=30)).isoformat()
+    archive_checked = None
+    if needs_archive(set(stored_dates) | set(totals)) and last_try < cutoff:
+        for u in urls[1:3]:
+            try:
+                r2 = requests.get(u, headers=UA, timeout=60)
+                r2.raise_for_status()
+                older = parse_csv(r2.text)
+                added = {ym: v for ym, v in older.items() if ym not in totals}
+                totals.update(added)
+                print(f"  ✓ border_encounters: archive file added {len(added)} months ({u.rsplit('/', 1)[-1]})")
+            except Exception as e:                                # noqa: BLE001
+                print(f"  ! border_encounters: archive fetch failed ({e}) — will retry in 30 days")
+        archive_checked = datetime.date.today().isoformat()
 
     series = [{"date": ym, "value": totals[ym]} for ym in sorted(totals)]
-    if not series:
-        raise RuntimeError("parsed zero monthly totals from CBP CSV")
 
     latest = series[-1]
     yoy_key = f"{int(latest['date'][:4]) - 1}{latest['date'][4:]}"   # same month, prior year
@@ -122,6 +169,10 @@ def main():
     }
     if yoy is not None:
         out["comparison"] = {"label": "Same month, prior year", "value": yoy}
+    if archive_checked:
+        out["archive_checked"] = archive_checked
+    elif existing and existing.get("archive_checked"):
+        out["archive_checked"] = existing["archive_checked"]
     publish(out, series=series)
 
 

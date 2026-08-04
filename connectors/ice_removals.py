@@ -22,6 +22,7 @@ import os
 import sys
 import io
 import re
+import json
 import datetime
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -29,6 +30,22 @@ from common import publish  # noqa: E402
 from ice_detention import fetch_workbook, through_date  # noqa: E402
 
 FY2024_REMOVALS = 271484   # ICE ERO FY2024 Annual Report (static comparator)
+ANNUAL_STATIC = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                             "static", "ice_removals_annual.json")
+
+
+def annual_history():
+    """FY2012–FY2024 removals from ICE ERO annual reports — a committed static
+    file (closed fiscal years never change). Missing file just skips the
+    context series; the live metric is unaffected."""
+    try:
+        with open(ANNUAL_STATIC) as f:
+            rows = json.load(f)["annual"]
+        return sorted(({"fy": int(r["fy"]), "value": int(r["value"]), "source": r.get("source", "")}
+                       for r in rows), key=lambda r: r["fy"])
+    except Exception as e:                                        # noqa: BLE001
+        print(f"  ! ice_removals: static annual history unavailable ({e})")
+        return None
 
 
 def _num(x):
@@ -102,6 +119,9 @@ def main():
     }
     if famu:
         out["famu_removals"] = famu
+    hist = annual_history()
+    if hist:
+        out["annual_history"] = hist
     publish(out, series=[{"date": as_of[:7], "value": fytd}])
 
 

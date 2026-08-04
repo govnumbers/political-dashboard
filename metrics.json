@@ -49,5 +49,5 @@
     { "id": "approval_rating", "name": "Presidential approval", "category": "Executive Power & Governance",
       "connector": "connectors/votehub_approval.py", "source": "VoteHub poll aggregate (keyless, CC-BY; the board's one opinion metric)", "bucket": "AUTO", "cadence": "weekly" }
   ],
-  "_next": "v2 register complete: 23 metrics across 7 category tabs, all keyless (project doc 03 has the full mini-specs; 07 has the backlog). Every connector stores a full historical series and publishes through connectors/validators.py + connectors/common.py (bounds + max-jump validation, merge-don't-overwrite, freshness stamps). Next phase: presentation layer (expandable cards, charts, tabs)."
+  "_next": "v2 register complete: 23 metrics across 7 category tabs, all keyless (project doc 03 has the full mini-specs; 07 has the backlog). Every connector stores a full historical series and publishes through connectors/validators.py + connectors/common.py (bounds + max-jump validation, merge-don't-overwrite, freshness stamps). Presentation layer live (phase 7, Aug 2026): every card expands into its chart (build.py payload() emits site/d/<id>.json; assets/chart.js renders client-side; category tabs, All default). Next phase: shareable cards."
 }

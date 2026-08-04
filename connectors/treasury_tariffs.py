@@ -61,11 +61,14 @@ def main():
     if not rows:
         raise RuntimeError("no Customs Duties rows in mts_table_4")
 
-    series = []
+    series, series_net = [], []
     for row in rows:
         v = _b(row, "current_fytd_gross_rcpt_amt")
         if v is not None:
             series.append({"date": row["record_date"][:7], "value": v})
+        nv = _b(row, "current_fytd_net_rcpt_amt")
+        if nv is not None:
+            series_net.append({"date": row["record_date"][:7], "value": nv})
     if not series:
         raise RuntimeError("parsed zero customs-duties FYTD points")
 
@@ -91,6 +94,11 @@ def main():
     }
     if prior_gross is not None:
         out["comparison"] = {"label": "Same period last fiscal year (gross)", "value": prior_gross}
+    # Net-of-refunds FYTD line for the expanded chart (phase 7): same rows, the
+    # net field — full history refetched every run, so plain overwrite is safe
+    # and self-healing. Display rule (doc 02): gross and net always together.
+    if series_net:
+        out["series_net"] = series_net
     publish(out, series=series)
 
 

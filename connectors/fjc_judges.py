@@ -77,6 +77,29 @@ def count_window(pairs, president_substr, start, days):
                if president_substr in pres and start <= d <= end)
 
 
+def term_curve(pairs, president_substr, start, today=None, months=48):
+    """Dense cumulative-by-month confirmation curve for one term's first
+    `months` months: [{"month": m, "value": cum}]. Distinguishes the two Trump
+    terms by date-windowing (the same name appears in both). Zero-confirmation
+    months carry the running count — that IS a cumulative counter's meaning."""
+    end_m = months
+    if today is not None:
+        elapsed = (today.year - start.year) * 12 + (today.month - start.month)
+        end_m = min(months, max(0, elapsed))
+    per = {}
+    for pres, d in pairs:
+        if president_substr not in pres:
+            continue
+        mi = (d.year - start.year) * 12 + (d.month - start.month)
+        if 0 <= mi <= months:
+            per[mi] = per.get(mi, 0) + 1
+    out, cum = [], 0
+    for m in range(0, end_m + 1):
+        cum += per.get(m, 0)
+        out.append({"month": m, "value": cum})
+    return out
+
+
 def main():
     r = requests.get(CSV_URL, headers=UA, timeout=120)
     r.raise_for_status()
@@ -105,6 +128,15 @@ def main():
         "as_of": today_iso(), "since": TERM2.isoformat(), "direction": "neutral",
         "comparison": {"label": "His first term at the same point", "value": trump1},
         "biden_same_point": biden,
+        # Term-aligned curves for the expanded chart (phase 7): same CSV, every
+        # president — recomputed each run (idempotent; the source is the full
+        # directory every time). Current term's curve runs only to the current
+        # month; prior terms' full 48.
+        "aligned": {
+            "trump2": term_curve(pairs, "Trump", TERM2, today=today),
+            "trump1": term_curve(pairs, "Trump", TERM1),
+            "biden": term_curve(pairs, "Biden", BIDEN),
+        },
         "source": {"name": "Federal Judicial Center — biographical directory",
                    "url": "https://www.fjc.gov/history/judges/biographical-directory-article-iii-federal-judges-export"},
         "cadence": "As confirmed",

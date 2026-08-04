@@ -242,6 +242,158 @@ ok(_va == (68297, 591684),
 ok(va_backlog.counts_from_rows([["nothing", "here"]]) is None,
    "VA: sheet without the metric columns returns None (moves on)")
 
+print("== phase 7: aligned-series math (build.py) ==")
+sys.path.insert(0, HERE)
+import build as B
+
+_ms = [{"date": "2025-01", "value": 100.0}, {"date": "2025-02", "value": 102.0},
+       {"date": "2025-04", "value": 90.0}]
+_al = B.aligned_monthly(_ms, "trump2")
+ok(_al == [[0, 100.0], [1, 102.0], [3, 90.0]], "aligned_monthly: months since inauguration, holes stay holes")
+_alp = B.aligned_monthly(_ms, "trump2", pct=True)
+ok(_alp == [[0, 0.0], [1, 2.0], [3, -10.0]], "aligned_monthly pct: rebased to month-0")
+ok(B.aligned_monthly([{"date": "2025-03", "value": 5}], "trump2", pct=True) is None,
+   "aligned_monthly pct: no month-0 base -> None (never fake a base)")
+ok(B.carry_forward([[0, 46], [2, 100]]) == [[0, 46], [1, 46], [2, 100]],
+   "carry_forward: cumulative counter carries between events")
+_dd = [{"date": "2025-01-20", "value": 36e12}, {"date": "2025-01-22", "value": 36.1e12},
+       {"date": "2025-02-20", "value": 36.72e12}]
+_dp = B.aligned_daily_pct(_dd, "trump2")
+ok(_dp[0] == [0.0, 0.0] and abs(_dp[-1][1] - 2.0) < 0.01,
+   "aligned_daily_pct: 0% on inauguration day, growth vs that base")
+_gq = [{"date": "2025-03", "value": 4.0}, {"date": "2025-06", "value": 4.0},
+       {"date": "2025-09", "value": 4.0}, {"date": "2025-12", "value": 4.0}]
+_gi = B.gdp_index(_gq, "trump2")
+ok(_gi[0] == [0, 100.0] and abs(_gi[-1][1] - 104.0) < 0.05,
+   "gdp_index: compounds annualized rates to +4% over four 4% quarters")
+
+print("== phase 7: chart payloads ==")
+_src = {"name": "S", "url": "u"}
+
+
+def _m(mid, series, **kw):
+    d = {"id": mid, "name": mid, "value": (series[-1]["value"] if series else 1),
+         "as_of": "2026-06", "cadence": "Monthly", "source": _src, "series": series}
+    d.update(kw)
+    return d
+
+
+_infl = B.payload(_m("inflation", _ms, target={"label": "Fed", "value": 2.0}), {})
+ok(_infl["benchmark"] == 2.0 and _infl["gaps"] and _infl["series"][0]["pts"],
+   "inflation payload: benchmark line + shutdown gap chip")
+ok(_infl["channels"] and _infl["caveats"], "inflation payload: influence + caveats furniture present")
+
+_debt_series = [{"date": (datetime.date(2017, 1, 20) + datetime.timedelta(days=i * 7)).isoformat(),
+                 "value": 2e13 + i * 1e10} for i in range(500)]
+_debt = B.payload(_m("national_debt", _debt_series), {})
+_cols = {s["label"]: s["color"] for s in _debt["series"]}
+ok(_cols.get("Trump ’25") == "#e66767" and _cols.get("Biden") == "#3987e5",
+   "debt payload: locked president colors (Trump red, Biden blue)")
+ok(len(_debt["series"]) == 3 and _debt["xType"] == "months", "debt payload: three aligned president lines")
+
+_eo_series = [{"date": "2025-01", "value": 46}, {"date": "2025-02", "value": 76}]
+_eo = B.payload(_m("executive_orders", _eo_series,
+                   comparison={"label": "Biden", "value": 94}), {})
+ok(len(_eo["series"]) == 1 and _eo["dots"] and _eo["dots"][0]["y"] == 94,
+   "EO payload pre-backfill: Trump line + Biden same-point dot")
+_eo2 = B.payload(_m("executive_orders", _eo_series,
+                    comparison={"label": "Biden", "value": 94},
+                    prev_terms={"biden": [{"month": 0, "value": 10}, {"month": 1, "value": 20}],
+                                "obama": [{"month": 0, "value": 5}]}), {})
+ok(len(_eo2["series"]) == 3 and not _eo2.get("dots"),
+   "EO payload post-backfill: three full curves, dot retired")
+
+_j = B.payload(_m("judges_confirmed", [],
+                  aligned={"trump2": [{"month": 0, "value": 0}, {"month": 1, "value": 2}],
+                           "trump1": [{"month": 0, "value": 0}],
+                           "biden": [{"month": 0, "value": 1}]}), {})
+ok(len(_j["series"]) == 3, "judges payload: aligned curves from the connector become three lines")
+
+_ice = B.payload(_m("ice_removals", [{"date": "2026-07", "value": 356389}],
+                    annual_history=[{"fy": 2023, "value": 142580}, {"fy": 2024, "value": 271484}]), {})
+ok(_ice["template"] == "bars" and _ice["series"][0]["pts"][-1][2] == "’26*",
+   "ICE removals payload: annual bars + current FY marked partial")
+_hole = _ice["series"][0]["pts"][-2]
+ok(_hole[1] is None and _hole[2] == "’25" and "pending" in _hole[3],
+   "ICE removals payload: unpublished FY2025 is a labelled hole, never a zero bar")
+_ice2 = B.payload(_m("ice_removals", [{"date": "2026-07", "value": 356389}]), {})
+ok(not _ice2["series"] and _ice2["accrueBody"], "ICE removals payload without static: honest accrue state")
+
+_tr = B.payload(_m("tariff_revenue", [{"date": "2026-05", "value": 220.7}, {"date": "2026-06", "value": 244.3}],
+                   series_net=[{"date": "2026-06", "value": 163.0}]), {})
+ok(len(_tr["series"]) == 2 and _tr["series"][1]["label"] == "Net of refunds",
+   "tariff payload: gross + net lines once the net series exists")
+
+_mz = B.payload(_m("measles_cases", [{"date": f"{y}-12", "value": v} for y, v in
+                                     [(2019, 1274), (2020, 13), (2024, 285), (2025, 2288), (2026, 2318)]]), {})
+ok(_mz["template"] == "bars" and sorted(_mz["labelIdx"]) == [0, 3, 4],
+   "measles payload: top-3 bars labelled (incl. the partial year)")
+
+_det = B.payload(_m("ice_detention", [{"date": "2026-07", "value": 62517}], currently_detained=65765), {})
+ok(not _det["series"] and "62,517" in _det["accrueBody"], "sparse detention: accrue state carries the figures")
+
+print("== phase 7: full build render ==")
+B.build()
+_html = open(os.path.join(HERE, "site", "index.html")).read()
+ok(_html.count('data-id="') == 23, "index.html: all 23 cards carry data-id")
+ok(_html.count("expand-btn") >= 23, "index.html: every card gets the expand affordance")
+ok('data-tab="all">All</button>' in _html, "tabs: first tab is plain 'All', no count pill")
+ok("tab-count" not in _html and '<span class="n">' not in _html, "tabs: no count indicators")
+ok("localStorage" not in _html and "sessionStorage" not in _html, "no browser storage anywhere")
+ok("Presentation layer" in _html or "chart.js" not in _html or "lineChart" in _html,
+   "chart.js inlined into the page")
+_dfiles = sorted(os.listdir(os.path.join(HERE, "site", "d")))
+ok(len(_dfiles) == 23, "site/d/: one payload per metric (store deep, load shallow)")
+_all_ok = True
+for _df in _dfiles:
+    _p = json.load(open(os.path.join(HERE, "site", "d", _df)))
+    if not (_p.get("chartTitle") and _p.get("channels") and _p.get("caveats")
+            and ("series" in _p) and _p.get("srcUrl")):
+        _all_ok = False
+        print(f"    ✗ {_df} missing furniture/spec fields")
+ok(_all_ok, "every payload carries chart spec + influence note + caveats + source")
+
+print("== phase 7: backfill logic (no network) ==")
+import federal_register_eo as feo
+_curve = feo.month_curve(["2021-01-25", "2021-01-30", "2021-03-02"], datetime.date(2021, 1, 20))
+ok(_curve == [{"month": 0, "value": 2}, {"month": 1, "value": 2}, {"month": 2, "value": 3}],
+   "EO month_curve: dense cumulative, empty months carry")
+_have = {"biden": [{"month": 0, "value": 10}], "obama": [{"month": 0, "value": 5}]}
+ok(feo.prev_term_curves({"prev_terms": _have}) == _have,
+   "EO prev_term_curves: closed-term curves carried forward, never refetched")
+
+_fpairs = [("Donald J. Trump", datetime.date(2017, 2, 10)),
+           ("Donald J. Trump", datetime.date(2017, 5, 1)),
+           ("Donald J. Trump", datetime.date(2025, 3, 1)),
+           ("Joseph R. Biden", datetime.date(2021, 6, 1))]
+_t1c = fjc_judges.term_curve(_fpairs, "Trump", datetime.date(2017, 1, 20))
+ok(_t1c[0] == {"month": 0, "value": 0} and _t1c[1]["value"] == 1 and _t1c[-1]["value"] == 2,
+   "judges term_curve: dense cumulative within the dated window")
+_t2c = fjc_judges.term_curve(_fpairs, "Trump", datetime.date(2025, 1, 20),
+                             today=datetime.date(2025, 4, 15))
+ok(_t2c[-1] == {"month": 3, "value": 1} and len(_t2c) == 4,
+   "judges term_curve: current term stops at the current month and excludes term-1 dates")
+
+_sats = va_backlog.saturdays_between(datetime.date(2018, 1, 1), datetime.date(2018, 1, 31))
+ok([s.isoformat() for s in _sats] == ["2018-01-06", "2018-01-13", "2018-01-20", "2018-01-27"],
+   "VA saturdays_between: exactly the week-ending Saturdays")
+_ex = {"series": [{"date": "2026-07-18", "value": 70000}],
+       "archive_missing": ["2026-07-11"]}
+_tg = va_backlog.backfill_targets(_ex, datetime.date(2026, 7, 28), chunk=5)
+ok(len(_tg) == 5 and _tg[0] == datetime.date(2026, 7, 4)
+   and datetime.date(2026, 7, 18) not in _tg and datetime.date(2026, 7, 11) not in _tg,
+   "VA backfill_targets: newest-first, capped, skips stored + known-missing weeks")
+
+ok(cbp_border.needs_archive({"2022-10", "2022-11"}), "CBP needs_archive: pre-2022 hole detected")
+ok(cbp_border.needs_archive({"2021-01", "2023-06"}), "CBP needs_archive: closed-FY Jul–Sep holes detected")
+_full = {f"{y}-{m:02d}" for y in range(2021, 2027) for m in range(1, 13)}
+ok(not cbp_border.needs_archive(_full), "CBP needs_archive: complete series -> no refetch")
+
+import ice_removals as icer
+_hist = icer.annual_history()
+ok(_hist and _hist[0]["fy"] == 2012 and _hist[-1]["fy"] == 2024 and _hist[-1]["value"] == 271484,
+   "ICE annual_history: static file loads, sorted FY2012→FY2024")
+
 print("== stale_days override ==")
 with tempfile.TemporaryDirectory() as td:
     common.DATA_DIR = td
