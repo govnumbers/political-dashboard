@@ -14,13 +14,14 @@
     "url": "https://votehub.com/polls/"
   },
   "cadence": "Weekly",
-  "note": "Simple average of 2 national polls (one per pollster, last ~2 weeks). Opinion data, not a government statistic \u2014 the board's one survey-derived metric.",
+  "note": "Simple average of 2 national polls (one per pollster). Opinion data, not a government statistic \u2014 the board's one survey-derived metric. VoteHub's public feed has carried no new national approval poll since Jun 29, 2026; the figure shown is the last aggregate, checked daily.",
+  "source_stalled_since": "2026-06-29",
   "series": [
     {
       "date": "2026-06-29",
       "value": 42.2
     }
   ],
-  "last_checked": "2026-07-28",
+  "last_checked": "2026-08-04",
   "stale_after": "2026-07-13"
 }
