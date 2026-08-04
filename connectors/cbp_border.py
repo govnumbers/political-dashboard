@@ -82,7 +82,12 @@ def cal_month(fy, mon_abbr):
     return f"{fy - 1 if m >= 10 else fy}-{m:02d}"
 
 
-def parse_csv(text):
+def current_fiscal_year(today=None):
+    today = today or datetime.date.today()
+    return today.year + (1 if today.month >= 10 else 0)
+
+
+def parse_csv(text, current_fy=None):
     rows = list(csv.reader(io.StringIO(text)))
 
     def cols(cells):
@@ -110,23 +115,32 @@ def parse_csv(text):
     for row in rows[header_idx + 1:]:
         if not row or len(row) <= max(fy_i, mon_i, cnt_i):
             continue
-        if grp_i is not None and grp_i < len(row) and row[grp_i].strip().lower() not in ("fytd", ""):
-            continue   # skip 'Remaining' (months that haven't happened yet)
         try:
             fy = int(re.sub(r"\D", "", row[fy_i]))          # "2026 (FYTD)" -> 2026
             ym = cal_month(fy, row[mon_i])
             cnt = int(float(re.sub(r"[^\d.]", "", row[cnt_i]) or 0))
         except (ValueError, KeyError):
             continue
+        grp = row[grp_i].strip().lower() if (grp_i is not None and grp_i < len(row)) else ""
+        if grp not in ("fytd", ""):
+            # 'Remaining' means "past the current FY's progress". For the CURRENT
+            # fiscal year those months haven't happened — skip, so the future
+            # never shows as zero. For a CLOSED fiscal year the same tag sits on
+            # months that DID happen (Jul–Sep, beyond the current year's elapsed
+            # window) — keep them when a real count is present. This is what
+            # fills the Jul–Sep holes without any archive file.
+            if not (current_fy is not None and fy < current_fy and cnt > 0):
+                continue
         totals[ym] = totals.get(ym, 0) + cnt
     return totals
 
 
 def main():
+    cur_fy = current_fiscal_year()
     urls = csv_urls()
     r = requests.get(urls[0], headers=UA, timeout=60)
     r.raise_for_status()
-    totals = parse_csv(r.text)
+    totals = parse_csv(r.text, current_fy=cur_fy)
     if not totals:
         raise RuntimeError("parsed zero monthly totals from CBP CSV")
 
@@ -145,7 +159,7 @@ def main():
             try:
                 r2 = requests.get(u, headers=UA, timeout=60)
                 r2.raise_for_status()
-                older = parse_csv(r2.text)
+                older = parse_csv(r2.text, current_fy=cur_fy)
                 added = {ym: v for ym, v in older.items() if ym not in totals}
                 totals.update(added)
                 print(f"  ✓ border_encounters: archive file added {len(added)} months ({u.rsplit('/', 1)[-1]})")

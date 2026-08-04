@@ -384,6 +384,20 @@ ok(len(_tg) == 5 and _tg[0] == datetime.date(2026, 7, 4)
    and datetime.date(2026, 7, 18) not in _tg and datetime.date(2026, 7, 11) not in _tg,
    "VA backfill_targets: newest-first, capped, skips stored + known-missing weeks")
 
+_cbp_rows = "\n".join([
+    "Fiscal Year,Month Grouping,Month (abbv),Encounter Count",
+    "2023 (FYTD),FYTD,JUN,10000",
+    "2023 (FYTD),Remaining,JUL,20000",     # closed FY: month happened -> keep
+    "2026 (FYTD),FYTD,JUN,12901",
+    "2026 (FYTD),Remaining,JUL,0",         # current FY: future month -> skip
+    "2024 (FYTD),Remaining,AUG,",          # closed FY but blank count -> skip (never store fake zeros)
+])
+_cbp = cbp_border.parse_csv(_cbp_rows, current_fy=2026)
+ok(_cbp.get("2023-07") == 20000 and "2026-07" not in _cbp and "2024-08" not in _cbp,
+   "CBP: closed-FY 'Remaining' months kept (they happened); current-FY future + blanks skipped")
+ok(cbp_border.current_fiscal_year(datetime.date(2026, 8, 4)) == 2026
+   and cbp_border.current_fiscal_year(datetime.date(2026, 11, 1)) == 2027,
+   "CBP: fiscal-year rollover at October")
 ok(cbp_border.needs_archive({"2022-10", "2022-11"}), "CBP needs_archive: pre-2022 hole detected")
 ok(cbp_border.needs_archive({"2021-01", "2023-06"}), "CBP needs_archive: closed-FY Jul–Sep holes detected")
 _full = {f"{y}-{m:02d}" for y in range(2021, 2027) for m in range(1, 13)}
