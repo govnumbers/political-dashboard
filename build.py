@@ -830,9 +830,13 @@ def payload(m, loaded):
                    f"{m.get('disapprove', 0):.0f}% disapprove as of {pretty_date(m['as_of'])}). "
                    "A sourced cross-president comparison (prior presidents at the same point in "
                    "term) is planned as a one-time historical import, clearly labelled as survey data.")
+        appr_caveats = ["Simple average of recent national polls, one per pollster (VoteHub, CC-BY); the poll list is linked from the source. Opinion data, not a government statistic."]
+        if m.get("source_stalled_since"):
+            stalled_pretty = pretty_date(m["source_stalled_since"])
+            appr_caveats.insert(0, f"VoteHub’s public feed has carried no new national approval poll since {stalled_pretty} — the figure shown is the last aggregate. The pipeline checks daily; this card revives automatically when polls resume.")
         fx.update(channels="public opinion responds to everything on this board — it is the electorate’s own scoreboard, not a government statistic.",
                   limits="poll aggregates smooth single-poll noise but inherit house effects and modelling choices; this is the board’s one survey-derived metric, labelled as such.",
-                  caveats=["Simple average of recent national polls, one per pollster (VoteHub, CC-BY); the poll list is linked from the source. Opinion data, not a government statistic."])
+                  caveats=appr_caveats)
 
     else:
         accrue(m.get("name", mid), "History for this metric accrues with each data run.")

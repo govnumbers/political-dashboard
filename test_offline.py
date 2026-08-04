@@ -408,6 +408,23 @@ _hist = icer.annual_history()
 ok(_hist and _hist[0]["fy"] == 2012 and _hist[-1]["fy"] == 2024 and _hist[-1]["value"] == 271484,
    "ICE annual_history: static file loads, sorted FY2012→FY2024")
 
+print("== approval known-outage state (4 Aug 2026 incident) ==")
+_ex = {"id": "approval_rating", "value": 42.2, "as_of": "2026-06-29", "n_polls": 2,
+       "disapprove": 55.6, "net": -13.4, "cadence": "Weekly",
+       "source": {"name": "VoteHub poll aggregate (CC-BY)", "url": "x"}, "note": "old"}
+_st = votehub_approval.stalled_output(dict(_ex), datetime.date(2026, 8, 4), "0 usable polls")
+ok(_st["source_stalled_since"] == "2026-06-29" and "no new national approval poll since Jun 29, 2026" in _st["note"],
+   "stalled: last-good held with explicit on-card disclosure")
+ok(_st["value"] == 42.2 and "series" not in _st, "stalled: value unchanged, stored series untouched")
+ok(raises_runtime(lambda: votehub_approval.stalled_output(dict(_ex), datetime.date(2026, 9, 15), "x")),
+   "stalled: acknowledgment window is time-boxed — hard-fails after 75 quiet days")
+ok(raises_runtime(lambda: votehub_approval.stalled_output(None, datetime.date(2026, 8, 4), "x")),
+   "stalled: no last-good to hold -> still fails loud")
+_ap = B.payload(_m("approval_rating", [{"date": "2026-06-29", "value": 42.2}],
+                   disapprove=55.6, source_stalled_since="2026-06-29"), {})
+ok(any("no new national approval poll since" in c for c in _ap["caveats"]),
+   "approval payload: outage disclosed in the expanded card's caveats")
+
 print("== stale_days override ==")
 with tempfile.TemporaryDirectory() as td:
     common.DATA_DIR = td

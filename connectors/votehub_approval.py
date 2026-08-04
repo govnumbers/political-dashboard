@@ -25,9 +25,49 @@ import datetime
 import requests
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from common import publish, UA  # noqa: E402
+from common import publish, load_existing, UA  # noqa: E402
 
 API = "https://api.votehub.com/polls"
+
+# KNOWN-OUTAGE HANDLING (4 Aug 2026, logged in docs 02/04): VoteHub's public
+# API stopped ingesting approval/favorability polls after 2026-06-29 while its
+# election-race types stay current — verified across every parameter lane,
+# including the site chart's own `in_averages_only=true` bucket (the votehub.com
+# "live" average line keeps recomputing daily on those stale polls). Rather
+# than run red every day for a diagnosed, disclosed condition:
+#   • the connector still queries the API EVERY run (the metric revives by
+#     itself the day polls reappear — the healthy path below is unchanged);
+#   • while quiet, it republishes last-good with `source_stalled_since` and an
+#     explicit on-card sentence (plus the client-side stale flag already showing);
+#   • at >75 days quiet (mid-Sep 2026) it hard-fails again — the acknowledgment
+#     is time-boxed, not indefinite; the fallback ladder is in docs 02/04.
+STALL_HARD_FAIL_DAYS = 75
+
+
+def stalled_output(existing, today, reason):
+    """Build the disclosed last-good payload for a quiet source. Raises if
+    there is no last-good to hold, or the acknowledgment window is exhausted."""
+    if not existing or existing.get("value") is None:
+        raise RuntimeError(f"approval source stalled and no last-good data to hold ({reason})")
+    last_poll = str(existing.get("as_of", ""))[:10]
+    quiet_days = (today - datetime.date.fromisoformat(last_poll)).days
+    if quiet_days > STALL_HARD_FAIL_DAYS:
+        raise RuntimeError(
+            f"approval feed quiet for {quiet_days} days (newest poll {last_poll}) — "
+            "acknowledgment window exhausted; pick the fallback (docs 02/04)")
+    pretty = datetime.date.fromisoformat(last_poll).strftime("%b %-d, %Y")
+    out = {k: v for k, v in existing.items()
+           if k not in ("last_checked", "stale_after", "series")}
+    out["source_stalled_since"] = last_poll
+    out["note"] = (f"Simple average of {existing.get('n_polls', '?')} national polls "
+                   "(one per pollster). Opinion data, not a government statistic — the "
+                   "board's one survey-derived metric. VoteHub's public feed has carried "
+                   f"no new national approval poll since {pretty}; the figure shown is "
+                   "the last aggregate, checked daily.")
+    print(f"  ⚠ approval: VoteHub public feed quiet {quiet_days} days "
+          f"(newest poll {last_poll}); holding last-good with on-card disclosure; "
+          f"hard-fails at {STALL_HARD_FAIL_DAYS} days ({reason})")
+    return out
 
 
 def average_polls(polls, today, window_days=14, min_polls=3):
@@ -79,7 +119,8 @@ def main():
     # The documented route (votehub.com/polls/api) is date filtering:
     # `from_date` = "polls whose end date is on or after this date", plus a
     # `subject` filter — so ask precisely for recent Trump approval polls.
-    from_date = (datetime.date.today() - datetime.timedelta(days=45)).isoformat()
+    today = datetime.date.today()
+    from_date = (today - datetime.timedelta(days=45)).isoformat()
     r = requests.get(API, params={"poll_type": "approval",
                                   "subject": "donald-trump",
                                   "from_date": from_date},
@@ -88,12 +129,17 @@ def main():
     js = r.json()
     polls = js if isinstance(js, list) else (js.get("polls") or js.get("results")
                                              or js.get("data") or [])
-    app, dis, n, as_of = average_polls(polls, datetime.date.today())
-
-    age = (datetime.date.today() - datetime.date.fromisoformat(as_of)).days
-    if age > 45:
-        raise RuntimeError(f"newest usable approval poll is {age} days old — "
-                           "feed looks stale or truncated; not publishing")
+    try:
+        app, dis, n, as_of = average_polls(polls, today)
+        age = (today - datetime.date.fromisoformat(as_of)).days
+        if age > 45:
+            raise RuntimeError(f"newest usable approval poll is {age} days old — "
+                               "feed looks stale or truncated; not publishing")
+    except RuntimeError as e:
+        # A diagnosed quiet source, not an infra failure (network errors above
+        # still raise → red). Republish last-good with explicit disclosure.
+        publish(stalled_output(load_existing("approval_rating"), today, str(e)), series=[])
+        return
 
     out = {
         "id": "approval_rating", "name": "Presidential approval",
