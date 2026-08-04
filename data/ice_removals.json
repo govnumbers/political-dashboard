@@ -18,12 +18,79 @@
   "stale_days": 75,
   "note": "Removals recorded in ICE's published statistics workbook, FY2026 to date. Official workbook figure \u2014 not comparable to press-release 'deportation' totals, which mix in CBP actions. Includes 36,548 with a family-unit identifier.",
   "famu_removals": 36548,
+  "annual_history": [
+    {
+      "fy": 2012,
+      "value": 409849,
+      "source": "ICE ERO FY2012 Annual Report"
+    },
+    {
+      "fy": 2013,
+      "value": 368644,
+      "source": "ICE ERO FY2013 Annual Report"
+    },
+    {
+      "fy": 2014,
+      "value": 315943,
+      "source": "ICE ERO FY2014 Annual Report"
+    },
+    {
+      "fy": 2015,
+      "value": 235413,
+      "source": "ICE ERO FY2015 Annual Report"
+    },
+    {
+      "fy": 2016,
+      "value": 240255,
+      "source": "ICE ERO FY2016 Annual Report"
+    },
+    {
+      "fy": 2017,
+      "value": 226119,
+      "source": "ICE ERO FY2017 Annual Report"
+    },
+    {
+      "fy": 2018,
+      "value": 256085,
+      "source": "ICE ERO FY2018 Annual Report"
+    },
+    {
+      "fy": 2019,
+      "value": 267258,
+      "source": "ICE ERO FY2019 Annual Report"
+    },
+    {
+      "fy": 2020,
+      "value": 185884,
+      "source": "ICE ERO FY2020 Annual Report"
+    },
+    {
+      "fy": 2021,
+      "value": 59011,
+      "source": "ICE ERO FY2021 Annual Report"
+    },
+    {
+      "fy": 2022,
+      "value": 72177,
+      "source": "ICE ERO FY2022 Annual Report"
+    },
+    {
+      "fy": 2023,
+      "value": 142580,
+      "source": "ICE ERO FY2023 Annual Report"
+    },
+    {
+      "fy": 2024,
+      "value": 271484,
+      "source": "ICE ERO FY2024 Annual Report"
+    }
+  ],
   "series": [
     {
       "date": "2026-07",
       "value": 356389
     }
   ],
-  "last_checked": "2026-08-03",
+  "last_checked": "2026-08-04",
   "stale_after": "2026-09-24"
 }

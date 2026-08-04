@@ -2,11 +2,11 @@
   "id": "va_claims_backlog",
   "name": "VA claims backlog",
   "category": "Health & Safety Net",
-  "value": 68297,
+  "value": 70529,
   "unit": "claims >125 days",
-  "as_of": "2026-07-25",
+  "as_of": "2026-08-01",
   "direction": "up_is_bad",
-  "total_pending": 591684,
+  "total_pending": 611453,
   "source": {
     "name": "Dept. of Veterans Affairs \u2014 Monday Morning Workload Report",
     "url": "https://www.benefits.va.gov/reports/detailed_claims_data.asp"
@@ -17,12 +17,135 @@
     "label": "At inauguration (week ending Jan 25, 2025)",
     "value": 257253
   },
+  "archive_missing": [
+    "2025-12-27"
+  ],
   "series": [
+    {
+      "date": "2026-01-03",
+      "value": 105830
+    },
+    {
+      "date": "2026-01-10",
+      "value": 103198
+    },
+    {
+      "date": "2026-01-17",
+      "value": 101281
+    },
+    {
+      "date": "2026-01-24",
+      "value": 100755
+    },
+    {
+      "date": "2026-01-31",
+      "value": 99683
+    },
+    {
+      "date": "2026-02-07",
+      "value": 98813
+    },
+    {
+      "date": "2026-02-14",
+      "value": 97032
+    },
+    {
+      "date": "2026-02-21",
+      "value": 96478
+    },
+    {
+      "date": "2026-02-28",
+      "value": 94611
+    },
+    {
+      "date": "2026-03-07",
+      "value": 92871
+    },
+    {
+      "date": "2026-03-14",
+      "value": 90712
+    },
+    {
+      "date": "2026-03-21",
+      "value": 88254
+    },
+    {
+      "date": "2026-03-28",
+      "value": 86159
+    },
+    {
+      "date": "2026-04-04",
+      "value": 81775
+    },
+    {
+      "date": "2026-04-11",
+      "value": 81530
+    },
+    {
+      "date": "2026-04-18",
+      "value": 80897
+    },
+    {
+      "date": "2026-04-25",
+      "value": 80091
+    },
+    {
+      "date": "2026-05-02",
+      "value": 75828
+    },
+    {
+      "date": "2026-05-09",
+      "value": 73226
+    },
+    {
+      "date": "2026-05-16",
+      "value": 72617
+    },
+    {
+      "date": "2026-05-23",
+      "value": 1739
+    },
+    {
+      "date": "2026-05-30",
+      "value": 1735
+    },
+    {
+      "date": "2026-06-06",
+      "value": 1696
+    },
+    {
+      "date": "2026-06-13",
+      "value": 1683
+    },
+    {
+      "date": "2026-06-20",
+      "value": 1702
+    },
+    {
+      "date": "2026-06-27",
+      "value": 1671
+    },
+    {
+      "date": "2026-07-04",
+      "value": 1717
+    },
+    {
+      "date": "2026-07-11",
+      "value": 1702
+    },
+    {
+      "date": "2026-07-18",
+      "value": 67849
+    },
     {
       "date": "2026-07-25",
       "value": 68297
+    },
+    {
+      "date": "2026-08-01",
+      "value": 70529
     }
   ],
-  "last_checked": "2026-08-03",
-  "stale_after": "2026-08-08"
+  "last_checked": "2026-08-04",
+  "stale_after": "2026-08-15"
 }

@@ -16,6 +16,7 @@
     "label": "Same month, prior year",
     "value": 9300
   },
+  "archive_checked": "2026-08-04",
   "series": [
     {
       "date": "2022-10",
@@ -162,6 +163,6 @@
       "value": 12901
     }
   ],
-  "last_checked": "2026-08-03",
+  "last_checked": "2026-08-04",
   "stale_after": "2026-09-08"
 }
