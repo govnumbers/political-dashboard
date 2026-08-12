@@ -79,8 +79,10 @@ def month_curve(dates, start, months=48):
 # file on every later run. A fetch failure only skips the enhancement — the
 # live metric still publishes.
 PREV_TERMS = {"biden": (datetime.date(2021, 1, 20), datetime.date(2025, 1, 19)),
-              "obama": (datetime.date(2009, 1, 20), datetime.date(2013, 1, 19))}
-PREV_SLUG = {"biden": "joe-biden", "obama": "barack-obama"}
+              "obama": (datetime.date(2009, 1, 20), datetime.date(2013, 1, 19)),
+              # v3 lock: Trump-'17 curve powers the four-bar collapsed strip
+              "trump1": (datetime.date(2017, 1, 20), datetime.date(2021, 1, 19))}
+PREV_SLUG = {"biden": "joe-biden", "obama": "barack-obama", "trump1": "donald-trump"}
 
 
 def prev_term_curves(existing):
@@ -131,6 +133,21 @@ def main():
     prev = prev_term_curves(load_existing("executive_orders"))
     if prev:
         out["prev_terms"] = prev
+
+    # v3 lock: all-time per-president totals (NARA disposition ranges; pre-FDR
+    # UCSB, labelled — citations + the Obama-count flag live in the static
+    # file). Enhancement-only: never blocks the live metric.
+    try:
+        import json as _json
+        with open(os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                               "static", "eo_alltime.json")) as f:
+            st = _json.load(f)
+        out["all_time"] = {"nara_modern": st["nara_modern"],
+                           "ucsb_pre_fdr": st["ucsb_pre_fdr"],
+                           "flags": st["_flags"]}
+    except Exception as e:  # noqa: BLE001
+        print(f"  ! executive_orders: all-time totals skipped this run ({e})")
+
     publish(out, series=series)
 
 

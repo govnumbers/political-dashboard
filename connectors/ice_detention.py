@@ -207,6 +207,18 @@ def main():
     cd = currently_detained(wb)
     if cd:
         out["currently_detained"] = cd
+
+    # v3 lock: verified annual ADP backfill (FY2019-24, ICE's own reports —
+    # citations + component checks inside the static file). Enhancement-only.
+    try:
+        import json as _json
+        with open(os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                               "static", "ice_adp_annual.json")) as f:
+            st = _json.load(f)
+        out["annual_adp"] = {"values": st["adp_by_fy"], "source_note": st["_source"]}
+    except Exception as e:  # noqa: BLE001
+        print(f"  ! ice_detention: annual ADP backfill skipped this run ({e})")
+
     publish(out, series=[{"date": as_of[:7], "value": adp}])
 
 

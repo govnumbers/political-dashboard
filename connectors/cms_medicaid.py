@@ -57,6 +57,32 @@ def aggregate(rows, min_states=MIN_STATES):
             if len(vs) >= min_states]
 
 
+def trim_leading_orphans(series, run=6):
+    """Drop isolated early months so the chart starts where coverage is
+    CONTINUOUS (v3 lock, 12 Aug 2026 — the creator's 'orphan dot': the source's
+    earliest months mostly fail the >=45-states rule, leaving one stranded
+    point followed by years of nothing). Keep everything from the first month
+    that begins `run` consecutive published months; annotate series start on
+    the card instead. Never trims interior gaps — those stay visible."""
+    def next_month(ym):
+        y, m = int(ym[:4]), int(ym[5:7])
+        return f"{y + (m == 12)}-{(m % 12) + 1:02d}"
+    dates = [p["date"] for p in series]
+    for i in range(len(series)):
+        ok, cur = True, dates[i]
+        for j in range(1, run):
+            if i + j >= len(series) or dates[i + j] != next_month(cur):
+                ok = False
+                break
+            cur = dates[i + j]
+        if ok:
+            if i:
+                print(f"  ⤳ medicaid: trimmed {i} leading orphan month(s) before {dates[i]} "
+                      "(pre-continuous coverage)")
+            return series[i:]
+    return series
+
+
 def main():
     rows, offset, page_size = [], 0, 500
     while True:
@@ -72,6 +98,7 @@ def main():
     series = aggregate(rows)
     if not series:
         raise RuntimeError("aggregated zero national Medicaid enrollment months")
+    series = trim_leading_orphans(series)
 
     latest = series[-1]
     base = next((p["value"] for p in series if p["date"] == BASELINE_MONTH), None)

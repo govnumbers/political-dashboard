@@ -40,11 +40,25 @@ CONNECTORS = [
     "cdc_overdoses.py",
     "cms_medicaid.py",
     "fjc_judges.py",
+    # --- v3 additions: keyless-API set (register locked 12 Aug 2026) ---
+    "fred_electricity.py",
+    "treasury_defense.py",
+    "usaspending_aid.py",
+    "fr_emergencies.py",       # derived count, rules printed on the card
+    "dcas_military_deaths.py", # keyless JSON API (endpoints pinned via creator capture)
     # --- v2 expansion: SEMI set (scrapes/workbooks; safe-fail) ---
     "ice_removals.py",         # same ICE workbook as ice_detention
     "va_backlog.py",
     "cdc_measles.py",
     "votehub_approval.py",
+    # --- v3 additions: SEMI set (scrapes/workbooks/PDF; safe-fail) ---
+    "ice_composition.py",      # same ICE workbook fetch, third metric
+    "ice_custody_deaths.py",
+    "eia_crude.py",
+    "eia_renewables.py",
+    "doj_clemency.py",
+    "nyu_warpowers.py",
+    "rpc_refugees.py",         # first PDF parser — workflow must install pypdf
 ]
 
 

@@ -109,7 +109,7 @@ async def main():
             "  cards: document.querySelectorAll('.tile').length,"
             "  sections: document.querySelectorAll('.category:not([hidden])').length})")
         if not (nojs["tabs"] == "none" and nojs["btn"] == "none"
-                and nojs["cards"] == 23 and nojs["sections"] == 7):
+                and nojs["cards"] == len(IDS) and nojs["sections"] >= 7):
             failures.append(f"JS-off degradation wrong: {nojs}")
         await pn.screenshot(path=f"{OUT}/12-nojs.png")
         await ctx.close()

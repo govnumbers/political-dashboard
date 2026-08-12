@@ -1,0 +1,40 @@
+{
+  "_what": "All-time executive-order totals per president, for the EO card's every-president context bars (register v3 #27, view kit).",
+  "_source": "Verified 12 Aug 2026. FDR-Biden: National Archives Executive Orders Disposition Tables index (archives.gov/federal-register/executive-orders/disposition - EO number ranges; counts computed range-end minus range-start plus 1) cross-checked against federalregister.gov/presidential-documents/executive-orders displayed totals. Consistency check passed: Trump first term = 220 by both routes. Pre-FDR: American Presidency Project, UCSB (presidency.ucsb.edu/statistics/data/executive-orders) - labelled as UCSB-sourced on the card.",
+  "_flags": "Obama: federalregister.gov displays 277 but its own 2009 row shows a 39-number range as 40 orders (one document double-counted); NARA's range (13489-13764) and UCSB both give 276 - we publish 276. Convention: FDR-era counts here are NUMBERED orders from NARA ranges; UCSB's pre-1945 figures include unnumbered orders (their FDR total is 3,726) - the card states the numbered-orders convention.",
+  "nara_modern": [
+    {"president": "Franklin D. Roosevelt", "total": 3467, "years": "1933-1945"},
+    {"president": "Harry S. Truman", "total": 894, "years": "1945-1953"},
+    {"president": "Dwight D. Eisenhower", "total": 482, "years": "1953-1961"},
+    {"president": "John F. Kennedy", "total": 214, "years": "1961-1963"},
+    {"president": "Lyndon B. Johnson", "total": 324, "years": "1963-1969"},
+    {"president": "Richard Nixon", "total": 346, "years": "1969-1974"},
+    {"president": "Gerald R. Ford", "total": 169, "years": "1974-1977"},
+    {"president": "Jimmy Carter", "total": 320, "years": "1977-1981"},
+    {"president": "Ronald Reagan", "total": 381, "years": "1981-1989"},
+    {"president": "George H.W. Bush", "total": 166, "years": "1989-1993"},
+    {"president": "Bill Clinton", "total": 364, "years": "1993-2001"},
+    {"president": "George W. Bush", "total": 291, "years": "2001-2009"},
+    {"president": "Barack Obama", "total": 276, "years": "2009-2017"},
+    {"president": "Donald Trump (1st term)", "total": 220, "years": "2017-2021"},
+    {"president": "Joe Biden", "total": 162, "years": "2021-2025"}
+  ],
+  "ucsb_pre_fdr": [
+    {"president": "Washington", "total": 8}, {"president": "J. Adams", "total": 1},
+    {"president": "Jefferson", "total": 4}, {"president": "Madison", "total": 1},
+    {"president": "Monroe", "total": 1}, {"president": "J.Q. Adams", "total": 3},
+    {"president": "Jackson", "total": 12}, {"president": "Van Buren", "total": 10},
+    {"president": "W.H. Harrison", "total": 0}, {"president": "Tyler", "total": 17},
+    {"president": "Polk", "total": 18}, {"president": "Taylor", "total": 5},
+    {"president": "Fillmore", "total": 12}, {"president": "Pierce", "total": 35},
+    {"president": "Buchanan", "total": 16}, {"president": "Lincoln", "total": 48},
+    {"president": "A. Johnson", "total": 79}, {"president": "Grant", "total": 217},
+    {"president": "Hayes", "total": 92}, {"president": "Garfield", "total": 6},
+    {"president": "Arthur", "total": 96}, {"president": "Cleveland (1st)", "total": 113},
+    {"president": "B. Harrison", "total": 143}, {"president": "Cleveland (2nd)", "total": 140},
+    {"president": "McKinley", "total": 185}, {"president": "T. Roosevelt", "total": 1081},
+    {"president": "Taft", "total": 724}, {"president": "Wilson", "total": 1803},
+    {"president": "Harding", "total": 522}, {"president": "Coolidge", "total": 1203},
+    {"president": "Hoover", "total": 1003}
+  ]
+}

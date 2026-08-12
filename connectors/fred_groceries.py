@@ -18,6 +18,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from common import publish, fred_series  # noqa: E402
 
 SERIES = "CUSR0000SAF11"
+EGGS_SERIES = "APU0000708111"
 TERM_START = "2025-01"
 
 
@@ -54,6 +55,21 @@ def main():
     }
     if base is not None:
         out["baseline"] = {"label": "At inauguration (Jan 2025)", "value": base}
+
+    # Egg sub-line (v3 lock, 12 Aug 2026): the most politically charged grocery
+    # item — avian-flu spike to records, then the decline the administration
+    # cites. Average price per dozen, same keyless FRED pipe. Enhancement-only:
+    # a fetch failure skips the sub-line, never the grocery metric.
+    try:
+        eggs = [{"date": d[:7], "value": round(v, 2)} for d, v in fred_series(EGGS_SERIES)]
+        if eggs:
+            e_base = next((p["value"] for p in eggs if p["date"] == TERM_START), None)
+            out["eggs"] = {"label": "Eggs, average price per dozen",
+                           "value": eggs[-1]["value"], "as_of": eggs[-1]["date"],
+                           "baseline": e_base, "series": eggs}
+    except Exception as e:  # noqa: BLE001
+        print(f"  ! grocery_prices: egg sub-line skipped this run ({e})")
+
     publish(out, series=series)
 
 

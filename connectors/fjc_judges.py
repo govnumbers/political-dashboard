@@ -27,6 +27,7 @@ CSV_URL = "https://www.fjc.gov/sites/default/files/history/judges.csv"
 TERM2 = datetime.date(2025, 1, 20)
 TERM1 = datetime.date(2017, 1, 20)
 BIDEN = datetime.date(2021, 1, 20)
+OBAMA = datetime.date(2009, 1, 20)  # v3: Obama joins the months-in-office view
 
 
 def _parse_date(s):
@@ -100,6 +101,18 @@ def term_curve(pairs, president_substr, start, today=None, months=48):
     return out
 
 
+def all_time_totals(pairs):
+    """Confirmations per appointing president, whole directory (1789->now),
+    in first-confirmation order — the all-time context bars (v3)."""
+    counts, first = {}, {}
+    for pres, d in pairs:
+        counts[pres] = counts.get(pres, 0) + 1
+        if pres not in first or d < first[pres]:
+            first[pres] = d
+    return [{"president": p, "total": counts[p], "from": first[p].isoformat()[:4]}
+            for p in sorted(counts, key=lambda p: first[p])]
+
+
 def main():
     r = requests.get(CSV_URL, headers=UA, timeout=120)
     r.raise_for_status()
@@ -136,7 +149,11 @@ def main():
             "trump2": term_curve(pairs, "Trump", TERM2, today=today),
             "trump1": term_curve(pairs, "Trump", TERM1),
             "biden": term_curve(pairs, "Biden", BIDEN),
+            "obama": term_curve(pairs, "Obama", OBAMA),  # first term (v3 lock)
         },
+        # v3: all-time per-president totals — the FJC file covers every judge
+        # since 1789, so this is the board's one true every-president context.
+        "all_time": all_time_totals(pairs),
         "source": {"name": "Federal Judicial Center — biographical directory",
                    "url": "https://www.fjc.gov/history/judges/biographical-directory-article-iii-federal-judges-export"},
         "cadence": "As confirmed",

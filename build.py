@@ -17,19 +17,24 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 DATA = os.path.join(HERE, "data")
 OUT = os.path.join(HERE, "site", "index.html")
 
-TOTAL_PLANNED = 23   # v2 register (project doc 03), locked 28 Jul 2026
+TOTAL_PLANNED = 35   # v3 register (project doc 03), locked 12 Aug 2026
 CATEGORY_ORDER = [
     "Cost of Living", "Economy & Jobs", "Trade & Tariffs", "Public Finances",
-    "Immigration", "Health & Safety Net", "Executive Power & Governance",
+    "Energy", "Immigration", "Health & Safety Net",
+    "Executive Power & Governance", "War & Defense",
 ]
 ORDER = [
     "inflation", "grocery_prices", "gas_price",
     "real_gdp", "unemployment", "real_wages", "federal_workforce",
     "tariff_revenue", "effective_tariff_rate", "trade_deficit",
     "national_debt", "budget_deficit", "interest_on_debt",
+    "electricity_price", "crude_oil", "renewable_share",
     "border_encounters", "ice_removals", "ice_detention",
+    "ice_composition", "ice_custody_deaths", "refugee_admissions",
     "overdose_deaths", "measles_cases", "medicaid_enrollment", "va_claims_backlog",
     "executive_orders", "judges_confirmed", "approval_rating",
+    "clemency", "national_emergencies",
+    "defense_outlays", "foreign_aid", "war_powers", "military_deaths",
 ]
 # Canonical id -> v2 category. Applied at load so the board groups correctly
 # even from data files written before the category migration (the connectors
@@ -48,6 +53,14 @@ CATEGORIES = {
     "executive_orders": "Executive Power & Governance",
     "judges_confirmed": "Executive Power & Governance",
     "approval_rating": "Executive Power & Governance",
+    # --- v3 additions (register locked 12 Aug 2026) ---
+    "electricity_price": "Energy", "crude_oil": "Energy", "renewable_share": "Energy",
+    "ice_composition": "Immigration", "ice_custody_deaths": "Immigration",
+    "refugee_admissions": "Immigration",
+    "clemency": "Executive Power & Governance",
+    "national_emergencies": "Executive Power & Governance",
+    "defense_outlays": "War & Defense", "foreign_aid": "War & Defense",
+    "war_powers": "War & Defense", "military_deaths": "War & Defense",
 }
 STALE_DAYS = {"biweek": 30, "as signed": 12, "as-signed": 12, "as confirmed": 14,
               "dai": 5, "week": 14, "month": 70, "quarter": 130}
@@ -299,7 +312,23 @@ def tile(m):
     elif m["id"] == "measles_cases":
         hero = num(m["value"])
         sub = m["note"].split(" — ")[0] + "."
-        if m.get("comparison"):
+        # v3 comparison change (locked 12 Aug 2026): compare to the PRIOR
+        # ADMINISTRATION'S years (the board's own compare-administrations
+        # principle), computed from the stored series — plus last year.
+        by_year = {int(p["date"][:4]): p["value"] for p in (m.get("series") or [])}
+        biden_years = {y: v for y, v in by_year.items() if 2021 <= y <= 2024}
+        if biden_years:
+            worst_y = max(biden_years, key=biden_years.get)
+            rows = [("This year so far", m["value"], num(m["value"]), "critical"),
+                    (f"Worst Biden-term year ({worst_y})", biden_years[worst_y],
+                     num(biden_years[worst_y]), "muted")]
+            if by_year.get(2025) is not None:
+                rows.insert(1, ("2025 full year", by_year[2025], num(by_year[2025]), "muted"))
+            bars = render_bars(rows, accent)
+            mult = m["value"] / biden_years[worst_y] if biden_years[worst_y] else 0
+            delta = (f'<span class="delta bad">&#9650; {mult:.0f}&#215; the worst Biden-term year '
+                     f'({worst_y}: {num(biden_years[worst_y])})</span>')
+        elif m.get("comparison"):
             comp = m["comparison"]; diff = m["value"] - comp["value"]
             if diff > 0:
                 delta = f'<span class="delta bad">&#9650; already above {comp["label"].lower()} ({num(comp["value"])})</span>'
@@ -346,11 +375,157 @@ def tile(m):
     elif m["id"] == "approval_rating":
         hero = f'{m["value"]:.0f}%'
         sub = m["note"]
+        net_txt = ""
         if m.get("disapprove") is not None:
             net = m.get("net", m["value"] - m["disapprove"])
-            delta = f'<span class="delta neutral">Disapprove {m["disapprove"]:.0f}% · net {net:+.0f}</span>'
+            net_txt = f'Disapprove {m["disapprove"]:.0f}% · net {net:+.0f}'
+        # v3 comparison change (locked 12 Aug 2026): vs Biden at the same point
+        # in term, via the sourced Gallup import — the four-bar strip. Basis is
+        # mixed (current term: VoteHub aggregate; prior: Gallup quarterly
+        # averages) and labelled as such on every bar.
+        sq = (m.get("gallup") or {}).get("same_quarter") or {}
+        if sq.get("biden") is not None:
+            delta = (f'<span class="delta neutral">{net_txt} &#183; Biden at the same point '
+                     f'(Gallup): {sq["biden"]:.0f}%</span>')
+            rows = [("Trump &#8217;25 &#183; VoteHub", m["value"], f'{m["value"]:.0f}%', "accent"),
+                    ("Biden &#183; Gallup", sq["biden"], f'{sq["biden"]:.0f}%', "muted")]
+            if sq.get("trump1") is not None:
+                rows.append(("Trump &#8217;17 &#183; Gallup", sq["trump1"], f'{sq["trump1"]:.0f}%', "muted"))
+            if sq.get("obama") is not None:
+                rows.append(("Obama &#183; Gallup", sq["obama"], f'{sq["obama"]:.0f}%', "muted"))
+            bars = render_bars(rows, accent)
+        elif m.get("disapprove") is not None:
+            delta = f'<span class="delta neutral">{net_txt}</span>'
             bars = render_bars([("Approve", m["value"], f'{m["value"]:.0f}%', "accent"),
                                 ("Disapprove", m["disapprove"], f'{m["disapprove"]:.0f}%', "muted")], accent)
+
+    # ---- v3 register cards (locked 12 Aug 2026) ----
+    elif m["id"] == "electricity_price":
+        cents = m["value"] * 100
+        hero = f'{cents:.1f}&#162;/kWh'
+        sub = m["note"].split(".")[0] + "."
+        if m.get("baseline"):
+            base = m["baseline"]["value"] * 100
+            diff = cents - base; pct = diff / base * 100
+            tone = "bad" if diff > 0 else "good"; arrow = "&#9650;" if diff > 0 else "&#9660;"
+            delta = f'<span class="delta {tone}">{arrow} {abs(diff):.1f}&#162; ({pct:+.0f}%) since inauguration</span>'
+            bars = render_bars([("Now", cents, f'{cents:.1f}&#162;', "critical" if diff > 0 else "good"),
+                                ("Inauguration", base, f'{base:.1f}&#162;', "muted")], accent)
+
+    elif m["id"] == "crude_oil":
+        hero = f'{m["value"]:.1f}M b/d'
+        sub = m["note"].split(".")[0] + "."
+        if m.get("baseline"):
+            base = m["baseline"]["value"]; diff = m["value"] - base; pct = diff / base * 100
+            arrow = "&#9650;" if diff > 0 else "&#9660;"
+            rec = m.get("record") or {}
+            rec_txt = f' &#183; record {rec["value"]:.1f} ({pretty_date(rec["date"])})' if rec.get("value") else ""
+            delta = f'<span class="delta neutral">{arrow} {pct:+.1f}% since inauguration{rec_txt}</span>'
+            bars = render_bars([("Now", m["value"], f'{m["value"]:.1f}', "accent"),
+                                ("Inauguration", base, f'{base:.1f}', "muted")], accent)
+
+    elif m["id"] == "renewable_share":
+        hero = f'{m["value"]:.1f}%'
+        sub = m["note"].split(".")[0] + "."
+        if m.get("baseline"):
+            base = m["baseline"]["value"]; diff = m["value"] - base
+            arrow = "&#9650;" if diff > 0 else "&#9660;"
+            delta = (f'<span class="delta neutral">{arrow} {abs(diff):.1f} pts vs Jan 2025 ({base}%) '
+                     "&#8212; the mix is seasonal; compare same months</span>")
+            bars = render_bars([("Now", m["value"], f'{m["value"]:.1f}%', "accent"),
+                                ("Jan 2025", base, f'{base:.1f}%', "muted")], accent)
+
+    elif m["id"] == "ice_composition":
+        hero = f'{m["value"]:.1f}%'
+        sub = m["note"]
+        d = m.get("detail") or {}
+        if d:
+            noconv = d["pending_criminal_charges"] + d["other_immigration_violators"]
+            delta = (f'<span class="delta neutral">{num(noconv)} of {num(d["total_detained"])} people '
+                     "detained &#8212; ICE&#8217;s own categories</span>")
+            bars = render_bars([("No conviction", noconv, num(noconv), "accent"),
+                                ("of which pending charges", d["pending_criminal_charges"],
+                                 num(d["pending_criminal_charges"]), "muted"),
+                                ("Convicted criminal", d["convicted_criminal"],
+                                 num(d["convicted_criminal"]), "muted")], accent)
+
+    elif m["id"] == "ice_custody_deaths":
+        hero = num(m["value"])
+        sub = m["note"].split(". ")[0] + "."
+        fc = {int(k): v for k, v in (m.get("fy_counts") or {}).items()}
+        if fc:
+            latest = max(fc)
+            rows = [(f"FY{fy}" + (" (to date)" if fy == latest else ""), n, num(n),
+                     "accent" if fy == latest else "muted")
+                    for fy, n in sorted(fc.items(), reverse=True)[:3]]
+            bars = render_bars(rows, accent)
+            if latest - 1 in fc:
+                delta = f'<span class="delta neutral">FY{latest - 1} full year: {num(fc[latest - 1])}</span>'
+
+    elif m["id"] == "refugee_admissions":
+        hero = num(m["value"])
+        sub = m["note"].split(". ")[0] + "."
+        if m.get("ceiling"):
+            c = m["ceiling"]
+            delta = (f'<span class="delta neutral">{c["label"]}: {num(c["value"])} &#8212; '
+                     "court-ordered cases sit outside it</span>")
+            bars = render_bars([("Arrivals FYTD", m["value"], num(m["value"]), "accent"),
+                                ("Ceiling", c["value"], num(c["value"]), "muted")], accent)
+
+    elif m["id"] == "clemency":
+        hero = num(m["value"])
+        sub = m["note"].split(". ")[0] + "."
+        ind = m.get("individuals_covered_approx")
+        if ind:
+            delta = (f'<span class="delta neutral">~{num(ind)} individuals covered incl. the '
+                     "Jan 6 proclamation (one action, ~1,500 people)</span>")
+        pp = m.get("per_president_individuals") or {}
+        if pp and ind:
+            bars = render_bars([("Trump &#8217;25 (~)", ind, f"~{num(ind)}", "accent"),
+                                ("Biden", pp.get("biden", 0), num(pp.get("biden", 0)), "muted"),
+                                ("Obama", pp.get("obama", 0), num(pp.get("obama", 0)), "muted"),
+                                ("Trump &#8217;17", pp.get("trump1", 0), num(pp.get("trump1", 0)), "muted")], accent)
+
+    elif m["id"] in ("national_emergencies", "war_powers"):
+        hero = num(m["value"])
+        sub = m["note"].split(". ")[0] + "."
+        pt = m.get("prev_terms") or {}
+        rows = [("Trump &#8217;25", m["value"], num(m["value"]), "accent")]
+        for pid, lbl in (("biden", "Biden"), ("trump1", "Trump &#8217;17"), ("obama", "Obama")):
+            v = pt.get(pid)
+            if isinstance(v, dict) and v.get("same_point") is not None:
+                rows.append((lbl, v["same_point"], num(v["same_point"]), "muted"))
+        if len(rows) > 1:
+            bars = render_bars(rows, accent)
+            what = "New declarations" if m["id"] == "national_emergencies" else "Reports"
+            delta = f'<span class="delta neutral">{what} at the same point in term</span>'
+
+    elif m["id"] in ("defense_outlays", "foreign_aid"):
+        hero = f'${m["value"]:,.0f}B'
+        sub = m["note"].split(". ")[0] + "."
+        if m.get("comparison"):
+            comp = m["comparison"]; diff = m["value"] - comp["value"]
+            arrow = "&#9650;" if diff > 0 else "&#9660;"
+            delta = (f'<span class="delta neutral">{arrow} ${abs(diff):,.0f}B vs {comp["label"].lower()} '
+                     f'(${comp["value"]:,.0f}B)</span>')
+            bars = render_bars([("This FY", m["value"], f'${m["value"]:,.0f}B', "accent"),
+                                ("Prior FY", comp["value"], f'${comp["value"]:,.0f}B', "muted")], accent)
+
+    elif m["id"] == "military_deaths":
+        hero = num(m["value"])
+        sub = m["note"].split(". ")[0] + "."
+        po = m.get("per_operation") or {}
+        rows, first = [], True
+        for op_name, v in po.items():   # NB: do not shadow tile()'s `name`
+            if v.get("deaths") is None:
+                continue
+            rows.append((op_name.replace("Operation ", "Op. "), v["deaths"], num(v["deaths"]),
+                         "accent" if first else "muted"))
+            first = False
+        if rows:
+            bars = render_bars(rows, accent)
+        if m.get("wounded_total"):
+            delta = f'<span class="delta neutral">Wounded in action: {num(m["wounded_total"])}</span>'
 
     else:
         hero = str(m.get("value", ""))
@@ -420,9 +595,14 @@ def date_points(series):
     return [[_ems(_pdate(p["date"])), p["value"]] for p in series]
 
 
-def aligned_monthly(series, pres, pct=False, months=TERM_MONTHS):
+def aligned_monthly(series, pres, pct=False, months=TERM_MONTHS, base_by=0):
     """Series -> [[months_in_office, value]] for one president's first term.
-    pct=True rebases to % change vs the inauguration month (requires month 0)."""
+    pct=True rebases to % change vs the earliest point at month <= base_by.
+    base_by=0 (default) demands the inauguration month itself; QUARTERLY series
+    never store month 0 (quarters are stamped with their END month, so the
+    inauguration quarter lands at month 2) — pass base_by=3 for those, which is
+    what 'percent of the inauguration-quarter level' actually means. This was
+    the real-wages empty-chart bug (creator-found, Aug 2026)."""
     inaug = PRES[pres]["inaug"]
     pts = []
     for p in series:
@@ -432,7 +612,7 @@ def aligned_monthly(series, pres, pct=False, months=TERM_MONTHS):
     if not pts:
         return None
     if pct:
-        base = next((v for m, v in pts if m == 0), None)
+        base = next((v for m, v in pts if m <= base_by), None)
         if base is None:
             return None
         pts = [[m, round((v / base - 1) * 100, 2)] for m, v in pts]
@@ -495,7 +675,8 @@ def _pseries(ids, series, **kw):
     entity colors; presidents with no reachable data simply drop out)."""
     out = []
     for pid in ids:
-        fn = kw.get("fn") or (lambda s, p: aligned_monthly(s, p, pct=kw.get("pct", False)))
+        fn = kw.get("fn") or (lambda s, p: aligned_monthly(
+            s, p, pct=kw.get("pct", False), base_by=kw.get("base_by", 0)))
         pts = fn(series, pid)
         if pts:
             out.append({"label": PRES[pid]["label"], "color": PRES[pid]["color"], "pts": pts})
@@ -594,7 +775,9 @@ def payload(m, loaded):
                            "Obama-era months predate the stored series (which starts 2017) — a candidate one-time backfill."])
 
     elif mid == "real_wages":
-        sers = _pseries(["trump2", "biden", "trump1", "obama"], S, pct=True)
+        # quarterly series: quarter-END stamps mean month 0 never exists;
+        # base_by=3 rebases on the inauguration QUARTER (stored at month 2)
+        sers = _pseries(["trump2", "biden", "trump1", "obama"], S, pct=True, base_by=3)
         aligned("Real median weekly earnings, % change since inauguration quarter", "pctsign", sers,
                 unit="% vs inauguration qtr",
                 gaps=[{"x": _mon_idx(datetime.date(2025, 12, 1), T2_START), "label": "Q4 ’25 not collected (shutdown)"}])
@@ -704,7 +887,20 @@ def payload(m, loaded):
                            "Annual bars are ICE ERO annual-report totals (static, sourced); FY2025’s full-year total joins when ICE publishes its annual report. ICE paused publication for 56 days in early 2026 — gaps show as gaps."])
 
     elif mid == "ice_detention":
-        if len(S) >= 4:
+        adp_hist = ((m.get("annual_adp") or {}).get("values") or {})
+        if adp_hist:
+            # v3: verified annual backfill (ICE's own reports; citations in
+            # connectors/static/ice_adp_annual.json) + the accruing current FY
+            bars = []
+            for fy in sorted(int(k) for k in adp_hist):
+                bars.append([len(bars), adp_hist[str(fy)], "’" + str(fy)[2:], f"FY{fy} average"])
+            bars.append([len(bars), None, "’25", "FY2025 — no comparable annual figure published"])
+            bars.append([len(bars), m["value"], "’26*", f"FY2026 to date ({pretty_date(m['as_of'])})"])
+            fx.update(template="bars", xType="bars", fmt="count",
+                      chartTitle="ICE detention, average daily population by fiscal year — ’26 is to-date",
+                      series=[{"label": "ADP", "color": ACCENT, "pts": bars}],
+                      labelIdx=list(range(len(bars))), unitLabel="ADP")
+        elif len(S) >= 4:
             own("Average daily population in ICE detention (FY-to-date)", "count",
                 rng=False, unit="ADP")
         else:
@@ -820,23 +1016,167 @@ def payload(m, loaded):
 
     elif mid == "approval_rating":
         t2 = aligned_monthly([{"date": p["date"][:7], "value": p["value"]} for p in S], "trump2")
-        if t2 and len(t2) >= 4:
+        # v3: the sourced Gallup import draws prior presidents as quarterly-
+        # average lines (quarter N plotted at month 3N); the current term stays
+        # the VoteHub aggregate. Mixed survey bases, labelled on every line and
+        # in the caveats. Gallup's unpublished quarters stay gaps.
+        gq = (m.get("gallup") or {}).get("quarterly") or {}
+        sers = []
+        if t2:
+            sers.append({"label": PRES["trump2"]["label"] + " · VoteHub",
+                         "color": PRES["trump2"]["color"], "pts": t2})
+        for pid in ("biden", "trump1", "obama"):
+            qq = gq.get(pid)
+            if qq:
+                pts = [[int(k) * 3, v] for k, v in sorted(qq.items(), key=lambda kv: int(kv[0]))]
+                sers.append({"label": PRES[pid]["label"] + " · Gallup",
+                             "color": PRES[pid]["color"], "pts": pts})
+        if len(sers) >= 2:
+            aligned("Approval by months in office — prior presidents are Gallup quarterly averages",
+                    "pct", sers, unit="% approve", zero=False)
+        elif t2 and len(t2) >= 4:
             aligned("Approval, by months in office", "pct",
                     [{"label": PRES["trump2"]["label"], "color": PRES["trump2"]["color"], "pts": t2}],
                     unit="% approve")
         else:
             accrue("Presidential approval, weekly aggregate",
                    f"The weekly aggregate starts accruing now ({m['value']:.0f}% approve / "
-                   f"{m.get('disapprove', 0):.0f}% disapprove as of {pretty_date(m['as_of'])}). "
-                   "A sourced cross-president comparison (prior presidents at the same point in "
-                   "term) is planned as a one-time historical import, clearly labelled as survey data.")
-        appr_caveats = ["Simple average of recent national polls, one per pollster (VoteHub, CC-BY); the poll list is linked from the source. Opinion data, not a government statistic."]
+                   f"{m.get('disapprove', 0):.0f}% disapprove as of {pretty_date(m['as_of'])}).")
+        appr_caveats = ["Simple average of recent national polls, one per pollster (VoteHub, CC-BY); the poll list is linked from the source. Opinion data, not a government statistic.",
+                        "Prior presidents are Gallup quarterly averages (a different survey base than the current term's aggregate — stated on each line); Gallup never published a few late quarters (Biden Q15–16, Trump-’17 Q16), and those stay gaps."]
         if m.get("source_stalled_since"):
             stalled_pretty = pretty_date(m["source_stalled_since"])
             appr_caveats.insert(0, f"VoteHub’s public feed has carried no new national approval poll since {stalled_pretty} — the figure shown is the last aggregate. The pipeline checks daily; this card revives automatically when polls resume.")
         fx.update(channels="public opinion responds to everything on this board — it is the electorate’s own scoreboard, not a government statistic.",
                   limits="poll aggregates smooth single-poll noise but inherit house effects and modelling choices; this is the board’s one survey-derived metric, labelled as such.",
                   caveats=appr_caveats)
+
+    # ---------------- v3 register cards (locked 12 Aug 2026) ----------------
+    elif mid == "electricity_price":
+        own("Residential electricity price — monthly since 1978", "usd2", unit="$/kWh")
+        fx.update(channels="permitting for generation and transmission, tariffs on grid equipment (transformers, panels), federal power marketing.",
+                  limits="rates are set by state regulators and utilities; fuel costs and grid-investment cycles dominate; data-center demand growth is a private-sector force.",
+                  caveats=["BLS average-price series, US city average, not seasonally adjusted — the price on a bill, not a policy index.",
+                           "The nominal long view embeds general inflation; cross-president views use % change since inauguration."])
+
+    elif mid == "crude_oil":
+        own("US crude oil production — monthly since 1920", "idx", unit="Million barrels/day")
+        fx.update(channels="leasing, permitting, regulatory posture.",
+                  limits="production responds to global prices and shale economics with multi-year lags; records were also being set under the prior administration.",
+                  caveats=["EIA monthly field production, millions of barrels per day.",
+                           "The shale era (2010→) dwarfs everything before it — the century of context is the point of this chart."])
+
+    elif mid == "renewable_share":
+        own("Renewable share of US electricity generation — monthly since 2001", "pct",
+            unit="% of utility-scale generation")
+        fx.update(channels="tax-credit changes (2025 law phase-outs), federal permitting and leasing (esp. offshore wind), tariffs on imported equipment.",
+                  limits="the generation mix follows multi-year investment cycles and weather (hydro, wind); most 2025–26 capacity additions were contracted years earlier.",
+                  caveats=["A computed ratio of EIA's own generation-by-source figures: (conventional hydro + wind + solar + geothermal + biomass) ÷ total, utility-scale only; excludes rooftop solar and pumped storage.",
+                           "The mix is strongly seasonal (hydro peaks in spring, solar in summer) — compare same months, not adjacent ones."])
+
+    elif mid == "ice_composition":
+        d = m.get("detail") or {}
+        if len(S) >= 4:
+            own("Share of ICE detainees with no criminal conviction", "pct", rng=False,
+                unit="% no conviction")
+        else:
+            accrue("Detention composition — ICE's own categories",
+                   (f"{m['value']:.1f}% of the {d.get('total_detained', 0):,} people in ICE detention "
+                    f"have no criminal conviction ({d.get('pending_criminal_charges', 0):,} with charges "
+                    f"pending, {d.get('other_immigration_violators', 0):,} with none), as of "
+                    f"{pretty_date(m['as_of'])}. ") if d else "Composition accrues from here. "
+                   + "Each biweekly ICE snapshot adds a point; the share draws itself as the record builds.")
+        fx.update(channels="direct — arrest priorities, detention decisions, quota pressure.",
+                  limits="'no conviction' includes people with pending charges (broken out separately); composition shifts with the enforcement mix (interior arrests vs border book-ins).",
+                  caveats=["ICE's own categories — 'Convicted Criminal', 'Pending Criminal Charges', 'Other Immigration Violators' — reconciled against the workbook's Currently Detained total before publishing.",
+                           "Detention composition only: ICE stopped publishing arrest-side criminality when its dashboard was frozen (Jan 2025)."])
+
+    elif mid == "ice_custody_deaths":
+        fc = {int(k): v for k, v in (m.get("fy_counts") or {}).items()}
+        if fc:
+            bars = []
+            for fy in range(min(fc), max(fc) + 1):
+                star = fy == max(fc)
+                bars.append([len(bars), fc.get(fy), "’" + str(fy)[2:] + ("*" if star else ""),
+                             f"FY{fy}" + (" to date" if star else "")])
+            fx.update(template="bars", xType="bars", fmt="count",
+                      chartTitle="Deaths in ICE custody by fiscal year — current year is to-date",
+                      series=[{"label": "Deaths", "color": ACCENT, "pts": bars}],
+                      labelIdx=list(range(len(bars))), unitLabel="Deaths")
+        else:
+            accrue("Deaths in ICE custody", "Counts accrue from ICE's death-reporting page.")
+        fx.update(channels="direct — detention capacity and crowding, medical-care contracts, oversight intensity.",
+                  limits="population size drives exposure (the detention card carries the ADP context); ICE posts deaths with documented delays, so recent counts revise upward.",
+                  caveats=["Counted from ICE's own per-death reporting page; names are never republished here.",
+                           "Definition narrowed in June 2026: deaths within 30 days of release are no longer reported — later years undercount relative to earlier ones by that rule change."])
+
+    elif mid == "refugee_admissions":
+        if len(S) >= 4:
+            own("Refugee arrivals, fiscal-YTD by month", "count", rng=False, unit="Arrivals FYTD")
+            if m.get("ceiling"):
+                fx.update(benchmark=m["ceiling"]["value"], benchmarkLabel=m["ceiling"]["label"])
+        else:
+            c = m.get("ceiling") or {}
+            accrue("Refugee admissions, fiscal-YTD",
+                   f"{m['value']:,} arrivals this fiscal year"
+                   + (f" against the {c['value']:,} ceiling" if c.get("value") else "")
+                   + f", as of {pretty_date(m['as_of'])}. Monthly history accrues from here; "
+                     "the official annual series back to 1975 is a planned static import.")
+        fx.update(channels="direct — the president sets the annual ceiling and program priorities; suspension and resumption by executive order.",
+                  limits="courts have ordered admissions the program suspended; processing pipelines lag policy decisions by months.",
+                  caveats=["Arrivals can exceed the ceiling: court-ordered and follow-to-join cases sit outside it.",
+                           "The State Department skips some monthly reports (Nov 2025 was never posted) — gaps show as gaps.",
+                           "Composition is part of the record: current arrivals are dominated by the reprioritised program (see the card's context line)."])
+
+    elif mid == "clemency":
+        own("Named clemency grants this term — cumulative", "count", rng=False,
+            unit="Named grants (cumulative)")
+        fx.update(channels="entirely the president's — the pardon power is plenary.",
+                  limits="counts measure use of the power, not merits; blanket proclamations cover unnamed individuals, counted separately from named grants.",
+                  caveats=["Two numbers, defined on the card: named grants (counted row-by-row from DOJ's grants pages) and individuals covered (adds the ~1,500 Jan 6 defendants pardoned or commuted in one day-one proclamation — one action, many people; the proclamation text itself names no count).",
+                           "Historical per-president totals are DOJ's own clemency statistics, frozen by DOJ in Jan 2025 — individual acts, categorical proclamations excluded."])
+
+    elif mid == "national_emergencies":
+        own("New national emergencies declared this term — cumulative", "count", rng=False,
+            unit="Declarations (cumulative)")
+        fx.update(channels="entirely the president's instrument.",
+                  limits="a count measures invocation, not scope; some declarations are routine (sanctions programs); continuations of pre-existing emergencies are excluded by rule.",
+                  caveats=["A derived count — no official list exists. Rules: Federal Register presidential documents containing the declaring phrase; annual 'Continuation of…' notices and terminations excluded; reconciled against the Brennan Center's tracker (a labelled cross-check, never the source).",
+                           "Each counted declaration's date and title is stored with the data — the receipts behind the number."])
+
+    elif mid == "defense_outlays":
+        own("Defense outlays, fiscal-YTD by month — resets each October", "usdB",
+            area=False, unit="FYTD ($B)")
+        fx.update(channels="budget requests, signed appropriations, supplementals.",
+                  limits="Congress appropriates; outlays lag obligations; much spending is multi-year programs locked in earlier.",
+                  caveats=["Department of Defense — Military Programs (military pay, operations, procurement, R&D; excludes VA and civil programs). Fiscal-year-to-date, so the line saw-tooths each October.",
+                           "The department is being renamed (Defense → War); the connector matches both labels so the series survives the rebrand."])
+
+    elif mid == "foreign_aid":
+        own("International-affairs obligations by fiscal year", "usdB", rng=False,
+            unit="Obligations ($B)")
+        fx.update(channels="direct — program terminations, agency reorganisation, withheld funds (litigated).",
+                  limits="obligations are commitments, not cash delivered; the USAID→State transition muddies 2025 reporting.",
+                  caveats=["A constructed metric, definition printed: federal obligations under budget function 150 (International Affairs) — development and humanitarian aid, security assistance, State operations, multilateral contributions — from USAspending.",
+                           "Cross-checked against foreignassistance.gov, whose own FY2024–25 reporting is partial since the USAID merger."])
+
+    elif mid == "war_powers":
+        own("War-powers reports to Congress this term — cumulative", "count", rng=False,
+            unit="Reports (cumulative)")
+        fx.update(channels="direct — reports follow presidential military action.",
+                  limits="classified annexes and disputed reporting obligations make counts a floor, not a ceiling; the 2026 dispute over the 60-day clock is itself part of the record.",
+                  caveats=["The officially defined record of US military action abroad: 48-hour and periodic War Powers Resolution reports, each linking its underlying official document.",
+                           "Compiled by NYU's War Powers Resolution Reporting project — named here because no official machine-readable list exists (the board's second non-government source; the other is the approval poll aggregate)."])
+
+    elif mid == "military_deaths":
+        own("US military deaths in current named operations — cumulative", "count",
+            rng=False, unit="Deaths (cumulative)")
+        fx.update(markers=[{"x": _ems(datetime.date(2026, 7, 15)),
+                            "label": "DCAS splits Iran-war casualties — definition change"}],
+                  channels="direct — decisions to initiate and continue operations.",
+                  limits="covers service members, not civilians or contractors; DCAS recategorised Iran-war casualties mid-conflict (July 2026), so per-operation splits changed while totals carried over.",
+                  caveats=["Hostile and non-hostile deaths across the current named operations (per-operation split on the card), as extracted by DCAS on its own stated date.",
+                           "The Pentagon's legacy public casualty report froze on Jan 30, 2025 — this database is the only current official channel."])
 
     else:
         accrue(m.get("name", mid), "History for this metric accrues with each data run.")
@@ -847,6 +1187,42 @@ def payload(m, loaded):
 # ---- page -------------------------------------------------------------------
 def _slug(cat):
     return cat.lower().replace(" & ", "-").replace(" ", "-")
+
+
+def frozen_strip(today=None):
+    """The transparency strip (v3): official series that stopped updating,
+    each with the date of its last official release and days since — factual
+    and dated only, definition printed. Entries + citations live in
+    connectors/static/frozen_sources.json; a source leaves the list by
+    publishing again. Enhancement-only: a missing/broken file renders nothing
+    rather than blocking the build."""
+    path = os.path.join(HERE, "connectors", "static", "frozen_sources.json")
+    try:
+        entries = json.load(open(path))["sources"]
+    except Exception as e:  # noqa: BLE001
+        print(f"  ! frozen strip skipped ({e})")
+        return ""
+    today = today or datetime.date.today()
+    rows = []
+    for e in entries:
+        days = (today - effective_date(e["last_update"])).days
+        rows.append(
+            f'<tr><td><a href="{e["url"]}" target="_blank" rel="noopener">{e["name"]}</a></td>'
+            f'<td class="fz-date">{pretty_date(e["last_update"])}</td>'
+            f'<td class="fz-days">{days:,} days</td>'
+            f'<td class="fz-note">{e["note"]}</td></tr>')
+    return f"""
+    <section class="frozen" id="frozen">
+      <h2>Official sources that have stopped updating</h2>
+      <p class="fz-def">Some official series stopped publishing during this administration. This list is
+      factual and automatic: each row names a source this dashboard uses or would use, the date of its
+      last release, and the days since — recomputed at every daily build. A source leaves this list by
+      publishing again.</p>
+      <table class="fz-table">
+        <thead><tr><th>Source</th><th>Last official release</th><th>Silent for</th><th>What happened</th></tr></thead>
+        <tbody>{''.join(rows)}</tbody>
+      </table>
+    </section>"""
 
 
 def build():
@@ -1045,6 +1421,15 @@ def build():
   footer {{ margin-top:48px; color:var(--muted); font-size:12px; max-width:70ch; }}
   footer a {{ color:var(--secondary); }}
   .built {{ opacity:.6; font-size:11px; margin-top:14px; }}
+  .frozen {{ margin-top:44px; border-top:1px solid var(--line); padding-top:22px; }}
+  .frozen h2 {{ font-size:16px; margin:0 0 6px; }}
+  .fz-def {{ color:var(--muted); font-size:13px; max-width:78ch; margin:0 0 14px; }}
+  .fz-table {{ width:100%; border-collapse:collapse; font-size:13px; }}
+  .fz-table th {{ text-align:left; color:var(--muted); font-weight:600; padding:6px 10px 6px 0; border-bottom:1px solid var(--line); }}
+  .fz-table td {{ padding:8px 10px 8px 0; border-bottom:1px solid var(--line); vertical-align:top; }}
+  .fz-date, .fz-days {{ white-space:nowrap; }}
+  .fz-days {{ font-variant-numeric:tabular-nums; }}
+  .fz-note {{ color:var(--muted); max-width:52ch; }}
 </style>
 </head>
 <body>
@@ -1059,6 +1444,7 @@ def build():
     <main>
       {body}
     </main>
+    {frozen_strip()}
     <footer>
       Each figure is collected automatically from an authoritative source and shown against a comparison so a single number has context. Favourable and unfavourable numbers are shown alike, and nothing is removed when it moves in either direction. Each card shows its own data date and flags itself when a figure is older than its source's normal update schedule. Expanded charts show the full stored history — gaps in official publication render as gaps, definition changes are marked on the chart, and every chart can be read as a table or downloaded as the exact data served.
       <div class="built">Site rebuilt {built}. Freshness is judged per metric (see each card's date), not by this build time.</div>

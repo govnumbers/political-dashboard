@@ -334,16 +334,21 @@ ok(not _det["series"] and "62,517" in _det["accrueBody"], "sparse detention: acc
 
 print("== phase 7: full build render ==")
 B.build()
+_ndata = len([f for f in os.listdir(os.path.join(HERE, "data")) if f.endswith(".json")])
 _html = open(os.path.join(HERE, "site", "index.html")).read()
-ok(_html.count('data-id="') == 23, "index.html: all 23 cards carry data-id")
-ok(_html.count("expand-btn") >= 23, "index.html: every card gets the expand affordance")
+ok(_html.count('data-id="') == _ndata and _ndata >= 23,
+   f"index.html: one card per data file present ({_ndata})")
+ok(_html.count("expand-btn") >= _ndata, "index.html: every card gets the expand affordance")
+ok("Official sources that have stopped updating" in _html
+   and _html.count('fz-days">') == 8,
+   "transparency strip: renders with all 8 sourced entries (v3)")
 ok('data-tab="all">All</button>' in _html, "tabs: first tab is plain 'All', no count pill")
 ok("tab-count" not in _html and '<span class="n">' not in _html, "tabs: no count indicators")
 ok("localStorage" not in _html and "sessionStorage" not in _html, "no browser storage anywhere")
 ok("Presentation layer" in _html or "chart.js" not in _html or "lineChart" in _html,
    "chart.js inlined into the page")
 _dfiles = sorted(os.listdir(os.path.join(HERE, "site", "d")))
-ok(len(_dfiles) == 23, "site/d/: one payload per metric (store deep, load shallow)")
+ok(len(_dfiles) == _ndata, "site/d/: one payload per metric (store deep, load shallow)")
 _all_ok = True
 for _df in _dfiles:
     _p = json.load(open(os.path.join(HERE, "site", "d", _df)))
@@ -424,6 +429,167 @@ _ap = B.payload(_m("approval_rating", [{"date": "2026-06-29", "value": 42.2}],
                    disapprove=55.6, source_stalled_since="2026-06-29"), {})
 ok(any("no new national approval poll since" in c for c in _ap["caveats"]),
    "approval payload: outage disclosed in the expanded card's caveats")
+
+print("== v3 register (locked 12 Aug 2026): static imports ==")
+_gp = json.load(open(os.path.join(HERE, "connectors", "static", "gallup_terms.json")))
+ok(_gp["quarterly"]["biden"]["7"] == 42.0 and _gp["quarterly"]["trump1"]["7"] == 41.1
+   and _gp["quarterly"]["obama"]["7"] == 44.7,
+   "gallup static: canonical 7th-quarter trio matches Gallup's own table")
+ok("15" not in _gp["quarterly"]["biden"] and "16" not in _gp["quarterly"]["trump1"],
+   "gallup static: unpublished quarters stay gaps, never estimated")
+_adp = json.load(open(os.path.join(HERE, "connectors", "static", "ice_adp_annual.json")))
+ok(all(sum(_adp["components_cbp_plus_ice"][fy]) == tot for fy, tot in _adp["adp_by_fy"].items()),
+   "ADP static: every year passes ICE's own component-sum check")
+_eoat = json.load(open(os.path.join(HERE, "connectors", "static", "eo_alltime.json")))
+ok(next(p["total"] for p in _eoat["nara_modern"] if "1st term" in p["president"]) == 220
+   and next(p["total"] for p in _eoat["nara_modern"] if p["president"] == "Barack Obama") == 276,
+   "EO all-time static: Trump-1 consistency check (220) + the flagged Obama count (276)")
+_fz = json.load(open(os.path.join(HERE, "connectors", "static", "frozen_sources.json")))
+ok(len(_fz["sources"]) == 8 and all(e.get("url") and e.get("last_update") for e in _fz["sources"]),
+   "frozen-sources static: 8 entries, each dated and cited")
+
+print("== v3: connector logic (no network) ==")
+import votehub_approval as vap
+_g = vap.attach_gallup({}, datetime.date(2026, 8, 12))["gallup"]
+ok(_g["term_quarter"] == 7 and _g["same_quarter"]["biden"] == 42.0,
+   "approval: Aug 2026 maps to term quarter 7; Biden same-quarter attached")
+ok(vap.attach_gallup({}, datetime.date(2025, 2, 1))["gallup"]["term_quarter"] == 1,
+   "approval: Feb 2025 maps to quarter 1")
+
+import dcas_military_deaths as dcm
+_td = {"tableData": [{"army": "7", "navy": "1", "marines": "0", "airforce": "6",
+                      "spaceforce": "0", "total": "14", "valid": True}],
+       "extractionDate": "August 11, 2026"}
+ok(dcm.table_total(_td) == 14 and dcm.parse_extraction_date(_td) == "2026-08-11",
+   "DCAS: summary total + extraction date parse (real captured shape)")
+_mm = dcm.monthly_points({"tableData": [
+    {"month_Year": "FEBRUARY 2026", "tot_total": "0", "tot_kia": "0", "tot_acc": "0"},
+    {"month_Year": "MARCH 2026", "tot_total": "13", "tot_kia": "7", "tot_acc": "6"},
+    {"month_Year": "GRAND TOTAL", "tot_total": "14"}]})
+ok(len(_mm) == 2 and _mm[1]["deaths"] == 13 and _mm[1]["hostile"] == 7,
+   "DCAS: monthly rows parse; GRAND TOTAL row skipped")
+ok(dcm.cumulative_series({"oefu": _mm, "oo": [{"date": "2026-03", "deaths": 4,
+                                               "hostile": 4, "nonhostile": 0}]})[-1]["value"] == 17,
+   "DCAS: cross-operation cumulative sums by month")
+
+import eia_crude as ecr
+_pts = ecr.parse_dnav_monthly('<tr><td>2026</td><td>13,570</td><td>13,580</td><td></td></tr>'
+                              '<tr><td>notes</td><td>x</td></tr>')
+ok(_pts == [{"date": "2026-01", "value": 13.57}, {"date": "2026-02", "value": 13.58}],
+   "crude: dnav rows parse to million b/d; junk rows ignored")
+
+import eia_renewables as ern
+_rows = [["Table 1.1"], ["Period", "Coal", "Natural Gas", "Nuclear", "Hydroelectric Conventional",
+          "Wind", "Solar Photovoltaic", "Geothermal", "Wood and Wood-Derived Fuels",
+          "Other Biomass", "Hydroelectric Pumped Storage", "Total"],
+         ["2026 May", "50", "150", "60", "25", "45", "30", "1.5", "3", "1.5", "-0.5", "365.5"]]
+ok(ern.parse_table(_rows)[0]["value"] == round((25 + 45 + 30 + 1.5 + 3 + 1.5) / 365.5 * 100, 1),
+   "renewables: label-keyed share computation; pumped storage excluded")
+
+import fr_emergencies as fre
+_docs = [{"document_number": "1", "title": "Declaring a National Emergency at the Southern Border", "signing_date": "2025-01-20"},
+         {"document_number": "2", "title": "Continuation of the National Emergency With Respect to Iran", "signing_date": "2025-03-05"},
+         {"document_number": "3", "title": "Termination of Emergency With Respect to Cuba", "signing_date": "2025-04-01"},
+         {"document_number": "4", "title": "Regulating Imports With a Reciprocal Tariff", "signing_date": "2025-04-02"}]
+_dd = fre.declarations(_docs, datetime.date(2025, 1, 20))
+ok([x["date"] for x in _dd] == ["2025-01-20", "2025-04-02"],
+   "emergencies: continuations + terminations excluded by rule; declarations kept")
+
+import ice_composition as icc
+_crows = [["Currently Detained Criminality"], ["Criminality", "ICE", "CBP", "Total"],
+          ["Convicted Criminal", 12000, 7329, 19329],
+          ["Pending Criminal Charges", 9000, 6000, 15000],
+          ["Other Immigration Violators", 20000, 11436, 31436]]
+_cats = icc.reconcile(icc.criminality_block(_crows), 65765)
+ok(_cats == {"convicted": 19329, "pending": 15000, "other": 31436}
+   and round((15000 + 31436) / 65765 * 100, 1) == 70.6,
+   "composition: label-anchored parse reconciles to Currently Detained (70.6% no conviction)")
+try:
+    icc.reconcile(icc.criminality_block(_crows), 90000)
+    ok(False, "composition: irreconcilable totals must refuse to publish")
+except RuntimeError:
+    ok(True, "composition: irreconcilable totals refuse to publish (integrity check)")
+
+import ice_custody_deaths as icd
+_dates = icd.death_dates("".join(f"<tr><td>{d}</td><td>NAME</td></tr>" for d in
+                                 ["04/12/2018", "10/05/2025", "January 5, 2026"]))
+ok(len(_dates) == 3 and icd.fy_counts(_dates) == {2018: 1, 2026: 2},
+   "custody deaths: row dates counted; Oct 2025 + Jan 2026 both land in FY2026")
+
+import doj_clemency as djc
+ok(len(djc.grant_rows("".join(f"<tr><td>Name {i}</td><td>March {i + 1}, 2025</td></tr>"
+                              for i in range(25)))) == 25,
+   "clemency: named-grant rows counted by grant date")
+
+import nyu_warpowers as nwp
+import csv as _csv2, io as _io2
+_wrows = [["Report", "Date Transmitted", "Link"]]
+_d0 = datetime.date(1973, 11, 7)
+for _i in range(120):
+    _wrows.append([f"R{_i}", (_d0 + datetime.timedelta(days=_i * 160)).strftime("%m/%d/%Y"), "u"])
+_buf = _io2.StringIO(); _csv2.writer(_buf).writerows(_wrows)
+ok(len(nwp.report_dates(_buf.getvalue())) == 120,
+   "war powers: date column auto-detected in the compilation CSV")
+
+import rpc_refugees as rpr
+_me = rpr.month_end_candidates(datetime.date(2026, 8, 12))
+ok(_me[0] == datetime.date(2026, 7, 31) and _me[1] == datetime.date(2026, 6, 30),
+   "refugees: month-end probing order (newest first)")
+ok(rpr.fy_of(datetime.date(2025, 10, 1)) == 2026, "refugees: fiscal-year math")
+
+import cms_medicaid as cmm
+_tr = cmm.trim_leading_orphans([{"date": "2013-09", "value": 1}] +
+                               [{"date": f"2016-{mm:02d}", "value": mm} for mm in range(1, 8)])
+ok(_tr[0]["date"] == "2016-01" and len(_tr) == 7,
+   "medicaid: leading orphan months trimmed at the first continuous run")
+
+import fjc_judges as fjm
+_at = fjm.all_time_totals([("Barack Obama", datetime.date(2009, 5, 1)),
+                           ("George Washington", datetime.date(1789, 9, 26))])
+ok(_at[0]["president"] == "George Washington", "judges: all-time totals ordered by first confirmation")
+
+print("== v3: payloads & tiles ==")
+_cd = B.payload(_m("ice_custody_deaths", [{"date": "2025-10", "value": 23}], value=23,
+                   fy_counts={"2018": 12, "2024": 9, "2025": 32, "2026": 23}), {})
+ok(_cd["template"] == "bars" and _cd["series"][0]["pts"][-1][2] == "’26*" and _cd["channels"],
+   "custody-deaths payload: FY bars, current year marked to-date, furniture present")
+_dt3 = B.payload(_m("ice_detention", [{"date": "2026-07", "value": 62517}], value=62517,
+                    annual_adp={"values": {"2019": 50165, "2024": 37721}}), {})
+ok(_dt3["template"] == "bars" and _dt3["series"][0]["pts"][0][1] == 50165
+   and any(p[1] is None and p[2] == "’25" for p in _dt3["series"][0]["pts"]),
+   "detention payload: verified annual bars + FY2025 labelled hole, never a zero")
+_md = B.payload(_m("military_deaths", [{"date": "2026-02", "value": 0}, {"date": "2026-07", "value": 18}],
+                   value=18, per_operation={}), {})
+ok(_md["series"] and _md["markers"][0]["label"].startswith("DCAS") and _md["limits"],
+   "military-deaths payload: cumulative line + recategorisation marker + influence note")
+_ap3 = B.payload(_m("approval_rating", [{"date": "2025-02-01", "value": 51}, {"date": "2026-06-29", "value": 42}],
+                    value=42, disapprove=56,
+                    gallup={"quarterly": {"biden": {"1": 56.0, "7": 42.0},
+                                          "trump1": {"7": 41.1}, "obama": {"7": 44.7}}}), {})
+ok(len(_ap3["series"]) == 4 and any("Gallup" in s["label"] for s in _ap3["series"])
+   and [21, 42.0] in _ap3["series"][1]["pts"],
+   "approval payload: VoteHub line + three Gallup quarterly lines (Q7 plotted at month 21)")
+_rf = B.payload(_m("refugee_admissions", [{"date": "2026-06", "value": 7730}], value=7730,
+                   ceiling={"label": "FY2026 presidential ceiling", "value": 7500}), {})
+ok(_rf["accrueBody"] and "7,730" in _rf["accrueBody"] and _rf["caveats"],
+   "refugees payload: honest accrue state carries arrivals vs ceiling")
+_mz3 = B.tile(_m("measles_cases", [{"date": f"{y}-12", "value": v} for y, v in
+                                   [(2021, 49), (2022, 121), (2023, 59), (2024, 285), (2025, 2288), (2026, 2371)]],
+                 value=2371, category="Health & Safety Net", unit="cases", direction="up_is_bad",
+                 note="Confirmed US measles cases — x.", cadence="Weekly"))
+ok("Worst Biden-term year (2024)" in _mz3 and "285" in _mz3,
+   "measles tile: v3 comparison — vs the prior administration's years, from its own series")
+_apt = B.tile(_m("approval_rating", [], value=42, category="Executive Power & Governance",
+                 unit="% approve", disapprove=56, net=-14, note="x", cadence="Weekly",
+                 gallup={"same_quarter": {"biden": 42.0, "trump1": 41.1, "obama": 44.7}}))
+ok("Biden at the same point (Gallup): 42%" in _apt and _apt.count("Gallup") >= 4,
+   "approval tile: v3 four-bar strip, every bar's survey basis labelled")
+_mdt = B.tile(_m("military_deaths", [], value=18, category="War & Defense", unit="deaths",
+                 note="x. y.", cadence="Weekly", wounded_total=696,
+                 per_operation={"Operation Epic Fury": {"deaths": 14},
+                                "Overseas Operations": {"deaths": 4}}))
+ok("military_deaths</h2>" in _mdt and "Op. Epic Fury" in _mdt,
+   "military-deaths tile: card title is the metric, not a shadowed operation name (regression)")
 
 print("== stale_days override ==")
 with tempfile.TemporaryDirectory() as td:

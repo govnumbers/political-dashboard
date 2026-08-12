@@ -53,6 +53,19 @@ BOUNDS = {
     "executive_orders":  {"min": 0.0,    "max": 3000.0,  "max_jump": 500.0,  "unit": "cumulative count"},
     "judges_confirmed":  {"min": 0.0,    "max": 600.0,   "max_jump": 60.0,   "unit": "cumulative count"},
     "approval_rating":   {"min": 15.0,   "max": 85.0,    "max_jump": 12.0,   "unit": "% approve (poll aggregate)"},
+    # --- v3 additions (register locked 12 Aug 2026) ---
+    "electricity_price": {"min": 0.05,   "max": 0.60,    "max_jump": 0.04,   "unit": "$/kWh, US city average residential"},
+    "crude_oil":         {"min": 3.0,    "max": 25.0,    "max_jump": 2.0,    "unit": "million barrels/day, monthly"},
+    "renewable_share":   {"min": 5.0,    "max": 60.0,    "max_jump": 8.0,    "unit": "% of utility-scale net generation (mix is seasonal)"},
+    "ice_composition":   {"min": 0.0,    "max": 100.0,   "max_jump": 25.0,   "unit": "% of detainees with no criminal conviction"},
+    "ice_custody_deaths": {"min": 0.0,   "max": 500.0,   "max_jump": 100.0,  "unit": "deaths in custody, fiscal-YTD (resets each Oct)"},
+    "refugee_admissions": {"min": 0.0,   "max": 250000.0,"max_jump": 150000.0,"unit": "arrivals, fiscal-YTD (resets each Oct; ceilings ranged 7.5k-230k)"},
+    "clemency":          {"min": 0.0,    "max": 20000.0, "max_jump": 5000.0, "unit": "clemency actions this term (blanket batches land at once)"},
+    "national_emergencies": {"min": 0.0, "max": 60.0,    "max_jump": 12.0,   "unit": "new NEA emergencies this term, cumulative"},
+    "defense_outlays":   {"min": 0.0,    "max": 2500.0,  "max_jump": 1300.0, "unit": "$B net outlays, fiscal-YTD (resets each Oct)"},
+    "foreign_aid":       {"min": 0.0,    "max": 150.0,   "max_jump": 80.0,   "unit": "$B obligations, fiscal-YTD (resets each Oct)"},
+    "war_powers":        {"min": 0.0,    "max": 100.0,   "max_jump": 25.0,   "unit": "WPR reports this term, cumulative"},
+    "military_deaths":   {"min": 0.0,    "max": 10000.0, "max_jump": 1000.0, "unit": "deaths, current named operations, cumulative"},
 }
 
 

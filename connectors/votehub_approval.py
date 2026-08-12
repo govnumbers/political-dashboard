@@ -42,6 +42,34 @@ API = "https://api.votehub.com/polls"
 #   • at >75 days quiet (mid-Sep 2026) it hard-fails again — the acknowledgment
 #     is time-boxed, not indefinite; the fallback ladder is in docs 02/04.
 STALL_HARD_FAIL_DAYS = 75
+TERM_START = datetime.date(2025, 1, 20)
+GALLUP_STATIC = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                             "static", "gallup_terms.json")
+
+
+def attach_gallup(out, today):
+    """v3 lock: attach the sourced Gallup one-time import (quarterly averages,
+    Biden/Trump-1/Obama) so the card can compare vs Biden at the same point in
+    term and draw the months-in-office view. Enhancement-only: a problem here
+    never blocks the live metric. Term quarters = 3-month blocks from Jan 20."""
+    import json as _json
+    try:
+        with open(GALLUP_STATIC) as f:
+            g = _json.load(f)
+        months_in = (today.year - TERM_START.year) * 12 + (today.month - TERM_START.month) \
+            - (1 if today.day < TERM_START.day else 0)
+        quarter = max(1, min(16, months_in // 3 + 1))
+        same_q = {}
+        for pid in ("biden", "trump1", "obama"):
+            v = g["quarterly"].get(pid, {}).get(str(quarter))
+            if v is not None:
+                same_q[pid] = v
+        out["gallup"] = {"term_quarter": quarter, "same_quarter": same_q,
+                         "quarterly": g["quarterly"], "inauguration": g["inauguration"],
+                         "method_note": g["_method_note"], "source_note": g["_source"]}
+    except Exception as e:  # noqa: BLE001
+        print(f"  ! approval: Gallup import skipped this run ({e})")
+    return out
 
 
 def stalled_output(existing, today, reason):
@@ -138,7 +166,8 @@ def main():
     except RuntimeError as e:
         # A diagnosed quiet source, not an infra failure (network errors above
         # still raise → red). Republish last-good with explicit disclosure.
-        publish(stalled_output(load_existing("approval_rating"), today, str(e)), series=[])
+        publish(attach_gallup(stalled_output(load_existing("approval_rating"), today, str(e)),
+                              today), series=[])
         return
 
     out = {
@@ -152,7 +181,7 @@ def main():
         "note": f"Simple average of {n} national polls (one per pollster, last ~2 weeks). "
                 "Opinion data, not a government statistic — the board's one survey-derived metric.",
     }
-    publish(out, series=[{"date": as_of, "value": app}])
+    publish(attach_gallup(out, today), series=[{"date": as_of, "value": app}])
 
 
 if __name__ == "__main__":
