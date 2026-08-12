@@ -409,7 +409,411 @@
         "month": 47,
         "value": 148
       }
+    ],
+    "trump1": [
+      {
+        "month": 0,
+        "value": 7
+      },
+      {
+        "month": 1,
+        "value": 15
+      },
+      {
+        "month": 2,
+        "value": 23
+      },
+      {
+        "month": 3,
+        "value": 33
+      },
+      {
+        "month": 4,
+        "value": 36
+      },
+      {
+        "month": 5,
+        "value": 39
+      },
+      {
+        "month": 6,
+        "value": 42
+      },
+      {
+        "month": 7,
+        "value": 45
+      },
+      {
+        "month": 8,
+        "value": 48
+      },
+      {
+        "month": 9,
+        "value": 51
+      },
+      {
+        "month": 10,
+        "value": 51
+      },
+      {
+        "month": 11,
+        "value": 55
+      },
+      {
+        "month": 12,
+        "value": 59
+      },
+      {
+        "month": 13,
+        "value": 60
+      },
+      {
+        "month": 14,
+        "value": 63
+      },
+      {
+        "month": 15,
+        "value": 66
+      },
+      {
+        "month": 16,
+        "value": 75
+      },
+      {
+        "month": 17,
+        "value": 77
+      },
+      {
+        "month": 18,
+        "value": 81
+      },
+      {
+        "month": 19,
+        "value": 83
+      },
+      {
+        "month": 20,
+        "value": 85
+      },
+      {
+        "month": 21,
+        "value": 85
+      },
+      {
+        "month": 22,
+        "value": 87
+      },
+      {
+        "month": 23,
+        "value": 92
+      },
+      {
+        "month": 24,
+        "value": 94
+      },
+      {
+        "month": 25,
+        "value": 95
+      },
+      {
+        "month": 26,
+        "value": 102
+      },
+      {
+        "month": 27,
+        "value": 105
+      },
+      {
+        "month": 28,
+        "value": 109
+      },
+      {
+        "month": 29,
+        "value": 114
+      },
+      {
+        "month": 30,
+        "value": 118
+      },
+      {
+        "month": 31,
+        "value": 121
+      },
+      {
+        "month": 32,
+        "value": 125
+      },
+      {
+        "month": 33,
+        "value": 133
+      },
+      {
+        "month": 34,
+        "value": 134
+      },
+      {
+        "month": 35,
+        "value": 137
+      },
+      {
+        "month": 36,
+        "value": 140
+      },
+      {
+        "month": 37,
+        "value": 144
+      },
+      {
+        "month": 38,
+        "value": 148
+      },
+      {
+        "month": 39,
+        "value": 155
+      },
+      {
+        "month": 40,
+        "value": 161
+      },
+      {
+        "month": 41,
+        "value": 169
+      },
+      {
+        "month": 42,
+        "value": 176
+      },
+      {
+        "month": 43,
+        "value": 183
+      },
+      {
+        "month": 44,
+        "value": 189
+      },
+      {
+        "month": 45,
+        "value": 193
+      },
+      {
+        "month": 46,
+        "value": 195
+      },
+      {
+        "month": 47,
+        "value": 206
+      },
+      {
+        "month": 48,
+        "value": 220
+      }
     ]
+  },
+  "all_time": {
+    "nara_modern": [
+      {
+        "president": "Franklin D. Roosevelt",
+        "total": 3467,
+        "years": "1933-1945"
+      },
+      {
+        "president": "Harry S. Truman",
+        "total": 894,
+        "years": "1945-1953"
+      },
+      {
+        "president": "Dwight D. Eisenhower",
+        "total": 482,
+        "years": "1953-1961"
+      },
+      {
+        "president": "John F. Kennedy",
+        "total": 214,
+        "years": "1961-1963"
+      },
+      {
+        "president": "Lyndon B. Johnson",
+        "total": 324,
+        "years": "1963-1969"
+      },
+      {
+        "president": "Richard Nixon",
+        "total": 346,
+        "years": "1969-1974"
+      },
+      {
+        "president": "Gerald R. Ford",
+        "total": 169,
+        "years": "1974-1977"
+      },
+      {
+        "president": "Jimmy Carter",
+        "total": 320,
+        "years": "1977-1981"
+      },
+      {
+        "president": "Ronald Reagan",
+        "total": 381,
+        "years": "1981-1989"
+      },
+      {
+        "president": "George H.W. Bush",
+        "total": 166,
+        "years": "1989-1993"
+      },
+      {
+        "president": "Bill Clinton",
+        "total": 364,
+        "years": "1993-2001"
+      },
+      {
+        "president": "George W. Bush",
+        "total": 291,
+        "years": "2001-2009"
+      },
+      {
+        "president": "Barack Obama",
+        "total": 276,
+        "years": "2009-2017"
+      },
+      {
+        "president": "Donald Trump (1st term)",
+        "total": 220,
+        "years": "2017-2021"
+      },
+      {
+        "president": "Joe Biden",
+        "total": 162,
+        "years": "2021-2025"
+      }
+    ],
+    "ucsb_pre_fdr": [
+      {
+        "president": "Washington",
+        "total": 8
+      },
+      {
+        "president": "J. Adams",
+        "total": 1
+      },
+      {
+        "president": "Jefferson",
+        "total": 4
+      },
+      {
+        "president": "Madison",
+        "total": 1
+      },
+      {
+        "president": "Monroe",
+        "total": 1
+      },
+      {
+        "president": "J.Q. Adams",
+        "total": 3
+      },
+      {
+        "president": "Jackson",
+        "total": 12
+      },
+      {
+        "president": "Van Buren",
+        "total": 10
+      },
+      {
+        "president": "W.H. Harrison",
+        "total": 0
+      },
+      {
+        "president": "Tyler",
+        "total": 17
+      },
+      {
+        "president": "Polk",
+        "total": 18
+      },
+      {
+        "president": "Taylor",
+        "total": 5
+      },
+      {
+        "president": "Fillmore",
+        "total": 12
+      },
+      {
+        "president": "Pierce",
+        "total": 35
+      },
+      {
+        "president": "Buchanan",
+        "total": 16
+      },
+      {
+        "president": "Lincoln",
+        "total": 48
+      },
+      {
+        "president": "A. Johnson",
+        "total": 79
+      },
+      {
+        "president": "Grant",
+        "total": 217
+      },
+      {
+        "president": "Hayes",
+        "total": 92
+      },
+      {
+        "president": "Garfield",
+        "total": 6
+      },
+      {
+        "president": "Arthur",
+        "total": 96
+      },
+      {
+        "president": "Cleveland (1st)",
+        "total": 113
+      },
+      {
+        "president": "B. Harrison",
+        "total": 143
+      },
+      {
+        "president": "Cleveland (2nd)",
+        "total": 140
+      },
+      {
+        "president": "McKinley",
+        "total": 185
+      },
+      {
+        "president": "T. Roosevelt",
+        "total": 1081
+      },
+      {
+        "president": "Taft",
+        "total": 724
+      },
+      {
+        "president": "Wilson",
+        "total": 1803
+      },
+      {
+        "president": "Harding",
+        "total": 522
+      },
+      {
+        "president": "Coolidge",
+        "total": 1203
+      },
+      {
+        "president": "Hoover",
+        "total": 1003
+      }
+    ],
+    "flags": "Obama: federalregister.gov displays 277 but its own 2009 row shows a 39-number range as 40 orders (one document double-counted); NARA's range (13489-13764) and UCSB both give 276 - we publish 276. Convention: FDR-era counts here are NUMBERED orders from NARA ranges; UCSB's pre-1945 figures include unnumbered orders (their FDR total is 3,726) - the card states the numbered-orders convention."
   },
   "series": [
     {

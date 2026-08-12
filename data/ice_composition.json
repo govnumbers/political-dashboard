@@ -1,0 +1,30 @@
+{
+  "id": "ice_composition",
+  "name": "ICE detainees with no criminal conviction",
+  "category": "Immigration",
+  "value": 71.7,
+  "unit": "%",
+  "as_of": "2026-07-11",
+  "direction": "neutral",
+  "detail": {
+    "convicted_criminal": 18247,
+    "pending_criminal_charges": 19417,
+    "other_immigration_violators": 26842,
+    "total_detained": 64506
+  },
+  "source": {
+    "name": "U.S. Immigration and Customs Enforcement (detention workbook)",
+    "url": "https://www.ice.gov/detain/detention-management"
+  },
+  "cadence": "Biweekly",
+  "stale_days": 75,
+  "note": "Share of the 64,506 people in ICE detention with no criminal conviction, using ICE's own categories: 'Pending Criminal Charges' plus 'Other Immigration Violators' (no conviction and no pending charge), vs 'Convicted Criminal'. The three categories are ICE's, reconciled against the workbook's own Currently Detained total before publishing.",
+  "series": [
+    {
+      "date": "2026-07",
+      "value": 71.7
+    }
+  ],
+  "last_checked": "2026-08-12",
+  "stale_after": "2026-09-24"
+}
