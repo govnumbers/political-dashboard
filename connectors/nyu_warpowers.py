@@ -37,16 +37,26 @@ TERMS = {"trump2": ("2025-01-20", None),
          "obama": ("2009-01-20", "2013-01-19")}
 
 
-def find_csv_url(html, base=SITE):
-    cands = re.findall(r'href="([^"]+\.csv[^"]*)"', html, re.I)
-    if not cands:
-        raise RuntimeError("no CSV link found on the war-powers project page (site changed)")
-    url = cands[0]
-    if url.startswith("/"):
-        url = base.rstrip("/") + url
-    elif not url.startswith("http"):
-        url = base.rstrip("/") + "/" + url
-    return url
+def find_csv_urls(html, base=SITE):
+    """FIRST-LIVE-RUN FIX (12 Aug 2026): the project's downloads don't end in
+    .csv — they're endpoints on a separate data host, e.g.
+    warpowers-data.herokuapp.com/download-48-hr-reports and
+    .../download-periodic-reports. Match download-report-ish hrefs first,
+    literal .csv links as a fallback; return ALL (both report types count)."""
+    cands = re.findall(r'href="([^"]*download[^"]*report[^"]*)"', html, re.I)
+    cands += re.findall(r'href="([^"]+\.csv[^"]*)"', html, re.I)
+    urls, seen = [], set()
+    for url in cands:
+        if url.startswith("/"):
+            url = base.rstrip("/") + url
+        elif not url.startswith("http"):
+            url = base.rstrip("/") + "/" + url
+        if url not in seen:
+            seen.add(url)
+            urls.append(url)
+    if not urls:
+        raise RuntimeError("no report-download links found on the war-powers project page (site changed)")
+    return urls
 
 
 def _parse_date(s):
@@ -64,7 +74,7 @@ def report_dates(csv_text):
     assumed: the column where the most values parse as dates wins (and must
     clear 60% parseability + 50 rows to be believed)."""
     rows = list(csv.reader(io.StringIO(csv_text)))
-    if len(rows) < 10:
+    if len(rows) < 5:
         raise RuntimeError("war-powers CSV implausibly small")
     header, body = rows[0], rows[1:]
     best_col, best_hits = None, 0
@@ -73,10 +83,10 @@ def report_dates(csv_text):
         if hits > best_hits:
             best_col, best_hits = ci, hits
     sample = min(len(body), 400)
-    if best_col is None or best_hits < max(50, int(0.6 * sample)):
+    if best_col is None or best_hits < max(20, int(0.6 * sample)):
         raise RuntimeError("could not identify a date column in the war-powers CSV")
     dates = [d for r in body if best_col < len(r) for d in [_parse_date(r[best_col])] if d]
-    if len(dates) < 80:  # >100 reports exist since 1973
+    if len(dates) < 30:  # per-file floor; main() enforces >=80 across both report types
         raise RuntimeError(f"war-powers CSV yielded only {len(dates)} dated reports — refusing")
     return sorted(dates)
 
@@ -91,10 +101,18 @@ def count_window(dates, start, end=None, days_cap=None):
 def main():
     page = requests.get(SITE, headers=UA, timeout=90)
     page.raise_for_status()
-    csv_url = find_csv_url(page.text)
-    r = requests.get(csv_url, headers=UA, timeout=90)
-    r.raise_for_status()
-    dates = report_dates(r.text)
+    dates, fetched = [], 0
+    for csv_url in find_csv_urls(page.text)[:4]:
+        try:
+            r = requests.get(csv_url, headers=UA, timeout=90)
+            r.raise_for_status()
+            dates += report_dates(r.text)
+            fetched += 1
+        except (requests.RequestException, RuntimeError) as e:
+            print(f"  ! war_powers: {csv_url} skipped ({e})")
+    if not fetched or len(dates) < 80:
+        raise RuntimeError(f"war-powers: only {len(dates)} dated reports from {fetched} file(s) — refusing")
+    dates = sorted(dates)
 
     days_in = (datetime.date.today() - TERM_START).days
     this_term = [d for d in dates if d >= TERM_START]

@@ -517,11 +517,20 @@ ok(len(_dates) == 3 and icd.fy_counts(_dates) == {2018: 1, 2026: 2},
    "custody deaths: row dates counted; Oct 2025 + Jan 2026 both land in FY2026")
 
 import doj_clemency as djc
-ok(len(djc.grant_rows("".join(f"<tr><td>Name {i}</td><td>March {i + 1}, 2025</td></tr>"
-                              for i in range(25)))) == 25,
-   "clemency: named-grant rows counted by grant date")
+_chtml = ("<p><strong>May 28, 2025 - 16 Pardons and 6 Commutations</strong></p><table>"
+          + "".join(f"<tr><td>Name {i}</td><td>D. Alaska</td><td>Five years (December 3, 2019)</td></tr>"
+                    for i in range(22)) + "</table>"
+          "<p><strong>October 1, 2025 - 1 Commutation (Amended)</strong></p>"
+          "<p><strong>July 3, 2026 – 17 Pardons</strong></p>")
+_b = djc.grant_batches(_chtml)
+ok(_b == [("2025-05-28", 22, False), ("2025-10-01", 1, True), ("2026-07-03", 17, False)],
+   "clemency: batch headings parsed (hyphen + en-dash), sentencing dates in rows ignored, amended flagged")
 
 import nyu_warpowers as nwp
+_urls = nwp.find_csv_urls('<a href="https://warpowers-data.herokuapp.com/download-48-hr-reports">CSV</a>'
+                          '<a href="https://warpowers-data.herokuapp.com/download-periodic-reports">CSV</a>')
+ok(len(_urls) == 2 and _urls[0].endswith("download-48-hr-reports"),
+   "war powers: off-domain download endpoints discovered (first-live-run fix)")
 import csv as _csv2, io as _io2
 _wrows = [["Report", "Date Transmitted", "Link"]]
 _d0 = datetime.date(1973, 11, 7)
@@ -590,6 +599,29 @@ _mdt = B.tile(_m("military_deaths", [], value=18, category="War & Defense", unit
                                 "Overseas Operations": {"deaths": 4}}))
 ok("military_deaths</h2>" in _mdt and "Op. Epic Fury" in _mdt,
    "military-deaths tile: card title is the metric, not a shadowed operation name (regression)")
+
+print("== v3: border OHSS backfill (verified against the real workbook) ==")
+_bf = json.load(open(os.path.join(HERE, "connectors", "static", "border_ohss_backfill.json")))
+ok(len(_bf["series"]) == 108 and _bf["series"][0]["date"] == "2013-10"
+   and _bf["series"][-1]["date"] == "2022-09",
+   "border backfill static: 108 months, Oct 2013 – Sep 2022 exactly")
+ok(all(p["date"] < "2022-10" for p in _bf["series"]),
+   "border backfill static: never overlaps the live CBP series (boundary rule)")
+ok(all(p["value"] % 10 == 0 for p in _bf["series"]) and "_verification" in _bf,
+   "border backfill static: OHSS rounding intact + verification note embedded")
+_bseries = _bf["series"] + [{"date": "2024-06", "value": 130415}, {"date": "2025-06", "value": 9300},
+                            {"date": "2026-06", "value": 12901}]
+_bt = B.tile(_m("border_encounters", _bseries, value=12901, as_of="2026-06",
+                category="Immigration", unit="encounters", note="x.", cadence="Monthly",
+                comparison={"label": "Same month, prior year", "value": 9300}))
+ok("under Biden (2024: 130,415)" in _bt and "Same month last year" in _bt,
+   "border tile: v3 comparison vs same month under Biden, YoY kept as secondary")
+_bp = B.payload(_m("border_encounters", _bseries, value=12901, as_of="2026-06",
+                   cadence="Monthly"), {})
+ok(len(_bp["series"]) == 3 and not _bp.get("gaps"),
+   "border payload: Trump-'17 line joins post-backfill; pre-backfill gap chip retired")
+ok(any("OHSS" in c for c in _bp["caveats"]),
+   "border payload: backfill provenance + rounding stated in caveats")
 
 print("== stale_days override ==")
 with tempfile.TemporaryDirectory() as td:

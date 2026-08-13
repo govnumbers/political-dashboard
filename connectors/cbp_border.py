@@ -183,6 +183,27 @@ def main():
     }
     if yoy is not None:
         out["comparison"] = {"label": "Same month, prior year", "value": yoy}
+
+    # --- v3: verified OHSS closed-history backfill (Oct 2013 – Sep 2022) ---
+    # From DHS OHSS's final (discontinued Jan 2025) monthly tables, parsed
+    # against the real workbook the creator hand-downloaded; definition match
+    # PROVEN on the 24-month overlap with CBP's live series (agrees to OHSS's
+    # rounding everywhere — provenance + verification inside the static file).
+    # Only pre-Oct-2022 months ship, so this can never touch the live series.
+    # Enhancement-only: a problem here never blocks the live metric.
+    try:
+        import json as _json
+        with open(os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                               "static", "border_ohss_backfill.json")) as f:
+            bf = _json.load(f)
+        have = set(stored_dates) | {p["date"] for p in series}
+        add = [p for p in bf["series"] if p["date"] < "2022-10" and p["date"] not in have]
+        if add:
+            series = sorted(add + series, key=lambda p: p["date"])
+            print(f"  ✓ border: OHSS backfill added {len(add)} closed-history months "
+                  f"({add[0]['date']} → {add[-1]['date']})")
+    except Exception as e:  # noqa: BLE001
+        print(f"  ! border: OHSS backfill skipped this run ({e})")
     if archive_checked:
         out["archive_checked"] = archive_checked
     elif existing and existing.get("archive_checked"):

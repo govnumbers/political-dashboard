@@ -195,7 +195,28 @@ def tile(m):
     elif m["id"] == "border_encounters":
         hero = num(m["value"])
         sub = m["note"]
-        if m.get("comparison"):
+        # v3 comparison change (locked 12 Aug 2026): the headline compares to
+        # the SAME CALENDAR MONTH in 2024 — the last full Biden year — because
+        # "vs last year" now compares this administration to itself. Computed
+        # from the stored series (backfill-independent for 2024 months);
+        # year-over-year stays as the secondary line.
+        biden_val = None
+        if m.get("as_of") and m.get("series"):
+            want = f"2024-{str(m['as_of'])[5:7]}"
+            biden_val = next((p["value"] for p in m["series"] if p["date"] == want), None)
+        if biden_val:
+            diff = m["value"] - biden_val
+            pct = diff / biden_val * 100
+            arrow = "&#9650;" if diff > 0 else "&#9660;"
+            delta = (f'<span class="delta neutral">{arrow} {pct:+.0f}% vs the same month '
+                     f'under Biden (2024: {num(biden_val)})</span>')
+            rows = [("This year", m["value"], num(m["value"]), "accent"),
+                    ("Same month 2024 (Biden)", biden_val, num(biden_val), "muted")]
+            if m.get("comparison"):
+                rows.insert(1, ("Same month last year", m["comparison"]["value"],
+                                num(m["comparison"]["value"]), "muted"))
+            bars = render_bars(rows, accent)
+        elif m.get("comparison"):
             comp = m["comparison"]; diff = m["value"] - comp["value"]
             pct = (diff / comp["value"] * 100) if comp["value"] else 0
             arrow = "&#9650;" if diff > 0 else "&#9660;"
@@ -849,16 +870,25 @@ def payload(m, loaded):
 
     # ---------------- Immigration ----------------
     elif mid == "border_encounters":
-        sers = _pseries(["trump2", "biden"], S)
+        # v3: the verified OHSS backfill extends the series to Oct 2013, so the
+        # months-in-office view gains Trump-'17's full term and Biden's first
+        # 21 months; the pre-backfill gap chip renders only while it's needed.
+        sers = _pseries(["trump2", "biden", "trump1"], S)
+        has_backfill = S and S[0]["date"] < "2022-01"
+        gaps = None if has_backfill else [{"x": 21, "label": "Biden data begins Oct ’22 (current CBP file)"}]
         aligned("Southwest border encounters per month, by months in office", "count", sers,
                 unit="Encounters / mo",
                 markers=[{"x": _mon_idx(datetime.date(2023, 5, 1), PRES["biden"]["inaug"]),
                           "label": "Title 42 ends — definition change", "kind": "break"}],
-                gaps=[{"x": 21, "label": "Biden data begins Oct ’22 (current CBP file)"}])
+                gaps=gaps)
+        border_caveats = ["The dashed marker is a definition break: pandemic-era Title 42 expulsions ended May 2023 — counts either side aren’t directly comparable. Marked, never smoothed."]
+        if has_backfill:
+            border_caveats.append("Months before Oct 2022 come from DHS OHSS’s official historical tables (discontinued Jan 2025) — the same encounters definition, verified against CBP’s live series on their 24-month overlap; OHSS publishes values rounded to the nearest 10. No official monthly encounters series exists before Oct 2013.")
+        else:
+            border_caveats.append("Line breaks are real holes (CBP’s current file omits Jul–Sep of closed fiscal years); the archive backfill fills them and Biden’s first 21 months.")
         fx.update(channels="direct — border policy, asylum rules, processing regimes, military deployment.",
                   limits="push factors abroad and smuggling economics also move flows; counts are events, not unique people; Title 42→Title 8 changes comparability across eras.",
-                  caveats=["The dashed marker is a definition break: pandemic-era Title 42 expulsions ended May 2023 — counts either side aren’t directly comparable. Marked, never smoothed.",
-                           "Line breaks are real holes (CBP’s current file omits Jul–Sep of closed fiscal years); the archive backfill fills them and Biden’s first 21 months."])
+                  caveats=border_caveats)
 
     elif mid == "ice_removals":
         annual = m.get("annual_history") or []

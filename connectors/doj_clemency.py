@@ -39,41 +39,59 @@ DATE_RE = re.compile(
     r"\b(January|February|March|April|May|June|July|August|September|October|November|December)"
     r"\s+(\d{1,2}),?\s+(\d{4})\b", re.I)
 
+# FIRST-LIVE-RUN FIX (12 Aug 2026): individual table rows carry only the
+# SENTENCING date (in parentheses) — the GRANT dates live in <strong> batch
+# headings shaped "July 3, 2026 – 17 Pardons" / "May 28, 2025 - 16 Pardons and
+# 6 Commutations" (hyphen OR en-dash; some marked "(Amended)"). So the counts
+# come from DOJ's own stated batch totals, not row dates.
+BATCH_RE = re.compile(
+    r"(January|February|March|April|May|June|July|August|September|October|November|December)"
+    r"\s+(\d{1,2}),?\s+(\d{4})\s*[-–—]\s*([^<]{0,120}?(?:Pardons?|Commutations?)[^<]{0,40})",
+    re.I)
 
-def grant_rows(html):
-    """HTML -> list of ISO grant dates, one per named-grant table row."""
-    dates = []
-    for tr in re.findall(r"<tr[^>]*>(.*?)</tr>", html, re.S | re.I):
-        text = re.sub(r"<[^>]+>", " ", tr)
-        m = DATE_RE.search(text)
-        if not m:
-            continue
+
+def grant_batches(html):
+    """HTML -> [(iso_date, count, amended)] from DOJ's own batch headings.
+    Counts are summed integers in the heading phrase ('16 Pardons and 6
+    Commutations' -> 22). '(Amended)' batches are returned flagged and
+    EXCLUDED from totals by the caller — amendments restate existing grants;
+    counting them would double-count (stated in the method note)."""
+    out = []
+    for m in BATCH_RE.finditer(html):
         try:
             d = datetime.datetime.strptime(f"{m.group(1)} {m.group(2)} {m.group(3)}", "%B %d %Y").date()
         except ValueError:
             continue
-        if datetime.date(2025, 1, 20) <= d <= datetime.date.today():
-            dates.append(d.isoformat())
-    return sorted(dates)
+        if not (datetime.date(2025, 1, 20) <= d <= datetime.date.today()):
+            continue
+        phrase = m.group(4)
+        nums = [int(n) for n in re.findall(r"\b(\d{1,4})\b", phrase)]
+        if not nums:
+            continue
+        out.append((d.isoformat(), sum(nums), "amended" in phrase.lower()))
+    return sorted(out)
 
 
 def main():
     r = requests.get(PAGE, headers=UA, timeout=90)
     r.raise_for_status()
-    dates = grant_rows(r.text)
-    if len(dates) < 20:  # the page carried 140+ named grants by late 2025
-        raise RuntimeError(f"clemency grants page yielded only {len(dates)} dated rows — refusing to undercount")
+    batches = grant_batches(r.text)
+    counted = [(d, n) for d, n, amended in batches if not amended]
+    if sum(n for _, n in counted) < 50:  # the page carried 140+ named grants by late 2025
+        raise RuntimeError(f"clemency batch headings summed to only "
+                           f"{sum(n for _, n in counted)} — refusing to undercount")
 
-    # cumulative named grants by month
+    # cumulative named grants by month, from DOJ's own batch headings
     per = {}
-    for d in dates:
-        per[d[:7]] = per.get(d[:7], 0) + 1
+    for d, n in counted:
+        per[d[:7]] = per.get(d[:7], 0) + n
     series, cum = [], 0
     for ym in sorted(per):
         cum += per[ym]
         series.append({"date": ym, "value": cum})
 
-    named = len(dates)
+    named = sum(n for _, n in counted)
+    dates = [d for d, _ in counted]
     out = {
         "id": "clemency", "name": "Clemency (pardons & commutations)",
         "category": "Executive Power & Governance", "value": named, "unit": "named grants",
@@ -83,8 +101,9 @@ def main():
         "per_president_individuals": HISTORY,
         "source": {"name": "DOJ Office of the Pardon Attorney — clemency grants", "url": PAGE},
         "cadence": "As granted", "stale_days": 120,
-        "note": "Named clemency grants (pardons + commutations) listed on DOJ's own grants "
-                "pages, counted per grant date. Shown alongside: individuals covered, which "
+        "note": "Named clemency grants (pardons + commutations) from DOJ's own grants page, "
+                "summed from its dated batch headings ('(Amended)' batches excluded to avoid "
+                "double-counting restated grants). Shown alongside: individuals covered, which "
                 "adds the ~1,500 Jan 6 defendants pardoned or commuted in one day-one "
                 "proclamation — one action covering many people; both counts are defined on "
                 "the card. Historical per-president totals from DOJ's clemency statistics "
