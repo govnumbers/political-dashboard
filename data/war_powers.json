@@ -1,0 +1,67 @@
+{
+  "id": "war_powers",
+  "name": "War-powers reports to Congress",
+  "category": "War & Defense",
+  "value": 11,
+  "unit": "reports",
+  "as_of": "2026-07-10",
+  "since": "2025-01-20",
+  "direction": "neutral",
+  "prev_terms": {
+    "biden": {
+      "same_point": 5,
+      "full_term": 27
+    },
+    "trump1": {
+      "same_point": 5,
+      "full_term": 12
+    },
+    "obama": {
+      "same_point": 3,
+      "full_term": 14
+    }
+  },
+  "source": {
+    "name": "NYU Reiss Center \u2014 War Powers Resolution Reporting project (compilation of official reports)",
+    "url": "https://warpowers.lawandsecurity.org/"
+  },
+  "cadence": "As filed",
+  "stale_days": 120,
+  "note": "War Powers Resolution reports transmitted to Congress this term \u2014 the officially defined record of US military action abroad (48-hour and periodic reports; each links its official document). Compiled by an academic project, named here because no official machine-readable list exists. Counts are a floor: classified annexes and disputed reporting duties mean not all activity is reported.",
+  "series": [
+    {
+      "date": "2025-03",
+      "value": 1
+    },
+    {
+      "date": "2025-06",
+      "value": 2
+    },
+    {
+      "date": "2025-09",
+      "value": 4
+    },
+    {
+      "date": "2026-01",
+      "value": 5
+    },
+    {
+      "date": "2026-03",
+      "value": 7
+    },
+    {
+      "date": "2026-05",
+      "value": 8
+    },
+    {
+      "date": "2026-06",
+      "value": 10
+    },
+    {
+      "date": "2026-07",
+      "value": 11
+    }
+  ],
+  "last_checked": "2026-08-13",
+  "stale_after": "2026-11-07"
+}

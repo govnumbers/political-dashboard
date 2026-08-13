@@ -1,0 +1,140 @@
+{
+  "id": "renewable_share",
+  "name": "Renewable share of electricity generation",
+  "category": "Energy",
+  "value": 29.7,
+  "unit": "%",
+  "as_of": "2026-05",
+  "direction": "neutral",
+  "source": {
+    "name": "EIA Electric Power Monthly, Table 1.1",
+    "url": "https://www.eia.gov/electricity/monthly/"
+  },
+  "cadence": "Monthly",
+  "stale_days": 90,
+  "note": "Share of US utility-scale electricity generated from renewables (conventional hydro, wind, solar, geothermal, biomass) \u2014 a computed ratio of EIA's own generation-by-source figures. Excludes small-scale rooftop solar and pumped storage; the mix is seasonal (hydro peaks in spring, solar in summer), so same-month comparisons matter.",
+  "baseline": {
+    "label": "At inauguration (Jan 2025)",
+    "value": 21.3
+  },
+  "series": [
+    {
+      "date": "2024-01",
+      "value": 18.8
+    },
+    {
+      "date": "2024-02",
+      "value": 24.7
+    },
+    {
+      "date": "2024-03",
+      "value": 27.6
+    },
+    {
+      "date": "2024-04",
+      "value": 29.6
+    },
+    {
+      "date": "2024-05",
+      "value": 26.2
+    },
+    {
+      "date": "2024-06",
+      "value": 23.1
+    },
+    {
+      "date": "2024-07",
+      "value": 18.5
+    },
+    {
+      "date": "2024-08",
+      "value": 18.8
+    },
+    {
+      "date": "2024-09",
+      "value": 19.6
+    },
+    {
+      "date": "2024-10",
+      "value": 23.8
+    },
+    {
+      "date": "2024-11",
+      "value": 23.5
+    },
+    {
+      "date": "2024-12",
+      "value": 21.3
+    },
+    {
+      "date": "2025-01",
+      "value": 21.3
+    },
+    {
+      "date": "2025-02",
+      "value": 23.7
+    },
+    {
+      "date": "2025-03",
+      "value": 30.5
+    },
+    {
+      "date": "2025-04",
+      "value": 31.3
+    },
+    {
+      "date": "2025-05",
+      "value": 27.9
+    },
+    {
+      "date": "2025-06",
+      "value": 24.2
+    },
+    {
+      "date": "2025-07",
+      "value": 20.3
+    },
+    {
+      "date": "2025-08",
+      "value": 20.1
+    },
+    {
+      "date": "2025-09",
+      "value": 20.2
+    },
+    {
+      "date": "2025-10",
+      "value": 24.8
+    },
+    {
+      "date": "2025-11",
+      "value": 24.8
+    },
+    {
+      "date": "2025-12",
+      "value": 24.0
+    },
+    {
+      "date": "2026-01",
+      "value": 24.0
+    },
+    {
+      "date": "2026-02",
+      "value": 25.8
+    },
+    {
+      "date": "2026-03",
+      "value": 32.5
+    },
+    {
+      "date": "2026-04",
+      "value": 32.4
+    },
+    {
+      "date": "2026-05",
+      "value": 29.7
+    }
+  ],
+  "last_checked": "2026-08-13",
+  "stale_after": "2026-08-29"
+}

@@ -1,0 +1,80 @@
+{
+  "id": "clemency",
+  "name": "Clemency (pardons & commutations)",
+  "category": "Executive Power & Governance",
+  "value": 135,
+  "unit": "named grants",
+  "as_of": "2026-07-03",
+  "since": "2025-01-20",
+  "direction": "neutral",
+  "individuals_covered_approx": 1635,
+  "jan6_proclamation": {
+    "individuals_approx": 1500,
+    "date": "2025-01-20",
+    "citation": "Proclamation 10887, 90 FR 8331 (14 named commutations + blanket pardon; ~1,500 charged defendants per contemporaneous DOJ/court figures)"
+  },
+  "per_president_individuals": {
+    "biden": 4245,
+    "obama": 1927,
+    "trump1": 237
+  },
+  "source": {
+    "name": "DOJ Office of the Pardon Attorney \u2014 clemency grants",
+    "url": "https://www.justice.gov/pardon/clemency-grants-president-donald-j-trump-2025-present"
+  },
+  "cadence": "As granted",
+  "stale_days": 120,
+  "note": "Named clemency grants (pardons + commutations) from DOJ's own grants page, summed from its dated batch headings ('(Amended)' batches excluded to avoid double-counting restated grants). Shown alongside: individuals covered, which adds the ~1,500 Jan 6 defendants pardoned or commuted in one day-one proclamation \u2014 one action covering many people; both counts are defined on the card. Historical per-president totals from DOJ's clemency statistics (frozen by DOJ in Jan 2025).",
+  "series": [
+    {
+      "date": "2025-01",
+      "value": 27
+    },
+    {
+      "date": "2025-02",
+      "value": 28
+    },
+    {
+      "date": "2025-03",
+      "value": 41
+    },
+    {
+      "date": "2025-04",
+      "value": 43
+    },
+    {
+      "date": "2025-05",
+      "value": 70
+    },
+    {
+      "date": "2025-10",
+      "value": 72
+    },
+    {
+      "date": "2025-11",
+      "value": 84
+    },
+    {
+      "date": "2025-12",
+      "value": 89
+    },
+    {
+      "date": "2026-01",
+      "value": 110
+    },
+    {
+      "date": "2026-02",
+      "value": 117
+    },
+    {
+      "date": "2026-06",
+      "value": 118
+    },
+    {
+      "date": "2026-07",
+      "value": 135
+    }
+  ],
+  "last_checked": "2026-08-13",
+  "stale_after": "2026-10-31"
+}
