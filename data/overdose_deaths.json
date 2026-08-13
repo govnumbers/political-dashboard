@@ -2,9 +2,9 @@
   "id": "overdose_deaths",
   "name": "Drug overdose deaths (trailing 12 months)",
   "category": "Health & Safety Net",
-  "value": 68641,
+  "value": 67798,
   "unit": "deaths/12mo",
-  "as_of": "2026-02",
+  "as_of": "2026-03",
   "direction": "up_is_bad",
   "source": {
     "name": "CDC \u2014 NCHS provisional overdose counts",
@@ -15,7 +15,7 @@
   "note": "Provisional CDC estimate (completeness-adjusted) of overdose deaths in the 12 months ending this month; reported ~5 months behind and revised.",
   "baseline": {
     "label": "12 months ending Jan 2025 (inauguration)",
-    "value": 79619
+    "value": 79626
   },
   "series": [
     {
@@ -500,61 +500,65 @@
     },
     {
       "date": "2025-01",
-      "value": 79619
+      "value": 79626
     },
     {
       "date": "2025-02",
-      "value": 78046
+      "value": 78056
     },
     {
       "date": "2025-03",
-      "value": 77290
+      "value": 77306
     },
     {
       "date": "2025-04",
-      "value": 76151
+      "value": 76176
     },
     {
       "date": "2025-05",
-      "value": 75052
+      "value": 75093
     },
     {
       "date": "2025-06",
-      "value": 74033
+      "value": 74119
     },
     {
       "date": "2025-07",
-      "value": 73112
+      "value": 73238
     },
     {
       "date": "2025-08",
-      "value": 72713
+      "value": 72887
     },
     {
       "date": "2025-09",
-      "value": 72134
+      "value": 72364
     },
     {
       "date": "2025-10",
-      "value": 71514
+      "value": 71774
     },
     {
       "date": "2025-11",
-      "value": 70980
+      "value": 71289
     },
     {
       "date": "2025-12",
-      "value": 70376
+      "value": 70731
     },
     {
       "date": "2026-01",
-      "value": 69402
+      "value": 69784
     },
     {
       "date": "2026-02",
-      "value": 68641
+      "value": 69089
+    },
+    {
+      "date": "2026-03",
+      "value": 67798
     }
   ],
-  "last_checked": "2026-08-12",
-  "stale_after": "2026-10-26"
+  "last_checked": "2026-08-13",
+  "stale_after": "2026-11-26"
 }
