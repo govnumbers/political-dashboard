@@ -86,20 +86,32 @@ def extract_totals(pdf_bytes):
     if not text.strip():
         raise RuntimeError("RPC PDF has no extractable text layer")
 
-    def last_int(line):
-        nums = re.findall(r"\b\d{1,3}(?:,\d{3})*\b", line)
-        return int(nums[-1].replace(",", "")) if nums else None
+    # REAL STRUCTURE (verified against the creator's July-2026 file, 13 Aug 2026):
+    # pypdf emits this wide state×nationality matrix as a block of ALL labels
+    # ('Grand Total', 'Alabama', 'Total', 'South Africa', …) followed by a block
+    # of ALL numbers. The FY grand total is the FIRST number in that block AND
+    # the largest (it's the sum over every state and nationality). We take the
+    # max and cross-check it equals the first number in reading order — both
+    # must agree, or we refuse rather than publish a guess. ('Grand Total' as a
+    # line label failed the old parser because it's a COLUMN header, never a
+    # row whose value sits on the same line.)
+    return grand_total_from_text(text)
 
-    grand, sa = None, None
-    for line in text.splitlines():
-        l = line.strip()
-        if re.match(r"grand total", l, re.I):
-            grand = last_int(l) or grand
-        elif re.match(r"south africa", l, re.I):
-            sa = last_int(l) or sa
-    if grand is None:
-        raise RuntimeError("'Grand Total' not found in RPC PDF text (layout changed)")
-    return grand, sa
+
+def grand_total_from_text(text):
+    """The FY grand total = first numeric token in reading order, cross-checked
+    to be the maximum (both hold because pypdf lists all labels then all values,
+    starting with the grand-total row's grand-total cell — the sum over every
+    state and nationality). Pure function, unit-tested against the real layout."""
+    toks = [t.strip() for t in text.split("\n")]
+    nums = [int(t.replace(",", "")) for t in toks if re.fullmatch(r"\d{1,3}(?:,\d{3})*", t)]
+    if not nums:
+        raise RuntimeError("RPC PDF: no numeric tokens found (layout changed)")
+    grand = max(nums)
+    if grand != nums[0]:
+        raise RuntimeError(f"RPC PDF: grand-total cross-check failed (max {grand:,} "
+                           f"≠ first {nums[0]:,}) — refusing to guess at a changed layout")
+    return grand
 
 
 def fy_of(d):
@@ -108,7 +120,7 @@ def fy_of(d):
 
 def main():
     as_of_date, url, content = fetch_newest_pdf()
-    grand, south_africa = extract_totals(content)
+    grand = extract_totals(content)
     fy = fy_of(as_of_date)
     ceiling = CEILINGS.get(fy)
 
@@ -120,15 +132,13 @@ def main():
                    "url": url},
         "cadence": "Monthly", "stale_days": 100,
         "note": f"Refugees admitted FY{fy} to date, from the State Department's monthly "
-                "arrivals report. Admissions can exceed the ceiling because court-ordered "
-                "and follow-to-join cases sit outside it. USRAP was suspended by executive "
-                "order in Jan 2025; admissions since are dominated by the reprioritised "
-                "program (composition shown from the same report).",
+                "arrivals report. Admissions can exceed the annual ceiling because "
+                "court-ordered and follow-to-join cases sit outside it. USRAP was suspended "
+                "by executive order in Jan 2025; admissions since are dominated by the "
+                "reprioritised program.",
     }
     if ceiling:
         out["ceiling"] = {"label": f"FY{fy} presidential ceiling", "value": ceiling}
-    if south_africa is not None:
-        out["south_africa"] = south_africa
     publish(out, series=[{"date": as_of_date.strftime("%Y-%m"), "value": grand}])
 
 
