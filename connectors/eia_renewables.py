@@ -1,20 +1,21 @@
 #!/usr/bin/env python3
 """Renewable share of US electricity generation — computed from EIA's
-Electric Power Monthly Table 1.1 (keyless XLSX), monthly, history to 2001.
+Electric Power Monthly Table 1.1 (keyless XLSX), monthly.
 
 v3 register #16 (Energy tab). A COMPUTED metric with the formula printed on
 the card (precedent: effective tariff rate): renewable share = (conventional
-hydro + wind + solar + geothermal + wood + other biomass) ÷ total generation,
-UTILITY-SCALE only, monthly. Pumped-storage hydro is excluded (it's storage,
-net-negative); small-scale rooftop solar is excluded and the card says so.
+hydro + utility-scale solar + all other renewables) ÷ total utility-scale
+generation. Pumped-storage hydro is excluded (it's storage, net-negative);
+small-scale rooftop solar is excluded and the card says so.
 
 SOURCE MECHANICS: `eia.gov/electricity/monthly/xls/table_1_01.xlsx` is a
-plain keyless download at a stable URL (verified Aug 2026), refreshed monthly
-(~2-month lag). The sheet is a header block followed by one row per period.
-The parser is LABEL-KEYED — it finds the header row by its column names and
-matches source columns by keyword, so column reordering survives; a layout
-change it can't resolve dies loudly on the validators instead of guessing.
-First-run watchlist item (same playbook that shipped ICE/VA)."""
+plain keyless download at a stable URL, refreshed monthly (~2-month lag).
+VERIFIED against the real file (creator download, 13 Aug 2026): it's a compact
+summary carrying ~current year + 2 prior years of monthly data (plus annual
+totals back to 2016, which we don't use) — NOT deep history; the card's chart
+is short and accretes over time via merge-don't-overwrite. The parser is
+LABEL-KEYED (exact column names) and dies loudly if the layout changes. 2024
+annual cross-check: 22.7% (EIA-reported ~23%)."""
 import io
 import os
 import re
@@ -30,15 +31,21 @@ MONTHS = {m.lower(): i for i, m in enumerate(
     ["January", "February", "March", "April", "May", "June", "July",
      "August", "September", "October", "November", "December"], 1)}
 
-RENEWABLE_PATTERNS = [
-    r"hydroelectric conventional|conventional hydroelectric",
-    r"\bwind\b",
-    r"solar",              # matches photovoltaic + thermal utility columns
-    r"geothermal",
-    r"wood",
-    r"other biomass|waste biomass|biomass",
-]
-EXCLUDE_PATTERN = re.compile(r"pumped storage|small[- ]scale", re.I)
+# REAL LAYOUT (verified against the file the creator downloaded, 13 Aug 2026):
+# EIA's Table 1.1 browser download is a COMPACT summary, not the by-fuel
+# breakdown first assumed. Renewables are three exact columns —
+# 'Hydroelectric Conventional', 'Solar' (utility-scale), and 'Renewable
+# Sources Excluding Hydroelectric and Solar' (wind + geothermal + biomass +
+# wood) — over 'Total Generation at Utility Scale Facilities'. Pumped storage
+# and the 'Estimated ... Solar' small-scale columns are excluded by NOT being
+# in the match set. Periods are month names under 'Year YYYY' section headers
+# (September is written 'Sept'); 'Annual Totals', 'Year to Date' and 'Rolling
+# 12 Months' sections carry bare years, which are ignored. Monthly coverage
+# runs ~current year + 2 prior years (merge-don't-overwrite accretes history).
+MONTHS["sept"] = 9  # EIA abbreviates September
+REN_COLS = {"hydroelectric conventional", "solar",
+            "renewable sources excluding hydroelectric and solar"}
+TOTAL_COL = "total generation at utility scale facilities"
 
 
 def _norm(c):
@@ -46,60 +53,48 @@ def _norm(c):
 
 
 def parse_table(rows):
-    """Worksheet rows -> [{date: YYYY-MM, value: share%}] ascending.
-    rows = list of row-lists (values only)."""
-    # 1) header row: contains 'total' plus at least wind and solar labels
-    hdr_i, hdr = None, None
-    for i, r in enumerate(rows[:40]):
-        labels = [_norm(c) for c in r]
-        if any("wind" in l for l in labels) and any(l == "total" or l.endswith(" total") for l in labels):
-            hdr_i, hdr = i, labels
-            break
-    if hdr is None:
+    """Worksheet rows -> [{date: YYYY-MM, value: share%}] ascending."""
+    hdr_i = next((i for i, r in enumerate(rows)
+                  if any(_norm(c) == TOTAL_COL for c in r)), None)
+    if hdr_i is None:
         raise RuntimeError("EPM table 1.1: header row not found (layout changed)")
+    hdr = [_norm(c) for c in rows[hdr_i]]
+    total_col = hdr.index(TOTAL_COL)
+    ren_cols = [i for i, l in enumerate(hdr) if l in REN_COLS]
+    if len(ren_cols) != 3:
+        raise RuntimeError(f"EPM table 1.1: expected 3 renewable columns, found {len(ren_cols)} "
+                           "(layout changed)")
 
-    total_col = next(i for i, l in enumerate(hdr) if l == "total" or l.endswith(" total"))
-    ren_cols = []
-    for i, l in enumerate(hdr):
-        if not l or EXCLUDE_PATTERN.search(l):
-            continue
-        if any(re.search(p, l) for p in RENEWABLE_PATTERNS):
-            ren_cols.append(i)
-    if len(ren_cols) < 4:
-        raise RuntimeError(f"EPM table 1.1: only {len(ren_cols)} renewable columns matched (layout changed)")
+    def _f(r, idx):
+        try:
+            v = r[idx]
+            return float(str(v).replace(",", "")) if v not in (None, "", "--", "NM") else None
+        except (TypeError, ValueError, IndexError):
+            return None
 
-    # 2) period rows: EPM writes 'YYYY Month' in the first column (or Year, Month split)
-    out = []
+    out, year = [], None
     for r in rows[hdr_i + 1:]:
         period = _norm(r[0] if r else None)
-        m = re.match(r"^(19|20)(\d{2})\s+([a-z]+)", period)
-        ym = None
-        if m:
-            mon = MONTHS.get(m.group(3))
-            if mon:
-                ym = f"{m.group(1)}{m.group(2)}-{mon:02d}"
-        elif len(r) > 1:
-            y, mo = _norm(r[0]), _norm(r[1])
-            if re.fullmatch(r"(19|20)\d{2}", y) and mo in MONTHS:
-                ym = f"{y}-{MONTHS[mo]:02d}"
-        if not ym:
+        ym = re.match(r"year (\d{4})$", period)          # 'Year 2025' section header
+        if ym:
+            year = int(ym.group(1))
             continue
-
-        def _f(idx):
-            try:
-                v = r[idx]
-                return float(str(v).replace(",", "")) if v not in (None, "", "--", "NM") else None
-            except (TypeError, ValueError, IndexError):
-                return None
-
-        total = _f(total_col)
+        mon = MONTHS.get(period)                          # a month name under the current year
+        if not mon or year is None:
+            continue                                      # bare years, YTD/Rolling headers, footnotes
+        total = _f(r, total_col)
         if not total or total <= 0:
             continue
-        ren = sum(v for v in (_f(i) for i in ren_cols) if v is not None)
-        out.append({"date": ym, "value": round(ren / total * 100, 1)})
+        ren = sum(v for v in (_f(r, i) for i in ren_cols) if v is not None)
+        out.append({"date": f"{year}-{mon:02d}", "value": round(ren / total * 100, 1)})
     if not out:
         raise RuntimeError("EPM table 1.1: parsed zero period rows (layout changed)")
-    return sorted(out, key=lambda p: p["date"])
+    # de-dup (a month can appear in both a monthly section and nowhere else here,
+    # but guard anyway); latest wins
+    dedup = {}
+    for p in out:
+        dedup[p["date"]] = p["value"]
+    return [{"date": d, "value": dedup[d]} for d in sorted(dedup)]
 
 
 def main():

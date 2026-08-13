@@ -27,7 +27,7 @@ import calendar
 import requests
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from common import publish, UA  # noqa: E402
+from common import publish  # noqa: E402
 
 BASE = "https://www.rpc.state.gov/documents/"
 NAME = "Refugee Arrivals by State and Nationality as of {month} {day}, {year}.pdf"
@@ -48,17 +48,34 @@ def month_end_candidates(today, back=8):
     return out
 
 
+# FIRST-LIVE-RUN FIX (13 Aug 2026): rpc.state.gov (State Dept, behind Akamai)
+# 403s the project's default bot User-Agent — every candidate came back as a
+# non-PDF block page, so the connector correctly refused all 8 and failed. The
+# PDF and its URL pattern are exactly right (verified: "Refugee Arrivals by
+# State and Nationality as of July 31, 2026.pdf"); it just needs a browser UA.
+BROWSER_UA = {
+    "User-Agent": ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+                   "(KHTML, like Gecko) Chrome/126.0 Safari/537.36"),
+    "Accept": "application/pdf,*/*",
+    "Accept-Language": "en-US,en;q=0.9",
+}
+
+
 def fetch_newest_pdf(today=None):
     today = today or datetime.date.today()
+    seen = []
     for d in month_end_candidates(today):
         url = BASE + NAME.format(month=d.strftime("%B"), day=d.day, year=d.year).replace(" ", "%20")
         try:
-            r = requests.get(url, headers=UA, timeout=90)
+            r = requests.get(url, headers=BROWSER_UA, timeout=90)
             if r.status_code == 200 and r.content[:5] == b"%PDF-":
                 return d, url, r.content
-        except requests.RequestException:
-            continue
-    raise RuntimeError("no RPC arrivals PDF found in the last 8 month-ends")
+            seen.append(f"{d.isoformat()}:{r.status_code}"
+                        + ("/not-pdf" if r.status_code == 200 else ""))
+        except requests.RequestException as e:
+            seen.append(f"{d.isoformat()}:{type(e).__name__}")
+    raise RuntimeError("no RPC arrivals PDF found in the last 8 month-ends "
+                       f"(probed: {', '.join(seen)})")
 
 
 def extract_totals(pdf_bytes):

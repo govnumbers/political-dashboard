@@ -479,12 +479,25 @@ ok(_pts == [{"date": "2026-01", "value": 13.57}, {"date": "2026-02", "value": 13
    "crude: dnav rows parse to million b/d; junk rows ignored")
 
 import eia_renewables as ern
-_rows = [["Table 1.1"], ["Period", "Coal", "Natural Gas", "Nuclear", "Hydroelectric Conventional",
-          "Wind", "Solar Photovoltaic", "Geothermal", "Wood and Wood-Derived Fuels",
-          "Other Biomass", "Hydroelectric Pumped Storage", "Total"],
-         ["2026 May", "50", "150", "60", "25", "45", "30", "1.5", "3", "1.5", "-0.5", "365.5"]]
-ok(ern.parse_table(_rows)[0]["value"] == round((25 + 45 + 30 + 1.5 + 3 + 1.5) / 365.5 * 100, 1),
-   "renewables: label-keyed share computation; pumped storage excluded")
+# real EIA Table 1.1 layout: 'Year YYYY' section headers + month rows ('Sept'
+# abbreviation); 3 exact renewable columns; bare-year rows (Annual Totals / YTD)
+# ignored; pumped storage + estimated small-scale solar excluded.
+_ehdr = ["Period", "Coal", "Natural\nGas", "Nuclear", "Hydroelectric\nConventional",
+         "Solar", "Renewable\nSources\nExcluding\nHydroelectric and Solar",
+         "Hydroelectric\nPumped\nStorage", "Other",
+         "Total Generation at Utility Scale Facilities", "Estimated Total Solar"]
+_erows = [["Table 1.1. Net Generation by Energy Source"], ["(Thousand Megawatthours)"], [None],
+          _ehdr,
+          ["Annual Totals"], ["2024", "1", "1", "1", "1", "1", "1", "-1", "1", "10", "1"],
+          ["Year 2025"],
+          ["January", "100", "150", "60", "25", "30", "20", "-1", "5", "365.5", "8"],
+          ["Sept", "90", "140", "60", "40", "50", "25", "-1", "5", "400", "9"],
+          ["Year to Date"], ["2025", "9", "9", "9", "9", "9", "9", "-9", "9", "99", "9"]]
+_er = ern.parse_table(_erows)
+ok([p["date"] for p in _er] == ["2025-01", "2025-09"],
+   "renewables: 'Year YYYY' sections + 'Sept' parsed; Annual-Totals/YTD bare years ignored")
+ok(_er[0]["value"] == round((25 + 30 + 20) / 365.5 * 100, 1),
+   "renewables: share = 3 renewable cols ÷ utility total; pumped storage + small-scale solar excluded")
 
 import fr_emergencies as fre
 _docs = [{"document_number": "1", "title": "Declaring a National Emergency at the Southern Border", "signing_date": "2025-01-20"},
