@@ -558,12 +558,16 @@ _me = rpr.month_end_candidates(datetime.date(2026, 8, 12))
 ok(_me[0] == datetime.date(2026, 7, 31) and _me[1] == datetime.date(2026, 6, 30),
    "refugees: month-end probing order (newest first)")
 ok(rpr.fy_of(datetime.date(2025, 10, 1)) == 2026, "refugees: fiscal-year math")
-# grand total from the real pypdf layout: labels block, then numbers block that
-# starts with the grand-total cell (= the max). Verified against the July 2026 file.
-_rpdf = ("Nationality\nJul\nGrand\nTotal\nGrand Total\nAlabama\nTotal\nSouth Africa\n"
-         "Kansas\nTotal\nSouth Africa\nTotal\n10,258\n2,528\n1,062\n801\n36\n4\n")
-ok(rpr.grand_total_from_text(_rpdf) == 10258,
-   "refugees: grand total = first/max number in the pypdf numbers block (real layout)")
+# two real pypdf layouts (version-dependent grouping): 3.x one number per line,
+# and 6.x the whole grand-total row on ONE line ('10,258 2,528 …' — the 13 Aug
+# live-run bug). Both must extract the same total from the same file.
+_rpdf_3x = ("Nationality\nJul\nGrand\nTotal\nAlabama\nTotal\nSouth Africa\n"
+            "Kansas\nTotal\nSouth Africa\nTotal\n10,258\n2,528\n1,062\n801\n36\n4\n")
+_rpdf_6x = ("Actual Destination\nState Name\nNationality\nNov\nJul\nGrand\nTotal\n"
+            "Alabama\nTotal\nSouth Africa\nKansas\nTotal\nSouth Africa\nTotal\n"
+            " 10,258 2,528 1,062 599 1,570 1,341 1,507 931 595 125\n36\n36\n4\n")
+ok(rpr.grand_total_from_text(_rpdf_3x) == 10258 and rpr.grand_total_from_text(_rpdf_6x) == 10258,
+   "refugees: grand total read from full text under both pypdf layouts (per-line and single-row)")
 try:
     rpr.grand_total_from_text("Total\n500\n9,999\n")  # first != max
     ok(False, "refugees: mismatched first/max must refuse")

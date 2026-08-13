@@ -99,12 +99,17 @@ def extract_totals(pdf_bytes):
 
 
 def grand_total_from_text(text):
-    """The FY grand total = first numeric token in reading order, cross-checked
-    to be the maximum (both hold because pypdf lists all labels then all values,
-    starting with the grand-total row's grand-total cell — the sum over every
-    state and nationality). Pure function, unit-tested against the real layout."""
-    toks = [t.strip() for t in text.split("\n")]
-    nums = [int(t.replace(",", "")) for t in toks if re.fullmatch(r"\d{1,3}(?:,\d{3})*", t)]
+    """The FY grand total = first number in reading order, cross-checked to be
+    the maximum (both hold: pypdf emits all labels, then the grand-total row
+    whose first cell is the total — the sum over every state and nationality).
+
+    Numbers are pulled from the FULL text, NOT per line: pypdf VERSIONS group
+    cells differently — 6.x puts the whole grand-total row on ONE line
+    ('10,258 2,528 1,062 …'), 3.x one number per line. A per-line match missed
+    the total under 6.x and mis-read a state figure as the max (the 13 Aug
+    live-run bug: GitHub's runner ships pypdf 6.x). Full-text extraction is
+    version-independent — verified against the real file under both."""
+    nums = [int(n.replace(",", "")) for n in re.findall(r"\d+(?:,\d{3})*", text)]
     if not nums:
         raise RuntimeError("RPC PDF: no numeric tokens found (layout changed)")
     grand = max(nums)
