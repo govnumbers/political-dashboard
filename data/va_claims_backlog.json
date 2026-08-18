@@ -2,11 +2,11 @@
   "id": "va_claims_backlog",
   "name": "VA claims backlog",
   "category": "Health & Safety Net",
-  "value": 71137,
+  "value": 71391,
   "unit": "claims >125 days",
-  "as_of": "2026-08-08",
+  "as_of": "2026-08-15",
   "direction": "up_is_bad",
-  "total_pending": 626785,
+  "total_pending": 632308,
   "source": {
     "name": "Dept. of Veterans Affairs \u2014 Monday Morning Workload Report",
     "url": "https://www.benefits.va.gov/reports/detailed_claims_data.asp"
@@ -918,8 +918,12 @@
     {
       "date": "2026-08-08",
       "value": 71137
+    },
+    {
+      "date": "2026-08-15",
+      "value": 71391
     }
   ],
-  "last_checked": "2026-08-17",
-  "stale_after": "2026-08-22"
+  "last_checked": "2026-08-18",
+  "stale_after": "2026-08-29"
 }
