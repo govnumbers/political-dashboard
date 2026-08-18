@@ -3,12 +3,14 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Trump Administration — Tracked in Data</title>
+<title>Trump Administration, Tracked in Data</title>
 <style>
   :root {
     --plane:#0d0d0d; --surface:#1a1a19; --primary:#ffffff; --secondary:#c3c2b7;
     --muted:#898781; --hair:rgba(255,255,255,0.10); --grid:#2c2c2a;
     --series-1:#3987e5; --critical:#d03b3b; --good:#0ca30c; --warn:#e0a83b;
+    /* president identity palette (card-design pass): only on cross-president charts/strips */
+    --pres-t25:#e66767; --pres-biden:#3987e5; --pres-t17:#199e70; --pres-obama:#c98500;
   }
   * { box-sizing:border-box; }
   body {
@@ -33,7 +35,8 @@
   .tile { background:var(--surface); border:1px solid var(--hair); border-radius:16px; padding:24px 24px 18px; }
   .tile.is-stale { border-color:rgba(224,168,59,0.45); }
   .tile-cat { color:var(--muted); font-size:11px; letter-spacing:.12em; text-transform:uppercase; font-weight:600; }
-  .tile-name { font-size:15px; font-weight:550; color:var(--secondary); margin:6px 0 14px; }
+  .tile-name { font-size:15px; font-weight:550; color:var(--secondary); margin:6px 0 2px; }
+  .tile-qual { color:var(--muted); font-size:12px; font-weight:500; margin:0 0 14px; }
   .hero { font-size:52px; font-weight:660; letter-spacing:-0.02em; line-height:1; }
   .delta { display:block; font-size:13px; font-weight:550; margin-top:12px; }
   .delta.bad { color:var(--critical); }
@@ -85,6 +88,18 @@
               border:1px solid var(--hair); border-radius:8px; padding:4px 10px; cursor:pointer; }
   .ctrl-btn:hover { color:var(--primary); }
   .ctrl-btn.active { color:var(--primary); border-color:var(--series-1); background:rgba(57,135,229,0.12); }
+  /* real-price slider: a sub-control that sits below the view filters */
+  .realbar { display:flex; align-items:center; gap:10px; margin:2px 0 8px; }
+  .realbar .rlbl { font-size:12px; color:var(--muted); }
+  .rswitch { position:relative; display:inline-flex; background:#141414; border:1px solid var(--hair);
+             border-radius:999px; padding:3px; }
+  .rswitch button { all:unset; position:relative; z-index:1; flex:1; cursor:pointer; text-align:center; min-width:92px;
+             white-space:nowrap; box-sizing:border-box; font-family:inherit; font-size:12px; font-weight:600;
+             color:var(--muted); padding:5px 14px; border-radius:999px; }
+  .rswitch button[aria-pressed="true"] { color:var(--primary); }
+  .rknob { position:absolute; top:3px; bottom:3px; left:3px; width:calc(50% - 3px); background:#2a2c31;
+           border-radius:999px; transition:left .18s ease; z-index:0; }
+  .rswitch.on .rknob { left:50%; }
   .legend { display:flex; gap:14px; flex-wrap:wrap; margin:0 0 8px; }
   .lg { display:flex; align-items:center; gap:7px; font-size:12px; color:var(--secondary); font-weight:550; }
   .lg .key { width:14px; height:0; border-top:2.5px solid; border-radius:2px; }
@@ -121,6 +136,12 @@
   .detail-meta { display:flex; gap:6px 18px; flex-wrap:wrap; margin-top:14px; font-size:11.5px;
                  color:var(--muted); align-items:center; }
   .detail-meta a { color:var(--secondary); font-weight:550; text-decoration:none; }
+  .detail-meta .vtoggle { color:var(--muted); border:1px solid var(--hair); border-radius:6px; padding:2px 9px; cursor:pointer; }
+  .detail-meta .vtoggle:hover { color:var(--primary); border-color:rgba(255,255,255,0.28); }
+  .detail-meta .exp-group { display:inline-flex; align-items:center; gap:9px; }
+  .detail-meta .exp-lbl { color:var(--muted); display:inline-flex; align-items:center; gap:4px; }
+  .detail-meta .exp-link { color:var(--secondary); cursor:pointer; }
+  .detail-meta .exp-link:hover { color:var(--series-1); }
   .detail-meta a:hover { color:var(--series-1); }
 
   footer { margin-top:48px; color:var(--muted); font-size:12px; max-width:70ch; }
@@ -142,7 +163,7 @@
     <header>
       <div class="kicker">United States · Trump Administration</div>
       <h1>The record, tracked in data</h1>
-      <p class="lede">Official, sourced metrics — pulled automatically from government data, shown with history and comparisons. Every number links to its primary source. You draw the conclusions.</p>
+      <p class="lede">Official, sourced metrics, pulled automatically from government data, shown with history and comparisons. Every number links to its primary source. You draw the conclusions.</p>
       <div class="pilot">Pilot · 35 of 35 planned metrics</div>
     </header>
     <nav class="tabs" id="tabs" aria-label="Categories"><button class="tab active" type="button" data-tab="all">All</button><button class="tab" type="button" data-tab="cost-of-living">Cost of Living</button><button class="tab" type="button" data-tab="economy-jobs">Economy & Jobs</button><button class="tab" type="button" data-tab="trade-tariffs">Trade & Tariffs</button><button class="tab" type="button" data-tab="public-finances">Public Finances</button><button class="tab" type="button" data-tab="energy">Energy</button><button class="tab" type="button" data-tab="immigration">Immigration</button><button class="tab" type="button" data-tab="health-safety-net">Health & Safety Net</button><button class="tab" type="button" data-tab="executive-power-governance">Executive Power & Governance</button><button class="tab" type="button" data-tab="war-defense">War & Defense</button></nav>
@@ -153,14 +174,15 @@
         <div class="grid">
     <article class="tile" id="card-inflation" data-id="inflation" data-as-of="2026-07" data-stale-after="2026-10-09" data-cadence="monthly">
       <div class="tile-cat">Cost of Living</div>
-      <h2 class="tile-name">Inflation (CPI-U, year over year)</h2>
+      <h2 class="tile-name">Inflation</h2>
+      <div class="tile-qual">CPI-U, year over year</div>
       <div class="hero">3.4%</div>
       <span class="delta bad">&#9650; 1.4 pts above the Fed&#39;s 2.0% target</span>
       <div class="freshness">
         <span class="asof">as of Jul 2026</span>
         <span class="stale-flag" hidden>&#9888; data may be stale</span>
       </div>
-      <div class="tile-sub">Consumer Price Index for All Urban Consumers, all items, change over the prior 12 months.</div>
+      <div class="tile-sub">How fast consumer prices are rising: the change in the Consumer Price Index (all items) over the past 12 months.</div>
       <div class="bars">
         <div class="bar-row">
           <div class="bar-label">CPI (YoY)</div>
@@ -172,22 +194,23 @@
           <div class="bar-track"><div class="bar-fill" style="width:59%;background:var(--muted)"></div></div>
           <div class="bar-val">2.0%</div>
         </div></div>
-      <button class="expand-btn" type="button" aria-expanded="false"><span>History &amp; context</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg></button><div class="detail" hidden></div>
+      <button class="expand-btn" type="button" aria-expanded="false"><span>See more</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg></button><div class="detail" hidden></div>
       <div class="tile-foot">
-        <a href="https://www.bls.gov/cpi/" target="_blank" rel="noopener">Bureau of Labor Statistics &#8599;</a>
+        <a href="https://www.bls.gov/cpi/" target="_blank" rel="noopener">Bureau of Labor Statistics &#8594;</a>
         <span>updates monthly</span>
       </div>
     </article>
     <article class="tile" id="card-grocery_prices" data-id="grocery_prices" data-as-of="2026-07" data-stale-after="2026-10-09" data-cadence="monthly">
       <div class="tile-cat">Cost of Living</div>
-      <h2 class="tile-name">Grocery prices (food at home, YoY)</h2>
+      <h2 class="tile-name">Grocery prices</h2>
+      <div class="tile-qual">food at home, YoY</div>
       <div class="hero">2.6%</div>
       <span class="delta bad">&#9650; 0.8 pts vs 1.8% at inauguration</span>
       <div class="freshness">
         <span class="asof">as of Jul 2026</span>
         <span class="stale-flag" hidden>&#9888; data may be stale</span>
       </div>
-      <div class="tile-sub">Grocery-store (food-at-home) prices vs a year earlier, seasonally adjusted. Oct 2025 is missing at the source (never published due to the government shutdown).</div>
+      <div class="tile-sub">Grocery (food-at-home) prices compared with a year earlier, seasonally adjusted.</div>
       <div class="bars">
         <div class="bar-row">
           <div class="bar-label">Now (YoY)</div>
@@ -199,36 +222,47 @@
           <div class="bar-track"><div class="bar-fill" style="width:69%;background:var(--muted)"></div></div>
           <div class="bar-val">1.8%</div>
         </div></div>
-      <button class="expand-btn" type="button" aria-expanded="false"><span>History &amp; context</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg></button><div class="detail" hidden></div>
+      <button class="expand-btn" type="button" aria-expanded="false"><span>See more</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg></button><div class="detail" hidden></div>
       <div class="tile-foot">
-        <a href="https://fred.stlouisfed.org/series/CUSR0000SAF11" target="_blank" rel="noopener">Bureau of Labor Statistics (via FRED) &#8599;</a>
+        <a href="https://fred.stlouisfed.org/series/CUSR0000SAF11" target="_blank" rel="noopener">Bureau of Labor Statistics (via FRED) &#8594;</a>
         <span>updates monthly</span>
       </div>
     </article>
-    <article class="tile" id="card-gas_price" data-id="gas_price" data-as-of="2026-08-10" data-stale-after="2026-08-24" data-cadence="weekly">
+    <article class="tile" id="card-gas_price" data-id="gas_price" data-as-of="2026-08-17" data-stale-after="2026-08-31" data-cadence="weekly">
       <div class="tile-cat">Cost of Living</div>
-      <h2 class="tile-name">Gas price (regular)</h2>
-      <div class="hero">$4.01</div>
-      <span class="delta bad">&#9650; $0.96 (+32%) since inauguration</span>
+      <h2 class="tile-name">Gas price</h2>
+      <div class="tile-qual">regular</div>
+      <div class="hero">$4.05</div>
+      <span class="delta bad">&#9650; $1.01 (+33%) since inauguration</span>
       <div class="freshness">
-        <span class="asof">as of Aug 10, 2026</span>
+        <span class="asof">as of Aug 17, 2026</span>
         <span class="stale-flag" hidden>&#9888; data may be stale</span>
       </div>
-      <div class="tile-sub">US average regular gasoline, per gallon</div>
+      <div class="tile-sub">The US average retail price of regular gasoline, per gallon.</div>
       <div class="bars">
         <div class="bar-row">
-          <div class="bar-label">Now</div>
-          <div class="bar-track"><div class="bar-fill" style="width:100%;background:var(--critical)"></div></div>
-          <div class="bar-val">$4.01</div>
+          <div class="bar-label">Obama</div>
+          <div class="bar-track"><div class="bar-fill" style="width:66%;background:var(--pres-obama)"></div></div>
+          <div class="bar-val">$2.68</div>
         </div>
         <div class="bar-row">
-          <div class="bar-label">Inauguration</div>
-          <div class="bar-track"><div class="bar-fill" style="width:76%;background:var(--muted)"></div></div>
-          <div class="bar-val">$3.04</div>
+          <div class="bar-label">Trump ’17</div>
+          <div class="bar-track"><div class="bar-fill" style="width:70%;background:var(--pres-t17)"></div></div>
+          <div class="bar-val">$2.83</div>
+        </div>
+        <div class="bar-row">
+          <div class="bar-label">Biden</div>
+          <div class="bar-track"><div class="bar-fill" style="width:95%;background:var(--pres-biden)"></div></div>
+          <div class="bar-val">$3.83</div>
+        </div>
+        <div class="bar-row">
+          <div class="bar-label">Trump ’25</div>
+          <div class="bar-track"><div class="bar-fill" style="width:100%;background:var(--pres-t25)"></div></div>
+          <div class="bar-val">$4.05</div>
         </div></div>
-      <button class="expand-btn" type="button" aria-expanded="false"><span>History &amp; context</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg></button><div class="detail" hidden></div>
+      <button class="expand-btn" type="button" aria-expanded="false"><span>See more</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg></button><div class="detail" hidden></div>
       <div class="tile-foot">
-        <a href="https://fred.stlouisfed.org/series/GASREGW" target="_blank" rel="noopener">U.S. Energy Information Administration (via FRED) &#8599;</a>
+        <a href="https://fred.stlouisfed.org/series/GASREGW" target="_blank" rel="noopener">U.S. Energy Information Administration (via FRED) &#8594;</a>
         <span>updates weekly</span>
       </div>
     </article></div>
@@ -245,7 +279,7 @@
         <span class="asof">as of Jun 2026</span>
         <span class="stale-flag" hidden>&#9888; data may be stale</span>
       </div>
-      <div class="tile-sub">Quarter-on-quarter growth of inflation-adjusted GDP, annualized. Estimates are revised; 2025 quarters were whipsawed by tariff-driven import swings.</div>
+      <div class="tile-sub">Growth of the economy: the quarter-on-quarter change in inflation-adjusted gross domestic product (GDP), annualized.</div>
       <div class="bars">
         <div class="bar-row">
           <div class="bar-label">This term</div>
@@ -257,9 +291,9 @@
           <div class="bar-track"><div class="bar-fill" style="width:100%;background:var(--muted)"></div></div>
           <div class="bar-val">+3.8%</div>
         </div></div>
-      <button class="expand-btn" type="button" aria-expanded="false"><span>History &amp; context</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg></button><div class="detail" hidden></div>
+      <button class="expand-btn" type="button" aria-expanded="false"><span>See more</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg></button><div class="detail" hidden></div>
       <div class="tile-foot">
-        <a href="https://fred.stlouisfed.org/series/A191RL1Q225SBEA" target="_blank" rel="noopener">Bureau of Economic Analysis (via FRED) &#8599;</a>
+        <a href="https://fred.stlouisfed.org/series/A191RL1Q225SBEA" target="_blank" rel="noopener">Bureau of Economic Analysis (via FRED) &#8594;</a>
         <span>updates quarterly</span>
       </div>
     </article>
@@ -272,75 +306,102 @@
         <span class="asof">as of Jul 2026</span>
         <span class="stale-flag" hidden>&#9888; data may be stale</span>
       </div>
-      <div class="tile-sub">Unemployment rate (U-3), seasonally adjusted.</div>
+      <div class="tile-sub">The share of people who want a job and are actively looking but cannot find one (the standard U-3 rate), seasonally adjusted.</div>
       <div class="bars">
         <div class="bar-row">
-          <div class="bar-label">Now</div>
-          <div class="bar-track"><div class="bar-fill" style="width:100%;background:var(--critical)"></div></div>
-          <div class="bar-val">4.1%</div>
+          <div class="bar-label">Trump ’17</div>
+          <div class="bar-track"><div class="bar-fill" style="width:93%;background:var(--pres-t17)"></div></div>
+          <div class="bar-val">3.8%</div>
         </div>
         <div class="bar-row">
-          <div class="bar-label">Inauguration</div>
-          <div class="bar-track"><div class="bar-fill" style="width:98%;background:var(--muted)"></div></div>
-          <div class="bar-val">4.0%</div>
+          <div class="bar-label">Biden</div>
+          <div class="bar-track"><div class="bar-fill" style="width:85%;background:var(--pres-biden)"></div></div>
+          <div class="bar-val">3.5%</div>
+        </div>
+        <div class="bar-row">
+          <div class="bar-label">Trump ’25</div>
+          <div class="bar-track"><div class="bar-fill" style="width:100%;background:var(--pres-t25)"></div></div>
+          <div class="bar-val">4.1%</div>
         </div></div>
-      <button class="expand-btn" type="button" aria-expanded="false"><span>History &amp; context</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg></button><div class="detail" hidden></div>
+      <button class="expand-btn" type="button" aria-expanded="false"><span>See more</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg></button><div class="detail" hidden></div>
       <div class="tile-foot">
-        <a href="https://www.bls.gov/news.release/empsit.nr0.htm" target="_blank" rel="noopener">Bureau of Labor Statistics &#8599;</a>
+        <a href="https://www.bls.gov/news.release/empsit.nr0.htm" target="_blank" rel="noopener">Bureau of Labor Statistics &#8594;</a>
         <span>updates monthly</span>
       </div>
     </article>
     <article class="tile" id="card-real_wages" data-id="real_wages" data-as-of="2026-06" data-stale-after="2026-11-07" data-cadence="quarterly">
       <div class="tile-cat">Economy & Jobs</div>
-      <h2 class="tile-name">Real wages (median weekly earnings)</h2>
+      <h2 class="tile-name">Real wages</h2>
+      <div class="tile-qual">median weekly earnings</div>
       <div class="hero">$378</div>
       <span class="delta good">&#9650; +1.3% since the inauguration quarter ($373)</span>
       <div class="freshness">
         <span class="asof">as of Jun 2026</span>
         <span class="stale-flag" hidden>&#9888; data may be stale</span>
       </div>
-      <div class="tile-sub">Median usual weekly earnings, full-time workers, in constant (1982-84) dollars — pay adjusted for inflation. Q4 2025 is missing at the source (shutdown).</div>
+      <div class="tile-sub">Typical pay for full-time workers after inflation: median usual weekly earnings in constant (1982-84) dollars.</div>
       <div class="bars">
         <div class="bar-row">
-          <div class="bar-label">Now</div>
-          <div class="bar-track"><div class="bar-fill" style="width:100%;background:var(--series-1)"></div></div>
-          <div class="bar-val">$378</div>
+          <div class="bar-label">Obama</div>
+          <div class="bar-track"><div class="bar-fill" style="width:90%;background:var(--pres-obama)"></div></div>
+          <div class="bar-val">$342</div>
         </div>
         <div class="bar-row">
-          <div class="bar-label">Q1 2025</div>
-          <div class="bar-track"><div class="bar-fill" style="width:99%;background:var(--muted)"></div></div>
-          <div class="bar-val">$373</div>
+          <div class="bar-label">Trump ’17</div>
+          <div class="bar-track"><div class="bar-fill" style="width:93%;background:var(--pres-t17)"></div></div>
+          <div class="bar-val">$351</div>
+        </div>
+        <div class="bar-row">
+          <div class="bar-label">Biden</div>
+          <div class="bar-track"><div class="bar-fill" style="width:95%;background:var(--pres-biden)"></div></div>
+          <div class="bar-val">$359</div>
+        </div>
+        <div class="bar-row">
+          <div class="bar-label">Trump ’25</div>
+          <div class="bar-track"><div class="bar-fill" style="width:100%;background:var(--pres-t25)"></div></div>
+          <div class="bar-val">$378</div>
         </div></div>
-      <button class="expand-btn" type="button" aria-expanded="false"><span>History &amp; context</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg></button><div class="detail" hidden></div>
+      <button class="expand-btn" type="button" aria-expanded="false"><span>See more</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg></button><div class="detail" hidden></div>
       <div class="tile-foot">
-        <a href="https://fred.stlouisfed.org/series/LES1252881600Q" target="_blank" rel="noopener">Bureau of Labor Statistics (via FRED) &#8599;</a>
+        <a href="https://fred.stlouisfed.org/series/LES1252881600Q" target="_blank" rel="noopener">Bureau of Labor Statistics (via FRED) &#8594;</a>
         <span>updates quarterly</span>
       </div>
     </article>
     <article class="tile" id="card-federal_workforce" data-id="federal_workforce" data-as-of="2026-07" data-stale-after="2026-10-09" data-cadence="monthly">
       <div class="tile-cat">Economy & Jobs</div>
-      <h2 class="tile-name">Federal workforce (civilian employment)</h2>
+      <h2 class="tile-name">Federal workforce</h2>
+      <div class="tile-qual">civilian employment</div>
       <div class="hero">2,683k</div>
       <span class="delta neutral">&#9660; 327k (-10.9%) since inauguration (3,010k)</span>
       <div class="freshness">
         <span class="asof">as of Jul 2026</span>
         <span class="stale-flag" hidden>&#9888; data may be stale</span>
       </div>
-      <div class="tile-sub">All federal civilian employees incl. the Postal Service, from the monthly jobs report. Staff on paid deferred resignation counted as employed until they left payrolls (visible as the Oct 2025 drop).</div>
+      <div class="tile-sub">The number of federal civilian employees, including the Postal Service, from the monthly jobs report.</div>
       <div class="bars">
         <div class="bar-row">
-          <div class="bar-label">Now</div>
-          <div class="bar-track"><div class="bar-fill" style="width:89%;background:var(--series-1)"></div></div>
-          <div class="bar-val">2,683k</div>
+          <div class="bar-label">Obama</div>
+          <div class="bar-track"><div class="bar-fill" style="width:100%;background:var(--pres-obama)"></div></div>
+          <div class="bar-val">3,051</div>
         </div>
         <div class="bar-row">
-          <div class="bar-label">Inauguration</div>
-          <div class="bar-track"><div class="bar-fill" style="width:100%;background:var(--muted)"></div></div>
-          <div class="bar-val">3,010k</div>
+          <div class="bar-label">Trump ’17</div>
+          <div class="bar-track"><div class="bar-fill" style="width:92%;background:var(--pres-t17)"></div></div>
+          <div class="bar-val">2,799</div>
+        </div>
+        <div class="bar-row">
+          <div class="bar-label">Biden</div>
+          <div class="bar-track"><div class="bar-fill" style="width:94%;background:var(--pres-biden)"></div></div>
+          <div class="bar-val">2,862</div>
+        </div>
+        <div class="bar-row">
+          <div class="bar-label">Trump ’25</div>
+          <div class="bar-track"><div class="bar-fill" style="width:88%;background:var(--pres-t25)"></div></div>
+          <div class="bar-val">2,683</div>
         </div></div>
-      <button class="expand-btn" type="button" aria-expanded="false"><span>History &amp; context</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg></button><div class="detail" hidden></div>
+      <button class="expand-btn" type="button" aria-expanded="false"><span>See more</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg></button><div class="detail" hidden></div>
       <div class="tile-foot">
-        <a href="https://fred.stlouisfed.org/series/CES9091000001" target="_blank" rel="noopener">Bureau of Labor Statistics (via FRED) &#8599;</a>
+        <a href="https://fred.stlouisfed.org/series/CES9091000001" target="_blank" rel="noopener">Bureau of Labor Statistics (via FRED) &#8594;</a>
         <span>updates monthly</span>
       </div>
     </article></div>
@@ -350,14 +411,15 @@
         <div class="grid">
     <article class="tile" id="card-tariff_revenue" data-id="tariff_revenue" data-as-of="2026-07" data-stale-after="2026-10-09" data-cadence="monthly">
       <div class="tile-cat">Trade & Tariffs</div>
-      <h2 class="tile-name">Tariff revenue (customs duties, fiscal-YTD)</h2>
+      <h2 class="tile-name">Tariff revenue</h2>
+      <div class="tile-qual">customs duties, fiscal-YTD</div>
       <div class="hero">$269B</div>
       <span class="delta neutral">Gross fiscal-YTD · net after refunds $154B · prior FY gross $142B</span>
       <div class="freshness">
         <span class="asof">as of Jul 2026</span>
         <span class="stale-flag" hidden>&#9888; data may be stale</span>
       </div>
-      <div class="tile-sub">Customs duties collected this fiscal year (resets each October). Gross collections; net of refunds $154B. Courts ordered large tariff refunds in 2026, so both are shown — either alone misleads.</div>
+      <div class="tile-sub">Customs duties (tariffs) collected so far this fiscal year, which resets each October. Shown both gross and net of refunds.</div>
       <div class="bars">
         <div class="bar-row">
           <div class="bar-label">This FY, gross</div>
@@ -374,9 +436,9 @@
           <div class="bar-track"><div class="bar-fill" style="width:53%;background:var(--muted)"></div></div>
           <div class="bar-val">$142B</div>
         </div></div>
-      <button class="expand-btn" type="button" aria-expanded="false"><span>History &amp; context</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg></button><div class="detail" hidden></div>
+      <button class="expand-btn" type="button" aria-expanded="false"><span>See more</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg></button><div class="detail" hidden></div>
       <div class="tile-foot">
-        <a href="https://fiscaldata.treasury.gov/datasets/monthly-treasury-statement/receipts-of-the-u-s-government" target="_blank" rel="noopener">U.S. Treasury — Monthly Treasury Statement &#8599;</a>
+        <a href="https://fiscaldata.treasury.gov/datasets/monthly-treasury-statement/receipts-of-the-u-s-government" target="_blank" rel="noopener">U.S. Treasury — Monthly Treasury Statement &#8594;</a>
         <span>updates monthly</span>
       </div>
     </article>
@@ -389,48 +451,64 @@
         <span class="asof">as of Jun 2026</span>
         <span class="stale-flag" hidden>&#9888; data may be stale</span>
       </div>
-      <div class="tile-sub">Gross customs duties collected as a share of goods imports that month — the average tariff actually paid at the border. Computed transparently from two official series; shifts in the import mix move it as well as policy.</div>
+      <div class="tile-sub">The average tariff actually paid at the border: gross customs duties as a share of the value of goods imported that month.</div>
       <div class="bars">
         <div class="bar-row">
-          <div class="bar-label">Now</div>
-          <div class="bar-track"><div class="bar-fill" style="width:100%;background:var(--series-1)"></div></div>
-          <div class="bar-val">7.7%</div>
+          <div class="bar-label">Trump ’17</div>
+          <div class="bar-track"><div class="bar-fill" style="width:22%;background:var(--pres-t17)"></div></div>
+          <div class="bar-val">1.7%</div>
         </div>
         <div class="bar-row">
-          <div class="bar-label">Inauguration</div>
-          <div class="bar-track"><div class="bar-fill" style="width:32%;background:var(--muted)"></div></div>
-          <div class="bar-val">2.4%</div>
+          <div class="bar-label">Biden</div>
+          <div class="bar-track"><div class="bar-fill" style="width:42%;background:var(--pres-biden)"></div></div>
+          <div class="bar-val">3.2%</div>
+        </div>
+        <div class="bar-row">
+          <div class="bar-label">Trump ’25</div>
+          <div class="bar-track"><div class="bar-fill" style="width:100%;background:var(--pres-t25)"></div></div>
+          <div class="bar-val">7.7%</div>
         </div></div>
-      <button class="expand-btn" type="button" aria-expanded="false"><span>History &amp; context</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg></button><div class="detail" hidden></div>
+      <button class="expand-btn" type="button" aria-expanded="false"><span>See more</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg></button><div class="detail" hidden></div>
       <div class="tile-foot">
-        <a href="https://fred.stlouisfed.org/series/BOPGIMP" target="_blank" rel="noopener">Computed: Treasury MTS ÷ Census/BEA imports (via FRED) &#8599;</a>
+        <a href="https://fred.stlouisfed.org/series/BOPGIMP" target="_blank" rel="noopener">Computed: Treasury MTS ÷ Census/BEA imports (via FRED) &#8594;</a>
         <span>updates monthly</span>
       </div>
     </article>
     <article class="tile" id="card-trade_deficit" data-id="trade_deficit" data-as-of="2026-06" data-stale-after="2026-09-08" data-cadence="monthly">
       <div class="tile-cat">Trade & Tariffs</div>
-      <h2 class="tile-name">Trade deficit (goods & services)</h2>
+      <h2 class="tile-name">Trade deficit</h2>
+      <div class="tile-qual">goods & services</div>
       <div class="hero">$73.3B</div>
       <span class="delta good">&#9660; $51.4B (-41%) vs at inauguration (jan 2025)</span>
       <div class="freshness">
         <span class="asof">as of Jun 2026</span>
         <span class="stale-flag" hidden>&#9888; data may be stale</span>
       </div>
-      <div class="tile-sub">Monthly U.S. international trade deficit in goods and services.</div>
+      <div class="tile-sub">How much more the US imports than it exports each month, across goods and services.</div>
       <div class="bars">
         <div class="bar-row">
-          <div class="bar-label">Latest</div>
-          <div class="bar-track"><div class="bar-fill" style="width:59%;background:var(--good)"></div></div>
-          <div class="bar-val">$73.3B</div>
+          <div class="bar-label">Obama</div>
+          <div class="bar-track"><div class="bar-fill" style="width:59%;background:var(--pres-obama)"></div></div>
+          <div class="bar-val">$46B</div>
         </div>
         <div class="bar-row">
-          <div class="bar-label">At inaugurat</div>
-          <div class="bar-track"><div class="bar-fill" style="width:100%;background:var(--muted)"></div></div>
-          <div class="bar-val">$124.7B</div>
+          <div class="bar-label">Trump ’17</div>
+          <div class="bar-track"><div class="bar-fill" style="width:55%;background:var(--pres-t17)"></div></div>
+          <div class="bar-val">$43B</div>
+        </div>
+        <div class="bar-row">
+          <div class="bar-label">Biden</div>
+          <div class="bar-track"><div class="bar-fill" style="width:100%;background:var(--pres-biden)"></div></div>
+          <div class="bar-val">$78B</div>
+        </div>
+        <div class="bar-row">
+          <div class="bar-label">Trump ’25</div>
+          <div class="bar-track"><div class="bar-fill" style="width:95%;background:var(--pres-t25)"></div></div>
+          <div class="bar-val">$73B</div>
         </div></div>
-      <button class="expand-btn" type="button" aria-expanded="false"><span>History &amp; context</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg></button><div class="detail" hidden></div>
+      <button class="expand-btn" type="button" aria-expanded="false"><span>See more</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg></button><div class="detail" hidden></div>
       <div class="tile-foot">
-        <a href="https://fred.stlouisfed.org/series/BOPGSTB" target="_blank" rel="noopener">U.S. Census Bureau / BEA (via FRED) &#8599;</a>
+        <a href="https://fred.stlouisfed.org/series/BOPGSTB" target="_blank" rel="noopener">U.S. Census Bureau / BEA (via FRED) &#8594;</a>
         <span>updates monthly</span>
       </div>
     </article></div>
@@ -447,7 +525,7 @@
         <span class="asof">as of Aug 14, 2026</span>
         <span class="stale-flag" hidden>&#9888; data may be stale</span>
       </div>
-      <div class="tile-sub">Total public debt outstanding</div>
+      <div class="tile-sub">The total amount the federal government owes: total public debt outstanding.</div>
       <div class="bars">
         <div class="bar-row">
           <div class="bar-label">Now</div>
@@ -459,22 +537,23 @@
           <div class="bar-track"><div class="bar-fill" style="width:91%;background:var(--muted)"></div></div>
           <div class="bar-val">$36.21T</div>
         </div></div>
-      <button class="expand-btn" type="button" aria-expanded="false"><span>History &amp; context</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg></button><div class="detail" hidden></div>
+      <button class="expand-btn" type="button" aria-expanded="false"><span>See more</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg></button><div class="detail" hidden></div>
       <div class="tile-foot">
-        <a href="https://fiscaldata.treasury.gov/datasets/debt-to-the-penny/debt-to-the-penny" target="_blank" rel="noopener">U.S. Treasury — Debt to the Penny &#8599;</a>
+        <a href="https://fiscaldata.treasury.gov/datasets/debt-to-the-penny/debt-to-the-penny" target="_blank" rel="noopener">U.S. Treasury — Debt to the Penny &#8594;</a>
         <span>updates daily</span>
       </div>
     </article>
     <article class="tile" id="card-budget_deficit" data-id="budget_deficit" data-as-of="2026-07" data-stale-after="2026-10-09" data-cadence="monthly">
       <div class="tile-cat">Public Finances</div>
-      <h2 class="tile-name">Federal budget deficit (fiscal-YTD)</h2>
+      <h2 class="tile-name">Federal budget deficit</h2>
+      <div class="tile-qual">fiscal-YTD</div>
       <div class="hero">$1,799B</div>
       <span class="delta bad">&#9650; $170B vs the same point last fiscal year ($1,628B)</span>
       <div class="freshness">
         <span class="asof">as of Jul 2026</span>
         <span class="stale-flag" hidden>&#9888; data may be stale</span>
       </div>
-      <div class="tile-sub">Cumulative federal budget deficit so far this fiscal year (resets each October).</div>
+      <div class="tile-sub">How much more the government has spent than it has collected so far this fiscal year (resets each October).</div>
       <div class="bars">
         <div class="bar-row">
           <div class="bar-label">This FY</div>
@@ -486,22 +565,23 @@
           <div class="bar-track"><div class="bar-fill" style="width:91%;background:var(--muted)"></div></div>
           <div class="bar-val">$1,628B</div>
         </div></div>
-      <button class="expand-btn" type="button" aria-expanded="false"><span>History &amp; context</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg></button><div class="detail" hidden></div>
+      <button class="expand-btn" type="button" aria-expanded="false"><span>See more</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg></button><div class="detail" hidden></div>
       <div class="tile-foot">
-        <a href="https://fiscaldata.treasury.gov/datasets/monthly-treasury-statement/summary-of-receipts-outlays-and-the-deficit-surplus-of-the-u-s-government" target="_blank" rel="noopener">U.S. Treasury — Monthly Treasury Statement &#8599;</a>
+        <a href="https://fiscaldata.treasury.gov/datasets/monthly-treasury-statement/summary-of-receipts-outlays-and-the-deficit-surplus-of-the-u-s-government" target="_blank" rel="noopener">U.S. Treasury — Monthly Treasury Statement &#8594;</a>
         <span>updates monthly</span>
       </div>
     </article>
     <article class="tile" id="card-interest_on_debt" data-id="interest_on_debt" data-as-of="2026-07" data-stale-after="2026-10-09" data-cadence="monthly">
       <div class="tile-cat">Public Finances</div>
-      <h2 class="tile-name">Interest on the public debt (fiscal-YTD)</h2>
+      <h2 class="tile-name">Interest on the public debt</h2>
+      <div class="tile-qual">fiscal-YTD</div>
       <div class="hero">$1,170B</div>
       <span class="delta bad">&#9650; $153B vs the same point last fiscal year ($1,017B)</span>
       <div class="freshness">
         <span class="asof">as of Jul 2026</span>
         <span class="stale-flag" hidden>&#9888; data may be stale</span>
       </div>
-      <div class="tile-sub">Cumulative interest paid on all federal debt this fiscal year (resets each October). Includes intragovernmental holdings; single months are lumpy.</div>
+      <div class="tile-sub">Interest the government has paid on the national debt so far this fiscal year (resets each October).</div>
       <div class="bars">
         <div class="bar-row">
           <div class="bar-label">This FY</div>
@@ -513,9 +593,9 @@
           <div class="bar-track"><div class="bar-fill" style="width:87%;background:var(--muted)"></div></div>
           <div class="bar-val">$1,017B</div>
         </div></div>
-      <button class="expand-btn" type="button" aria-expanded="false"><span>History &amp; context</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg></button><div class="detail" hidden></div>
+      <button class="expand-btn" type="button" aria-expanded="false"><span>See more</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg></button><div class="detail" hidden></div>
       <div class="tile-foot">
-        <a href="https://fiscaldata.treasury.gov/datasets/interest-expense-public-debt/interest-expense-on-the-public-debt" target="_blank" rel="noopener">U.S. Treasury — Fiscal Data &#8599;</a>
+        <a href="https://fiscaldata.treasury.gov/datasets/interest-expense-public-debt/interest-expense-on-the-public-debt" target="_blank" rel="noopener">U.S. Treasury — Fiscal Data &#8594;</a>
         <span>updates monthly</span>
       </div>
     </article></div>
@@ -525,28 +605,39 @@
         <div class="grid">
     <article class="tile" id="card-electricity_price" data-id="electricity_price" data-as-of="2026-07" data-stale-after="2026-10-09" data-cadence="monthly">
       <div class="tile-cat">Energy</div>
-      <h2 class="tile-name">Electricity price (residential)</h2>
+      <h2 class="tile-name">Electricity price</h2>
+      <div class="tile-qual">residential</div>
       <div class="hero">19.7&#162;/kWh</div>
       <span class="delta bad">&#9650; 1.8&#162; (+10%) since inauguration</span>
       <div class="freshness">
         <span class="asof">as of Jul 2026</span>
         <span class="stale-flag" hidden>&#9888; data may be stale</span>
       </div>
-      <div class="tile-sub">US city average residential price per kilowatt-hour (BLS average-price series, not seasonally adjusted).</div>
+      <div class="tile-sub">The average residential price of electricity, in cents per kilowatt-hour (US city average).</div>
       <div class="bars">
         <div class="bar-row">
-          <div class="bar-label">Now</div>
-          <div class="bar-track"><div class="bar-fill" style="width:100%;background:var(--critical)"></div></div>
-          <div class="bar-val">19.7&#162;</div>
+          <div class="bar-label">Obama</div>
+          <div class="bar-track"><div class="bar-fill" style="width:68%;background:var(--pres-obama)"></div></div>
+          <div class="bar-val">13.3&#162;</div>
         </div>
         <div class="bar-row">
-          <div class="bar-label">Inauguration</div>
-          <div class="bar-track"><div class="bar-fill" style="width:91%;background:var(--muted)"></div></div>
-          <div class="bar-val">17.9&#162;</div>
+          <div class="bar-label">Trump ’17</div>
+          <div class="bar-track"><div class="bar-fill" style="width:71%;background:var(--pres-t17)"></div></div>
+          <div class="bar-val">13.9&#162;</div>
+        </div>
+        <div class="bar-row">
+          <div class="bar-label">Biden</div>
+          <div class="bar-track"><div class="bar-fill" style="width:83%;background:var(--pres-biden)"></div></div>
+          <div class="bar-val">16.4&#162;</div>
+        </div>
+        <div class="bar-row">
+          <div class="bar-label">Trump ’25</div>
+          <div class="bar-track"><div class="bar-fill" style="width:100%;background:var(--pres-t25)"></div></div>
+          <div class="bar-val">19.7&#162;</div>
         </div></div>
-      <button class="expand-btn" type="button" aria-expanded="false"><span>History &amp; context</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg></button><div class="detail" hidden></div>
+      <button class="expand-btn" type="button" aria-expanded="false"><span>See more</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg></button><div class="detail" hidden></div>
       <div class="tile-foot">
-        <a href="https://fred.stlouisfed.org/series/APU000072610" target="_blank" rel="noopener">Bureau of Labor Statistics (via FRED) &#8599;</a>
+        <a href="https://fred.stlouisfed.org/series/APU000072610" target="_blank" rel="noopener">Bureau of Labor Statistics (via FRED) &#8594;</a>
         <span>updates monthly</span>
       </div>
     </article>
@@ -559,21 +650,31 @@
         <span class="asof">as of May 2026</span>
         <span class="stale-flag" hidden>&#9888; data may be stale</span>
       </div>
-      <div class="tile-sub">US field production of crude oil, million barrels per day (EIA monthly, history to 1920).</div>
+      <div class="tile-sub">US crude oil pumped from wells, in millions of barrels per day.</div>
       <div class="bars">
         <div class="bar-row">
-          <div class="bar-label">Now</div>
-          <div class="bar-track"><div class="bar-fill" style="width:100%;background:var(--series-1)"></div></div>
-          <div class="bar-val">13.7</div>
+          <div class="bar-label">Obama</div>
+          <div class="bar-track"><div class="bar-fill" style="width:39%;background:var(--pres-obama)"></div></div>
+          <div class="bar-val">5.4</div>
         </div>
         <div class="bar-row">
-          <div class="bar-label">Inauguration</div>
-          <div class="bar-track"><div class="bar-fill" style="width:96%;background:var(--muted)"></div></div>
-          <div class="bar-val">13.1</div>
+          <div class="bar-label">Trump ’17</div>
+          <div class="bar-track"><div class="bar-fill" style="width:76%;background:var(--pres-t17)"></div></div>
+          <div class="bar-val">10.4</div>
+        </div>
+        <div class="bar-row">
+          <div class="bar-label">Biden</div>
+          <div class="bar-track"><div class="bar-fill" style="width:86%;background:var(--pres-biden)"></div></div>
+          <div class="bar-val">11.8</div>
+        </div>
+        <div class="bar-row">
+          <div class="bar-label">Trump ’25</div>
+          <div class="bar-track"><div class="bar-fill" style="width:100%;background:var(--pres-t25)"></div></div>
+          <div class="bar-val">13.7</div>
         </div></div>
-      <button class="expand-btn" type="button" aria-expanded="false"><span>History &amp; context</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg></button><div class="detail" hidden></div>
+      <button class="expand-btn" type="button" aria-expanded="false"><span>See more</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg></button><div class="detail" hidden></div>
       <div class="tile-foot">
-        <a href="https://www.eia.gov/dnav/pet/hist/LeafHandler.ashx?n=PET&s=MCRFPUS2&f=M" target="_blank" rel="noopener">U.S. Energy Information Administration &#8599;</a>
+        <a href="https://www.eia.gov/dnav/pet/hist/LeafHandler.ashx?n=PET&s=MCRFPUS2&f=M" target="_blank" rel="noopener">U.S. Energy Information Administration &#8594;</a>
         <span>updates monthly</span>
       </div>
     </article>
@@ -586,7 +687,7 @@
         <span class="asof">as of May 2026</span>
         <span class="stale-flag" hidden>&#9888; data may be stale</span>
       </div>
-      <div class="tile-sub">Share of US utility-scale electricity generated from renewables (conventional hydro, wind, solar, geothermal, biomass) — a computed ratio of EIA's own generation-by-source figures.</div>
+      <div class="tile-sub">The share of US utility-scale electricity generated from renewable sources: hydro, wind, solar, geothermal and biomass.</div>
       <div class="bars">
         <div class="bar-row">
           <div class="bar-label">Now</div>
@@ -598,9 +699,9 @@
           <div class="bar-track"><div class="bar-fill" style="width:72%;background:var(--muted)"></div></div>
           <div class="bar-val">21.3%</div>
         </div></div>
-      <button class="expand-btn" type="button" aria-expanded="false"><span>History &amp; context</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg></button><div class="detail" hidden></div>
+      <button class="expand-btn" type="button" aria-expanded="false"><span>See more</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg></button><div class="detail" hidden></div>
       <div class="tile-foot">
-        <a href="https://www.eia.gov/electricity/monthly/" target="_blank" rel="noopener">EIA Electric Power Monthly, Table 1.1 &#8599;</a>
+        <a href="https://www.eia.gov/electricity/monthly/" target="_blank" rel="noopener">EIA Electric Power Monthly, Table 1.1 &#8594;</a>
         <span>updates monthly</span>
       </div>
     </article></div>
@@ -617,7 +718,7 @@
         <span class="asof">as of Jul 2026</span>
         <span class="stale-flag" hidden>&#9888; data may be stale</span>
       </div>
-      <div class="tile-sub">Monthly Southwest land border encounters. Counts events, not unique people; composition shifts at the May 2023 Title 42 → Title 8 change.</div>
+      <div class="tile-sub">The number of times US authorities encountered someone at the southwest land border each month.</div>
       <div class="bars">
         <div class="bar-row">
           <div class="bar-label">This year</div>
@@ -634,22 +735,23 @@
           <div class="bar-track"><div class="bar-fill" style="width:100%;background:var(--muted)"></div></div>
           <div class="bar-val">104,100</div>
         </div></div>
-      <button class="expand-btn" type="button" aria-expanded="false"><span>History &amp; context</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg></button><div class="detail" hidden></div>
+      <button class="expand-btn" type="button" aria-expanded="false"><span>See more</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg></button><div class="detail" hidden></div>
       <div class="tile-foot">
-        <a href="https://www.cbp.gov/document/stats/southwest-land-border-encounters" target="_blank" rel="noopener">U.S. Customs and Border Protection &#8599;</a>
+        <a href="https://www.cbp.gov/document/stats/southwest-land-border-encounters" target="_blank" rel="noopener">U.S. Customs and Border Protection &#8594;</a>
         <span>updates monthly</span>
       </div>
     </article>
     <article class="tile" id="card-ice_removals" data-id="ice_removals" data-as-of="2026-07-11" data-stale-after="2026-09-24" data-cadence="biweekly">
       <div class="tile-cat">Immigration</div>
-      <h2 class="tile-name">ICE removals (fiscal-YTD)</h2>
+      <h2 class="tile-name">ICE removals</h2>
+      <div class="tile-qual">fiscal-YTD</div>
       <div class="hero">356,389</div>
       <span class="delta neutral">FY2024 full year (prior administration): 271,484</span>
       <div class="freshness">
         <span class="asof">as of Jul 11, 2026</span>
         <span class="stale-flag" hidden>&#9888; data may be stale</span>
       </div>
-      <div class="tile-sub">Removals recorded in ICE's published statistics workbook, FY2026 to date. Official workbook figure — not comparable to press-release 'deportation' totals, which mix in CBP actions. Includes 36,548 with a family-unit identifier.</div>
+      <div class="tile-sub">People removed (deported) from the US this fiscal year, as recorded in ICE's published statistics workbook.</div>
       <div class="bars">
         <div class="bar-row">
           <div class="bar-label">This FY so far</div>
@@ -661,26 +763,27 @@
           <div class="bar-track"><div class="bar-fill" style="width:76%;background:var(--muted)"></div></div>
           <div class="bar-val">271,484</div>
         </div></div>
-      <button class="expand-btn" type="button" aria-expanded="false"><span>History &amp; context</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg></button><div class="detail" hidden></div>
+      <button class="expand-btn" type="button" aria-expanded="false"><span>See more</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg></button><div class="detail" hidden></div>
       <div class="tile-foot">
-        <a href="https://www.ice.gov/detain/detention-management" target="_blank" rel="noopener">U.S. Immigration and Customs Enforcement &#8599;</a>
+        <a href="https://www.ice.gov/detain/detention-management" target="_blank" rel="noopener">U.S. Immigration and Customs Enforcement &#8594;</a>
         <span>updates biweekly</span>
       </div>
     </article>
     <article class="tile" id="card-ice_detention" data-id="ice_detention" data-as-of="2026-07-11" data-stale-after="2026-09-24" data-cadence="biweekly">
       <div class="tile-cat">Immigration</div>
-      <h2 class="tile-name">ICE detention population (ADP)</h2>
+      <h2 class="tile-name">ICE detention population</h2>
+      <div class="tile-qual">ADP</div>
       <div class="hero">62,517</div>
       <span class="delta neutral">Currently detained (point-in-time): 65,765</span>
       <div class="freshness">
         <span class="asof">as of Jul 11, 2026</span>
         <span class="stale-flag" hidden>&#9888; data may be stale</span>
       </div>
-      <div class="tile-sub">National average daily population in ICE detention, fiscal-YTD (FY2026), summed across 208 facilities and cross-checked against the workbook's second split. An average, not a point-in-time headcount.</div>
+      <div class="tile-sub">The average number of people held in ICE detention at any given time this fiscal year.</div>
       <div class="bars"></div>
-      <button class="expand-btn" type="button" aria-expanded="false"><span>History &amp; context</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg></button><div class="detail" hidden></div>
+      <button class="expand-btn" type="button" aria-expanded="false"><span>See more</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg></button><div class="detail" hidden></div>
       <div class="tile-foot">
-        <a href="https://www.ice.gov/detain/detention-management" target="_blank" rel="noopener">U.S. Immigration and Customs Enforcement &#8599;</a>
+        <a href="https://www.ice.gov/detain/detention-management" target="_blank" rel="noopener">U.S. Immigration and Customs Enforcement &#8594;</a>
         <span>updates biweekly</span>
       </div>
     </article>
@@ -693,7 +796,7 @@
         <span class="asof">as of Jul 11, 2026</span>
         <span class="stale-flag" hidden>&#9888; data may be stale</span>
       </div>
-      <div class="tile-sub">Share of the 64,506 people in ICE detention with no criminal conviction, using ICE's own categories: 'Pending Criminal Charges' plus 'Other Immigration Violators' (no conviction and no pending charge), vs 'Convicted Criminal'. The three categories are ICE's, reconciled against the workbook's own Currently Detained total before publishing.</div>
+      <div class="tile-sub">The share of people in ICE detention who have no criminal conviction, using ICE's own categories.</div>
       <div class="bars">
         <div class="bar-row">
           <div class="bar-label">No conviction</div>
@@ -710,9 +813,9 @@
           <div class="bar-track"><div class="bar-fill" style="width:39%;background:var(--muted)"></div></div>
           <div class="bar-val">18,247</div>
         </div></div>
-      <button class="expand-btn" type="button" aria-expanded="false"><span>History &amp; context</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg></button><div class="detail" hidden></div>
+      <button class="expand-btn" type="button" aria-expanded="false"><span>See more</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg></button><div class="detail" hidden></div>
       <div class="tile-foot">
-        <a href="https://www.ice.gov/detain/detention-management" target="_blank" rel="noopener">U.S. Immigration and Customs Enforcement (detention workbook) &#8599;</a>
+        <a href="https://www.ice.gov/detain/detention-management" target="_blank" rel="noopener">U.S. Immigration and Customs Enforcement (detention workbook) &#8594;</a>
         <span>updates biweekly</span>
       </div>
     </article>
@@ -725,7 +828,7 @@
         <span class="asof">as of Aug 18, 2026</span>
         <span class="stale-flag" hidden>&#9888; data may be stale</span>
       </div>
-      <div class="tile-sub">Deaths in ICE custody, counted from ICE's own per-death reporting page (one dated row per death; names never republished).</div>
+      <div class="tile-sub">The number of people who have died while in ICE detention, from ICE's own death-reporting page.</div>
       <div class="bars">
         <div class="bar-row">
           <div class="bar-label">FY2026 (to date)</div>
@@ -742,22 +845,23 @@
           <div class="bar-track"><div class="bar-fill" style="width:35%;background:var(--muted)"></div></div>
           <div class="bar-val">12</div>
         </div></div>
-      <button class="expand-btn" type="button" aria-expanded="false"><span>History &amp; context</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg></button><div class="detail" hidden></div>
+      <button class="expand-btn" type="button" aria-expanded="false"><span>See more</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg></button><div class="detail" hidden></div>
       <div class="tile-foot">
-        <a href="https://www.ice.gov/detain/detainee-death-reporting" target="_blank" rel="noopener">ICE Detainee Death Reporting &#8599;</a>
+        <a href="https://www.ice.gov/detain/detainee-death-reporting" target="_blank" rel="noopener">ICE Detainee Death Reporting &#8594;</a>
         <span>updates as posted</span>
       </div>
     </article>
     <article class="tile" id="card-refugee_admissions" data-id="refugee_admissions" data-as-of="2026-07-31" data-stale-after="2026-11-08" data-cadence="monthly">
       <div class="tile-cat">Immigration</div>
-      <h2 class="tile-name">Refugee admissions (fiscal-YTD)</h2>
+      <h2 class="tile-name">Refugee admissions</h2>
+      <div class="tile-qual">fiscal-YTD</div>
       <div class="hero">10,258</div>
       <span class="delta neutral">FY2026 presidential ceiling: 7,500 &#8212; court-ordered cases sit outside it</span>
       <div class="freshness">
         <span class="asof">as of Jul 31, 2026</span>
         <span class="stale-flag" hidden>&#9888; data may be stale</span>
       </div>
-      <div class="tile-sub">Refugees admitted FY2026 to date, from the State Department's monthly arrivals report.</div>
+      <div class="tile-sub">The number of refugees formally admitted to the US this fiscal year, from the State Department's monthly report.</div>
       <div class="bars">
         <div class="bar-row">
           <div class="bar-label">Arrivals FYTD</div>
@@ -769,9 +873,9 @@
           <div class="bar-track"><div class="bar-fill" style="width:73%;background:var(--muted)"></div></div>
           <div class="bar-val">7,500</div>
         </div></div>
-      <button class="expand-btn" type="button" aria-expanded="false"><span>History &amp; context</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg></button><div class="detail" hidden></div>
+      <button class="expand-btn" type="button" aria-expanded="false"><span>See more</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg></button><div class="detail" hidden></div>
       <div class="tile-foot">
-        <a href="https://www.rpc.state.gov/documents/Refugee%20Arrivals%20by%20State%20and%20Nationality%20as%20of%20July%2031,%202026.pdf" target="_blank" rel="noopener">State Dept Refugee Processing Center (monthly report) &#8599;</a>
+        <a href="https://www.rpc.state.gov/documents/Refugee%20Arrivals%20by%20State%20and%20Nationality%20as%20of%20July%2031,%202026.pdf" target="_blank" rel="noopener">State Dept Refugee Processing Center (monthly report) &#8594;</a>
         <span>updates monthly</span>
       </div>
     </article></div>
@@ -781,41 +885,48 @@
         <div class="grid">
     <article class="tile" id="card-overdose_deaths" data-id="overdose_deaths" data-as-of="2026-03" data-stale-after="2026-11-26" data-cadence="monthly">
       <div class="tile-cat">Health & Safety Net</div>
-      <h2 class="tile-name">Drug overdose deaths (trailing 12 months)</h2>
+      <h2 class="tile-name">Drug overdose deaths</h2>
+      <div class="tile-qual">trailing 12 months</div>
       <div class="hero">67,798</div>
       <span class="delta good">&#9660; 11,828 (-15%) vs the 12 months ending at inauguration</span>
       <div class="freshness">
         <span class="asof">as of Mar 2026</span>
         <span class="stale-flag" hidden>&#9888; data may be stale</span>
       </div>
-      <div class="tile-sub">Provisional CDC estimate (completeness-adjusted) of overdose deaths in the 12 months ending this month; reported ~5 months behind and revised.</div>
+      <div class="tile-sub">Estimated US drug overdose deaths over the most recent 12 months, from provisional Centers for Disease Control and Prevention data.</div>
       <div class="bars">
         <div class="bar-row">
-          <div class="bar-label">Latest 12 mo</div>
-          <div class="bar-track"><div class="bar-fill" style="width:85%;background:var(--good)"></div></div>
-          <div class="bar-val">67,798</div>
+          <div class="bar-label">Trump ’17</div>
+          <div class="bar-track"><div class="bar-fill" style="width:64%;background:var(--pres-t17)"></div></div>
+          <div class="bar-val">69,860</div>
         </div>
         <div class="bar-row">
-          <div class="bar-label">To Jan 2025</div>
-          <div class="bar-track"><div class="bar-fill" style="width:100%;background:var(--muted)"></div></div>
-          <div class="bar-val">79,626</div>
+          <div class="bar-label">Biden</div>
+          <div class="bar-track"><div class="bar-fill" style="width:100%;background:var(--pres-biden)"></div></div>
+          <div class="bar-val">109,622</div>
+        </div>
+        <div class="bar-row">
+          <div class="bar-label">Trump ’25</div>
+          <div class="bar-track"><div class="bar-fill" style="width:62%;background:var(--pres-t25)"></div></div>
+          <div class="bar-val">67,798</div>
         </div></div>
-      <button class="expand-btn" type="button" aria-expanded="false"><span>History &amp; context</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg></button><div class="detail" hidden></div>
+      <button class="expand-btn" type="button" aria-expanded="false"><span>See more</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg></button><div class="detail" hidden></div>
       <div class="tile-foot">
-        <a href="https://www.cdc.gov/nchs/nvss/vsrr/drug-overdose-data.htm" target="_blank" rel="noopener">CDC — NCHS provisional overdose counts &#8599;</a>
+        <a href="https://www.cdc.gov/nchs/nvss/vsrr/drug-overdose-data.htm" target="_blank" rel="noopener">CDC — NCHS provisional overdose counts &#8594;</a>
         <span>updates monthly</span>
       </div>
     </article>
     <article class="tile" id="card-measles_cases" data-id="measles_cases" data-as-of="2026-08-13" data-stale-after="2026-09-27" data-cadence="weekly">
       <div class="tile-cat">Health & Safety Net</div>
-      <h2 class="tile-name">Measles cases (2026 to date)</h2>
+      <h2 class="tile-name">Measles cases</h2>
+      <div class="tile-qual">2026 to date</div>
       <div class="hero">2,566</div>
       <span class="delta bad">&#9650; 9&#215; the worst Biden-term year (2024: 285)</span>
       <div class="freshness">
         <span class="asof">as of Aug 13, 2026</span>
         <span class="stale-flag" hidden>&#9888; data may be stale</span>
       </div>
-      <div class="tile-sub">Confirmed cases reported to CDC, year to date, dated by CDC's own 'as of' line.</div>
+      <div class="tile-sub">Confirmed measles cases reported to the Centers for Disease Control and Prevention this year.</div>
       <div class="bars">
         <div class="bar-row">
           <div class="bar-label">This year so far</div>
@@ -832,9 +943,9 @@
           <div class="bar-track"><div class="bar-fill" style="width:11%;background:var(--muted)"></div></div>
           <div class="bar-val">285</div>
         </div></div>
-      <button class="expand-btn" type="button" aria-expanded="false"><span>History &amp; context</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg></button><div class="detail" hidden></div>
+      <button class="expand-btn" type="button" aria-expanded="false"><span>See more</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg></button><div class="detail" hidden></div>
       <div class="tile-foot">
-        <a href="https://www.cdc.gov/measles/data-research/index.html" target="_blank" rel="noopener">CDC — measles cases and outbreaks &#8599;</a>
+        <a href="https://www.cdc.gov/measles/data-research/index.html" target="_blank" rel="noopener">CDC — measles cases and outbreaks &#8594;</a>
         <span>updates weekly</span>
       </div>
     </article>
@@ -847,21 +958,26 @@
         <span class="asof">as of Apr 2026</span>
         <span class="stale-flag" hidden>&#9888; data may be stale</span>
       </div>
-      <div class="tile-sub">Total people enrolled in Medicaid and CHIP, summed from state reports to CMS (~4-month lag; states revise).</div>
+      <div class="tile-sub">The number of people enrolled in Medicaid and the Children's Health Insurance Program (CHIP), from state reports.</div>
       <div class="bars">
         <div class="bar-row">
-          <div class="bar-label">Now</div>
-          <div class="bar-track"><div class="bar-fill" style="width:93%;background:var(--series-1)"></div></div>
-          <div class="bar-val">73.9M</div>
+          <div class="bar-label">Trump ’17</div>
+          <div class="bar-track"><div class="bar-fill" style="width:83%;background:var(--pres-t17)"></div></div>
+          <div class="bar-val">73.2M</div>
         </div>
         <div class="bar-row">
-          <div class="bar-label">Dec 2024</div>
-          <div class="bar-track"><div class="bar-fill" style="width:100%;background:var(--muted)"></div></div>
-          <div class="bar-val">79.2M</div>
+          <div class="bar-label">Biden</div>
+          <div class="bar-track"><div class="bar-fill" style="width:100%;background:var(--pres-biden)"></div></div>
+          <div class="bar-val">88.6M</div>
+        </div>
+        <div class="bar-row">
+          <div class="bar-label">Trump ’25</div>
+          <div class="bar-track"><div class="bar-fill" style="width:83%;background:var(--pres-t25)"></div></div>
+          <div class="bar-val">73.9M</div>
         </div></div>
-      <button class="expand-btn" type="button" aria-expanded="false"><span>History &amp; context</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg></button><div class="detail" hidden></div>
+      <button class="expand-btn" type="button" aria-expanded="false"><span>See more</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg></button><div class="detail" hidden></div>
       <div class="tile-foot">
-        <a href="https://data.medicaid.gov/dataset/6165f45b-ca93-5bb5-9d06-db29c692a360" target="_blank" rel="noopener">Centers for Medicare & Medicaid Services &#8599;</a>
+        <a href="https://data.medicaid.gov/dataset/6165f45b-ca93-5bb5-9d06-db29c692a360" target="_blank" rel="noopener">Centers for Medicare & Medicaid Services &#8594;</a>
         <span>updates monthly</span>
       </div>
     </article>
@@ -874,7 +990,7 @@
         <span class="asof">as of Aug 15, 2026</span>
         <span class="stale-flag" hidden>&#9888; data may be stale</span>
       </div>
-      <div class="tile-sub">Disability-compensation rating claims pending more than 125 days (VA's backlog definition). Total pending shown for context — the backlog can fall while overall pending doesn't. Total pending now: 632,308.</div>
+      <div class="tile-sub">Veterans' disability-compensation claims that have waited more than 125 days for a decision (the VA's backlog definition).</div>
       <div class="bars">
         <div class="bar-row">
           <div class="bar-label">Now</div>
@@ -886,9 +1002,9 @@
           <div class="bar-track"><div class="bar-fill" style="width:100%;background:var(--muted)"></div></div>
           <div class="bar-val">257,253</div>
         </div></div>
-      <button class="expand-btn" type="button" aria-expanded="false"><span>History &amp; context</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg></button><div class="detail" hidden></div>
+      <button class="expand-btn" type="button" aria-expanded="false"><span>See more</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg></button><div class="detail" hidden></div>
       <div class="tile-foot">
-        <a href="https://www.benefits.va.gov/reports/detailed_claims_data.asp" target="_blank" rel="noopener">Dept. of Veterans Affairs — Monday Morning Workload Report &#8599;</a>
+        <a href="https://www.benefits.va.gov/reports/detailed_claims_data.asp" target="_blank" rel="noopener">Dept. of Veterans Affairs — Monday Morning Workload Report &#8594;</a>
         <span>updates weekly</span>
       </div>
     </article></div>
@@ -905,7 +1021,7 @@
         <span class="asof">as of Aug 18, 2026</span>
         <span class="stale-flag" hidden>&#9888; data may be stale</span>
       </div>
-      <div class="tile-sub">Since inauguration · Jan 20, 2025</div>
+      <div class="tile-sub">The number of executive orders the president has signed since taking office, from the Federal Register.</div>
       <div class="bars">
         <div class="bar-row">
           <div class="bar-label">Trump</div>
@@ -917,22 +1033,23 @@
           <div class="bar-track"><div class="bar-fill" style="width:35%;background:var(--muted)"></div></div>
           <div class="bar-val">95</div>
         </div></div>
-      <button class="expand-btn" type="button" aria-expanded="false"><span>History &amp; context</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg></button><div class="detail" hidden></div>
+      <button class="expand-btn" type="button" aria-expanded="false"><span>See more</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg></button><div class="detail" hidden></div>
       <div class="tile-foot">
-        <a href="https://www.federalregister.gov/presidential-documents/executive-orders" target="_blank" rel="noopener">Federal Register &#8599;</a>
+        <a href="https://www.federalregister.gov/presidential-documents/executive-orders" target="_blank" rel="noopener">Federal Register &#8594;</a>
         <span>updates as signed</span>
       </div>
     </article>
     <article class="tile" id="card-judges_confirmed" data-id="judges_confirmed" data-as-of="2026-08-18" data-stale-after="2026-09-01" data-cadence="as confirmed">
       <div class="tile-cat">Executive Power & Governance</div>
-      <h2 class="tile-name">Federal judges confirmed (Article III)</h2>
+      <h2 class="tile-name">Federal judges confirmed</h2>
+      <div class="tile-qual">Article III</div>
       <div class="hero">54</div>
       <span class="delta neutral">+0 vs his first term at the same point (54)</span>
       <div class="freshness">
         <span class="asof">as of Aug 18, 2026</span>
         <span class="stale-flag" hidden>&#9888; data may be stale</span>
       </div>
-      <div class="tile-sub">Lifetime (Article III) judges confirmed this term, counted by Senate confirmation date from the FJC's directory of every federal judge since 1789.</div>
+      <div class="tile-sub">Lifetime federal judges (Article III) confirmed by the Senate this term, from the Federal Judicial Center.</div>
       <div class="bars">
         <div class="bar-row">
           <div class="bar-label">This term</div>
@@ -949,9 +1066,9 @@
           <div class="bar-track"><div class="bar-fill" style="width:100%;background:var(--muted)"></div></div>
           <div class="bar-val">76</div>
         </div></div>
-      <button class="expand-btn" type="button" aria-expanded="false"><span>History &amp; context</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg></button><div class="detail" hidden></div>
+      <button class="expand-btn" type="button" aria-expanded="false"><span>See more</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg></button><div class="detail" hidden></div>
       <div class="tile-foot">
-        <a href="https://www.fjc.gov/history/judges/biographical-directory-article-iii-federal-judges-export" target="_blank" rel="noopener">Federal Judicial Center — biographical directory &#8599;</a>
+        <a href="https://www.fjc.gov/history/judges/biographical-directory-article-iii-federal-judges-export" target="_blank" rel="noopener">Federal Judicial Center — biographical directory &#8594;</a>
         <span>updates as confirmed</span>
       </div>
     </article>
@@ -959,73 +1076,74 @@
       <div class="tile-cat">Executive Power & Governance</div>
       <h2 class="tile-name">Presidential approval</h2>
       <div class="hero">42%</div>
-      <span class="delta neutral">Disapprove 56% · net -13 &#183; Biden at the same point (Gallup): 42%</span>
+      <span class="delta neutral">Disapprove 56% · net -13 &#183; vs Biden at the same point: 42%</span>
       <div class="freshness">
         <span class="asof">as of Jun 29, 2026</span>
         <span class="stale-flag" hidden>&#9888; data may be stale</span>
       </div>
-      <div class="tile-sub">Simple average of 2 national polls (one per pollster). Opinion data, not a government statistic — the board's one survey-derived metric. VoteHub's public feed has carried no new national approval poll since Jun 29, 2026; the figure shown is the last aggregate, checked daily.</div>
+      <div class="tile-sub">The share of the public that approves of the president's job performance, averaged from recent national polls. Opinion data, not an official government statistic.</div>
       <div class="bars">
         <div class="bar-row">
-          <div class="bar-label">Trump &#8217;25 &#183; VoteHub</div>
-          <div class="bar-track"><div class="bar-fill" style="width:94%;background:var(--series-1)"></div></div>
+          <div class="bar-label">Trump &#8217;25</div>
+          <div class="bar-track"><div class="bar-fill" style="width:94%;background:var(--pres-t25)"></div></div>
           <div class="bar-val">42%</div>
         </div>
         <div class="bar-row">
-          <div class="bar-label">Biden &#183; Gallup</div>
-          <div class="bar-track"><div class="bar-fill" style="width:94%;background:var(--muted)"></div></div>
+          <div class="bar-label">Biden</div>
+          <div class="bar-track"><div class="bar-fill" style="width:94%;background:var(--pres-biden)"></div></div>
           <div class="bar-val">42%</div>
         </div>
         <div class="bar-row">
-          <div class="bar-label">Trump &#8217;17 &#183; Gallup</div>
-          <div class="bar-track"><div class="bar-fill" style="width:92%;background:var(--muted)"></div></div>
+          <div class="bar-label">Trump &#8217;17</div>
+          <div class="bar-track"><div class="bar-fill" style="width:92%;background:var(--pres-t17)"></div></div>
           <div class="bar-val">41%</div>
         </div>
         <div class="bar-row">
-          <div class="bar-label">Obama &#183; Gallup</div>
-          <div class="bar-track"><div class="bar-fill" style="width:100%;background:var(--muted)"></div></div>
+          <div class="bar-label">Obama</div>
+          <div class="bar-track"><div class="bar-fill" style="width:100%;background:var(--pres-obama)"></div></div>
           <div class="bar-val">45%</div>
         </div></div>
-      <button class="expand-btn" type="button" aria-expanded="false"><span>History &amp; context</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg></button><div class="detail" hidden></div>
+      <button class="expand-btn" type="button" aria-expanded="false"><span>See more</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg></button><div class="detail" hidden></div>
       <div class="tile-foot">
-        <a href="https://votehub.com/polls/" target="_blank" rel="noopener">VoteHub poll aggregate (CC-BY) &#8599;</a>
+        <a href="https://votehub.com/polls/" target="_blank" rel="noopener">VoteHub poll aggregate (CC-BY) &#8594;</a>
         <span>updates weekly</span>
       </div>
     </article>
     <article class="tile" id="card-clemency" data-id="clemency" data-as-of="2026-07-03" data-stale-after="2026-10-31" data-cadence="as granted">
       <div class="tile-cat">Executive Power & Governance</div>
-      <h2 class="tile-name">Clemency (pardons & commutations)</h2>
+      <h2 class="tile-name">Clemency</h2>
+      <div class="tile-qual">pardons & commutations</div>
       <div class="hero">135</div>
       <span class="delta neutral">~1,635 individuals covered incl. the Jan 6 proclamation (one action, ~1,500 people)</span>
       <div class="freshness">
         <span class="asof">as of Jul 3, 2026</span>
         <span class="stale-flag" hidden>&#9888; data may be stale</span>
       </div>
-      <div class="tile-sub">Named clemency grants (pardons + commutations) from DOJ's own grants page, summed from its dated batch headings ('(Amended)' batches excluded to avoid double-counting restated grants).</div>
+      <div class="tile-sub">Pardons and commutations the president has granted this term, from the Department of Justice's grants page.</div>
       <div class="bars">
         <div class="bar-row">
           <div class="bar-label">Trump &#8217;25 (~)</div>
-          <div class="bar-track"><div class="bar-fill" style="width:39%;background:var(--series-1)"></div></div>
+          <div class="bar-track"><div class="bar-fill" style="width:39%;background:var(--pres-t25)"></div></div>
           <div class="bar-val">~1,635</div>
         </div>
         <div class="bar-row">
           <div class="bar-label">Biden</div>
-          <div class="bar-track"><div class="bar-fill" style="width:100%;background:var(--muted)"></div></div>
+          <div class="bar-track"><div class="bar-fill" style="width:100%;background:var(--pres-biden)"></div></div>
           <div class="bar-val">4,245</div>
         </div>
         <div class="bar-row">
           <div class="bar-label">Obama</div>
-          <div class="bar-track"><div class="bar-fill" style="width:45%;background:var(--muted)"></div></div>
+          <div class="bar-track"><div class="bar-fill" style="width:45%;background:var(--pres-obama)"></div></div>
           <div class="bar-val">1,927</div>
         </div>
         <div class="bar-row">
           <div class="bar-label">Trump &#8217;17</div>
-          <div class="bar-track"><div class="bar-fill" style="width:6%;background:var(--muted)"></div></div>
+          <div class="bar-track"><div class="bar-fill" style="width:6%;background:var(--pres-t17)"></div></div>
           <div class="bar-val">237</div>
         </div></div>
-      <button class="expand-btn" type="button" aria-expanded="false"><span>History &amp; context</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg></button><div class="detail" hidden></div>
+      <button class="expand-btn" type="button" aria-expanded="false"><span>See more</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg></button><div class="detail" hidden></div>
       <div class="tile-foot">
-        <a href="https://www.justice.gov/pardon/clemency-grants-president-donald-j-trump-2025-present" target="_blank" rel="noopener">DOJ Office of the Pardon Attorney — clemency grants &#8599;</a>
+        <a href="https://www.justice.gov/pardon/clemency-grants-president-donald-j-trump-2025-present" target="_blank" rel="noopener">DOJ Office of the Pardon Attorney — clemency grants &#8594;</a>
         <span>updates as granted</span>
       </div>
     </article>
@@ -1038,31 +1156,31 @@
         <span class="asof">as of Aug 18, 2026</span>
         <span class="stale-flag" hidden>&#9888; data may be stale</span>
       </div>
-      <div class="tile-sub">New national emergencies declared under the National Emergencies Act, counted from Federal Register presidential documents containing the declaring phrase; annual continuations and terminations excluded.</div>
+      <div class="tile-sub">New national emergencies the president has declared under the National Emergencies Act this term.</div>
       <div class="bars">
         <div class="bar-row">
           <div class="bar-label">Trump &#8217;25</div>
-          <div class="bar-track"><div class="bar-fill" style="width:100%;background:var(--series-1)"></div></div>
+          <div class="bar-track"><div class="bar-fill" style="width:100%;background:var(--pres-t25)"></div></div>
           <div class="bar-val">8</div>
         </div>
         <div class="bar-row">
           <div class="bar-label">Biden</div>
-          <div class="bar-track"><div class="bar-fill" style="width:75%;background:var(--muted)"></div></div>
+          <div class="bar-track"><div class="bar-fill" style="width:75%;background:var(--pres-biden)"></div></div>
           <div class="bar-val">6</div>
         </div>
         <div class="bar-row">
           <div class="bar-label">Trump &#8217;17</div>
-          <div class="bar-track"><div class="bar-fill" style="width:12%;background:var(--muted)"></div></div>
+          <div class="bar-track"><div class="bar-fill" style="width:12%;background:var(--pres-t17)"></div></div>
           <div class="bar-val">1</div>
         </div>
         <div class="bar-row">
           <div class="bar-label">Obama</div>
-          <div class="bar-track"><div class="bar-fill" style="width:12%;background:var(--muted)"></div></div>
+          <div class="bar-track"><div class="bar-fill" style="width:12%;background:var(--pres-obama)"></div></div>
           <div class="bar-val">1</div>
         </div></div>
-      <button class="expand-btn" type="button" aria-expanded="false"><span>History &amp; context</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg></button><div class="detail" hidden></div>
+      <button class="expand-btn" type="button" aria-expanded="false"><span>See more</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg></button><div class="detail" hidden></div>
       <div class="tile-foot">
-        <a href="https://www.federalregister.gov/presidential-documents" target="_blank" rel="noopener">Federal Register (derived count — rules on the card) &#8599;</a>
+        <a href="https://www.federalregister.gov/presidential-documents" target="_blank" rel="noopener">Federal Register (derived count — rules on the card) &#8594;</a>
         <span>updates as signed</span>
       </div>
     </article></div>
@@ -1072,14 +1190,15 @@
         <div class="grid">
     <article class="tile" id="card-defense_outlays" data-id="defense_outlays" data-as-of="2026-07" data-stale-after="2026-10-09" data-cadence="monthly">
       <div class="tile-cat">War & Defense</div>
-      <h2 class="tile-name">Defense outlays (fiscal-YTD)</h2>
+      <h2 class="tile-name">Defense outlays</h2>
+      <div class="tile-qual">fiscal-YTD</div>
       <div class="hero">$765B</div>
       <span class="delta neutral">&#9650; $46B vs same point last fiscal year ($719B)</span>
       <div class="freshness">
         <span class="asof">as of Jul 2026</span>
         <span class="stale-flag" hidden>&#9888; data may be stale</span>
       </div>
-      <div class="tile-sub">Net outlays of the Department of Defense — Military Programs, fiscal-year-to-date (military pay, operations, procurement, R&D; excludes VA and civil programs).</div>
+      <div class="tile-sub">Money spent by the Department of Defense on military programs so far this fiscal year (pay, operations, procurement and research).</div>
       <div class="bars">
         <div class="bar-row">
           <div class="bar-label">This FY</div>
@@ -1091,22 +1210,23 @@
           <div class="bar-track"><div class="bar-fill" style="width:94%;background:var(--muted)"></div></div>
           <div class="bar-val">$719B</div>
         </div></div>
-      <button class="expand-btn" type="button" aria-expanded="false"><span>History &amp; context</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg></button><div class="detail" hidden></div>
+      <button class="expand-btn" type="button" aria-expanded="false"><span>See more</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg></button><div class="detail" hidden></div>
       <div class="tile-foot">
-        <a href="https://fiscaldata.treasury.gov/datasets/monthly-treasury-statement/" target="_blank" rel="noopener">U.S. Treasury Monthly Treasury Statement &#8599;</a>
+        <a href="https://fiscaldata.treasury.gov/datasets/monthly-treasury-statement/" target="_blank" rel="noopener">U.S. Treasury Monthly Treasury Statement &#8594;</a>
         <span>updates monthly</span>
       </div>
     </article>
     <article class="tile" id="card-foreign_aid" data-id="foreign_aid" data-as-of="2026-06" data-stale-after="2026-12-07" data-cadence="quarterly">
       <div class="tile-cat">War & Defense</div>
-      <h2 class="tile-name">Foreign aid & international affairs (obligations)</h2>
+      <h2 class="tile-name">Foreign aid & international affairs</h2>
+      <div class="tile-qual">obligations</div>
       <div class="hero">$36B</div>
       <span class="delta neutral">&#9660; $4B vs same point fy2025 ($39B)</span>
       <div class="freshness">
         <span class="asof">as of Jun 2026</span>
         <span class="stale-flag" hidden>&#9888; data may be stale</span>
       </div>
-      <div class="tile-sub">Federal obligations under budget function 150 — International Affairs — the official category covering development and humanitarian aid, security assistance, State operations and multilateral contributions.</div>
+      <div class="tile-sub">Federal money committed to international affairs (budget function 150): development and humanitarian aid, security assistance, diplomacy and contributions to international organizations.</div>
       <div class="bars">
         <div class="bar-row">
           <div class="bar-label">This FY</div>
@@ -1118,9 +1238,9 @@
           <div class="bar-track"><div class="bar-fill" style="width:100%;background:var(--muted)"></div></div>
           <div class="bar-val">$39B</div>
         </div></div>
-      <button class="expand-btn" type="button" aria-expanded="false"><span>History &amp; context</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg></button><div class="detail" hidden></div>
+      <button class="expand-btn" type="button" aria-expanded="false"><span>See more</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg></button><div class="detail" hidden></div>
       <div class="tile-foot">
-        <a href="https://www.usaspending.gov/explorer/budget_function" target="_blank" rel="noopener">USAspending (budget function 150) &#8599;</a>
+        <a href="https://www.usaspending.gov/explorer/budget_function" target="_blank" rel="noopener">USAspending (budget function 150) &#8594;</a>
         <span>updates quarterly</span>
       </div>
     </article>
@@ -1133,44 +1253,45 @@
         <span class="asof">as of Jul 10, 2026</span>
         <span class="stale-flag" hidden>&#9888; data may be stale</span>
       </div>
-      <div class="tile-sub">War Powers Resolution reports transmitted to Congress this term — the officially defined record of US military action abroad (48-hour and periodic reports; each links its official document).</div>
+      <div class="tile-sub">Reports the president has sent to Congress this term under the War Powers Resolution, the official record of US military action abroad.</div>
       <div class="bars">
         <div class="bar-row">
           <div class="bar-label">Trump &#8217;25</div>
-          <div class="bar-track"><div class="bar-fill" style="width:100%;background:var(--series-1)"></div></div>
+          <div class="bar-track"><div class="bar-fill" style="width:100%;background:var(--pres-t25)"></div></div>
           <div class="bar-val">11</div>
         </div>
         <div class="bar-row">
           <div class="bar-label">Biden</div>
-          <div class="bar-track"><div class="bar-fill" style="width:45%;background:var(--muted)"></div></div>
+          <div class="bar-track"><div class="bar-fill" style="width:45%;background:var(--pres-biden)"></div></div>
           <div class="bar-val">5</div>
         </div>
         <div class="bar-row">
           <div class="bar-label">Trump &#8217;17</div>
-          <div class="bar-track"><div class="bar-fill" style="width:45%;background:var(--muted)"></div></div>
+          <div class="bar-track"><div class="bar-fill" style="width:45%;background:var(--pres-t17)"></div></div>
           <div class="bar-val">5</div>
         </div>
         <div class="bar-row">
           <div class="bar-label">Obama</div>
-          <div class="bar-track"><div class="bar-fill" style="width:27%;background:var(--muted)"></div></div>
+          <div class="bar-track"><div class="bar-fill" style="width:27%;background:var(--pres-obama)"></div></div>
           <div class="bar-val">3</div>
         </div></div>
-      <button class="expand-btn" type="button" aria-expanded="false"><span>History &amp; context</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg></button><div class="detail" hidden></div>
+      <button class="expand-btn" type="button" aria-expanded="false"><span>See more</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg></button><div class="detail" hidden></div>
       <div class="tile-foot">
-        <a href="https://warpowers.lawandsecurity.org/" target="_blank" rel="noopener">NYU Reiss Center — War Powers Resolution Reporting project (compilation of official reports) &#8599;</a>
+        <a href="https://warpowers.lawandsecurity.org/" target="_blank" rel="noopener">NYU Reiss Center — War Powers Resolution Reporting project (compilation of official reports) &#8594;</a>
         <span>updates as filed</span>
       </div>
     </article>
     <article class="tile" id="card-military_deaths" data-id="military_deaths" data-as-of="2026-08-11" data-stale-after="2026-09-10" data-cadence="weekly">
       <div class="tile-cat">War & Defense</div>
-      <h2 class="tile-name">US military deaths (current operations)</h2>
+      <h2 class="tile-name">US military deaths</h2>
+      <div class="tile-qual">current operations</div>
       <div class="hero">18</div>
       <span class="delta neutral">Wounded in action: 696</span>
       <div class="freshness">
         <span class="asof">as of Aug 11, 2026</span>
         <span class="stale-flag" hidden>&#9888; data may be stale</span>
       </div>
-      <div class="tile-sub">US military deaths in the current named operations (Operation Epic Fury + Overseas Operations — DCAS's own July 2026 split of the Iran conflict), hostile and non-hostile, as extracted by DCAS on its stated date.</div>
+      <div class="tile-sub">US military deaths in the current named operations, both hostile and non-hostile, from the Defense Casualty Analysis System.</div>
       <div class="bars">
         <div class="bar-row">
           <div class="bar-label">Op. Epic Fury</div>
@@ -1182,9 +1303,9 @@
           <div class="bar-track"><div class="bar-fill" style="width:29%;background:var(--muted)"></div></div>
           <div class="bar-val">4</div>
         </div></div>
-      <button class="expand-btn" type="button" aria-expanded="false"><span>History &amp; context</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg></button><div class="detail" hidden></div>
+      <button class="expand-btn" type="button" aria-expanded="false"><span>See more</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg></button><div class="detail" hidden></div>
       <div class="tile-foot">
-        <a href="https://dcas.dmdc.osd.mil/dcas/conflictCasualties" target="_blank" rel="noopener">Defense Casualty Analysis System (DMDC) &#8599;</a>
+        <a href="https://dcas.dmdc.osd.mil/dcas/conflictCasualties" target="_blank" rel="noopener">Defense Casualty Analysis System (DMDC) &#8594;</a>
         <span>updates weekly</span>
       </div>
     </article></div>
@@ -1195,7 +1316,7 @@
       <h2>Official sources that have stopped updating</h2>
       <p class="fz-def">Some official series stopped publishing during this administration. This list is
       factual and automatic: each row names a source this dashboard uses or would use, the date of its
-      last release, and the days since — recomputed at every daily build. A source leaves this list by
+      last release, and the days since, recomputed at every daily build. A source leaves this list by
       publishing again.</p>
       <table class="fz-table">
         <thead><tr><th>Source</th><th>Last official release</th><th>Silent for</th><th>What happened</th></tr></thead>
@@ -1203,12 +1324,12 @@
       </table>
     </section>
     <footer>
-      Each figure is collected automatically from an authoritative source and shown against a comparison so a single number has context. Favourable and unfavourable numbers are shown alike, and nothing is removed when it moves in either direction. Each card shows its own data date and flags itself when a figure is older than its source's normal update schedule. Expanded charts show the full stored history — gaps in official publication render as gaps, definition changes are marked on the chart, and every chart can be read as a table or downloaded as the exact data served.
-      <div class="built">Site rebuilt Aug 18, 2026 11:22 UTC. Freshness is judged per metric (see each card's date), not by this build time.</div>
+      Each figure is collected automatically from an authoritative source and shown against a comparison so a single number has context. Favourable and unfavourable numbers are shown alike, and nothing is removed when it moves in either direction. Each card shows its own data date and flags itself when a figure is older than its source's normal update schedule. Expanded charts show the full stored history, gaps in official publication render as gaps, definition changes are marked on the chart, and every chart can be read as a table or downloaded as the exact data served.
+      <div class="built">Site rebuilt Aug 18, 2026 14:37 UTC. Freshness is judged per metric (see each card's date), not by this build time.</div>
     </footer>
   </div>
   <script>
-/* Presentation layer — tabs, expandable cards, and the three chart templates.
+/* Presentation layer, tabs, expandable cards, and the three chart templates.
  *
  * Inlined into site/index.html by build.py (assets/ is source; site/ is a build
  * artifact). Hand-rolled SVG, no libraries, no keys, no storage of any kind.
@@ -1220,7 +1341,7 @@
  *  - bars are always zero-based; %-change and index views baseline at 0/100;
  *  - every chart has a Table view twin and a link to the raw stored series.
  *
- * Charts fetch their payload (site/d/<id>.json) on first expand — the homepage
+ * Charts fetch their payload (site/d/<id>.json) on first expand, the homepage
  * stays light; history loads only when someone asks for it.
  */
 (function () {
@@ -1234,7 +1355,7 @@
   /* ---------- formatting ---------- */
   function fnum(v) { return Math.round(v).toLocaleString('en-US'); }
   function fmt(v, kind, axis) {
-    if (v == null || isNaN(v)) return '—';
+    if (v == null || isNaN(v)) return 'n/a';
     var a = Math.abs(v), s = v < 0 ? '−' : '';
     switch (kind) {
       case 'pct':     return (Math.round(v * 10) / 10) + '%';
@@ -1280,6 +1401,7 @@
   function dLab(x) { var d = new Date(x); return MONTH[d.getUTCMonth()] + ' ' + d.getUTCFullYear(); }
 
   function xTicks(fx, x0, x1) {
+    if (fx.xLabels) return fx.xLabels.filter(function (t) { return t.x >= x0 - 0.001 && t.x <= x1 + 0.001; });
     var out = [];
     if (fx.xType === 'months') {
       for (var m = 0; m <= x1; m += 6) out.push({ x: m, lab: '' + m });
@@ -1303,7 +1425,7 @@
     return out.filter(function (t) { return t.x >= x0 - 1; });
   }
 
-  /* split a series into gap-free segments — holes render as breaks, never bridged */
+  /* split a series into gap-free segments, holes render as breaks, never bridged */
   function segments(pts) {
     if (!pts.length) return [];
     var xs = pts.map(function (p) { return p[0]; }), steps = [];
@@ -1320,6 +1442,29 @@
   }
 
   /* ---------- line template (own-history · term-aligned · vs-benchmark) ---------- */
+  /* president identity eras, colour long histories: 4 palette presidents, rest grey */
+  var ERA = [
+    { t: Date.UTC(2009, 0, 20), c: '#c98500', label: 'Obama' },
+    { t: Date.UTC(2017, 0, 20), c: '#199e70', label: 'Trump ’17' },
+    { t: Date.UTC(2021, 0, 20), c: '#3987e5', label: 'Biden' },
+    { t: Date.UTC(2025, 0, 20), c: '#e66767', label: 'Trump ’25' }
+  ];
+  var ERA_GREY = '#6c7280';
+  function eraColor(x) { var c = ERA_GREY; for (var i = 0; i < ERA.length; i++) { if (x >= ERA[i].t) c = ERA[i].c; } return c; }
+  /* full president list for hover labels (incl. pre-Obama, shown in neutral grey) */
+  var PRESLIST = [
+    { t: Date.UTC(1929, 2, 4), n: 'Hoover' }, { t: Date.UTC(1933, 2, 4), n: 'F. Roosevelt' },
+    { t: Date.UTC(1945, 3, 12), n: 'Truman' }, { t: Date.UTC(1953, 0, 20), n: 'Eisenhower' },
+    { t: Date.UTC(1961, 0, 20), n: 'Kennedy' }, { t: Date.UTC(1963, 10, 22), n: 'L. Johnson' },
+    { t: Date.UTC(1969, 0, 20), n: 'Nixon' }, { t: Date.UTC(1974, 7, 9), n: 'Ford' },
+    { t: Date.UTC(1977, 0, 20), n: 'Carter' }, { t: Date.UTC(1981, 0, 20), n: 'Reagan' },
+    { t: Date.UTC(1989, 0, 20), n: 'G.H.W. Bush' }, { t: Date.UTC(1993, 0, 20), n: 'Clinton' },
+    { t: Date.UTC(2001, 0, 20), n: 'G.W. Bush' }, { t: Date.UTC(2009, 0, 20), n: 'Obama' },
+    { t: Date.UTC(2017, 0, 20), n: 'Trump ’17' }, { t: Date.UTC(2021, 0, 20), n: 'Biden' },
+    { t: Date.UTC(2025, 0, 20), n: 'Trump ’25' }
+  ];
+  function presAt(t) { var n = ''; for (var i = 0; i < PRESLIST.length; i++) { if (t >= PRESLIST[i].t) n = PRESLIST[i].n; } return n; }
+
   function lineChart(box, fx, state) {
     box.innerHTML = '';
     var W = Math.max(300, box.clientWidth), narrow = W < 540;
@@ -1331,6 +1476,8 @@
       if (state.range === 'term' && fx.termStart) pts = pts.filter(function (p) { return p[0] >= fx.termStart; });
       return { label: s.label, color: s.color, pts: pts };
     }).filter(function (s) { return s.pts.length; });
+
+    var presMode = fx.presEras && sers.length === 1 && fx.xType !== 'months';
 
     var allY = [], allX = [];
     sers.forEach(function (s) { s.pts.forEach(function (p) { allX.push(p[0]); allY.push(p[1]); }); });
@@ -1379,9 +1526,9 @@
     });
     if (capH) {
       var cap = el('text', { x: ml + pw / 2, y: H - 4, 'text-anchor': 'middle', fill: CLR.mut, 'font-size': '10.5' });
-      cap.textContent = 'Months in office'; svg.appendChild(cap);
+      cap.textContent = fx.xCaption || 'Months in office'; svg.appendChild(cap);
     }
-    /* vertical markers: inauguration (solid) · definition breaks (dashed) — marked, never smoothed */
+    /* vertical markers: inauguration (solid) · definition breaks (dashed), marked, never smoothed */
     (fx.markers || []).forEach(function (mk) {
       if (mk.x < x0 || mk.x > x1) return;
       var lx = X(mk.x);
@@ -1399,15 +1546,30 @@
                            fill: CLR.mut, 'font-size': '10.5', 'font-style': 'italic' }));
       t.textContent = g.label; svg.appendChild(t);
     });
-    if (sers.length === 1 && fx.area) {
+    if (fx.area !== false) {
       var base = Y(Math.max(0, yMin));
-      segments(sers[0].pts).forEach(function (seg) {
+      var areaSeg = function (seg, col, op) {
         if (seg.length < 2) return;
         var d = 'M' + X(seg[0][0]) + ' ' + base;
         seg.forEach(function (p) { d += ' L' + X(p[0]).toFixed(1) + ' ' + Y(p[1]).toFixed(1); });
         d += ' L' + X(seg[seg.length - 1][0]) + ' ' + base + ' Z';
-        svg.appendChild(el('path', { d: d, fill: sers[0].color, opacity: 0.09 }));
-      });
+        svg.appendChild(el('path', { d: d, fill: col, opacity: op }));
+      };
+      if (sers.length === 1 && presMode) {
+        segments(sers[0].pts).forEach(function (seg) {
+          var run = [seg[0]], curC = eraColor(seg[0][0]);
+          for (var i2 = 1; i2 < seg.length; i2++) {
+            var c2 = eraColor(seg[i2][0]);
+            run.push(seg[i2]);
+            if (c2 !== curC) { areaSeg(run, curC, 0.10); run = [seg[i2]]; curC = c2; }
+          }
+          areaSeg(run, curC, 0.10);
+        });
+      } else if (sers.length === 1) {
+        segments(sers[0].pts).forEach(function (seg) { areaSeg(seg, sers[0].color, 0.09); });
+      } else {
+        sers.forEach(function (s) { segments(s.pts).forEach(function (seg) { areaSeg(seg, s.color, 0.05); }); });
+      }
     }
     if (fx.benchmark != null) {
       svg.appendChild(el('line', { x1: ml, x2: ml + pw, y1: Y(fx.benchmark), y2: Y(fx.benchmark),
@@ -1419,7 +1581,25 @@
     sers.forEach(function (s) {
       segments(s.pts).forEach(function (seg) {
         if (seg.length === 1) {
-          svg.appendChild(el('circle', { cx: X(seg[0][0]), cy: Y(seg[0][1]), r: 3, fill: s.color }));
+          svg.appendChild(el('circle', { cx: X(seg[0][0]), cy: Y(seg[0][1]), r: 3,
+            fill: presMode ? eraColor(seg[0][0]) : s.color }));
+          return;
+        }
+        if (presMode) {
+          var run = [seg[0]], curC = eraColor(seg[0][0]);
+          var flush = function () {
+            if (run.length < 2) return;
+            var dd = '';
+            run.forEach(function (p, i) { dd += (i ? ' L' : 'M') + X(p[0]).toFixed(1) + ' ' + Y(p[1]).toFixed(1); });
+            svg.appendChild(el('path', { d: dd, fill: 'none', stroke: curC, 'stroke-width': 2,
+              'stroke-linejoin': 'round', 'stroke-linecap': 'round' }));
+          };
+          for (var j = 1; j < seg.length; j++) {
+            var c = eraColor(seg[j][0]);
+            run.push(seg[j]);
+            if (c !== curC) { flush(); run = [seg[j]]; curC = c; }
+          }
+          flush();
           return;
         }
         var d = '';
@@ -1441,10 +1621,10 @@
     });
     var ends = sers.map(function (s) {
       var p = s.pts[s.pts.length - 1];
-      return { s: s, x: X(p[0]), y: Y(p[1]), v: p[1] };
+      return { s: s, x: X(p[0]), y: Y(p[1]), v: p[1], px: p[0] };
     });
     ends.forEach(function (e) {
-      svg.appendChild(el('circle', { cx: e.x, cy: e.y, r: 4.5, fill: e.s.color,
+      svg.appendChild(el('circle', { cx: e.x, cy: e.y, r: 4.5, fill: presMode ? eraColor(e.px) : e.s.color,
         stroke: CLR.surface, 'stroke-width': 2 }));
     });
     if (endLab) {
@@ -1510,7 +1690,7 @@
       var d = 'M' + x + ' ' + (mt + ph) + ' L' + x + ' ' + (y + r) + ' Q' + x + ' ' + y + ' ' + (x + r) + ' ' + y +
               ' L' + (x + bw - r) + ' ' + y + ' Q' + (x + bw) + ' ' + y + ' ' + (x + bw) + ' ' + (y + r) +
               ' L' + (x + bw) + ' ' + (mt + ph) + ' Z';
-      var bar = el('path', { d: d, fill: color });
+      var bar = el('path', { d: d, fill: p[4] || color });
       svg.appendChild(bar);
       bars.push({ el: bar, cx: cx, y: y, p: p });
       var lab = el('text', { x: cx, y: mt + ph + 16, 'text-anchor': 'middle', fill: CLR.mut, 'font-size': '10.5' });
@@ -1572,14 +1752,16 @@
       cross.setAttribute('visibility', 'visible');
       tip.innerHTML = '';
       txt(div('tt-x', tip), fx.xType === 'months' ? ('Month ' + x + ' of term') : dLab(x));
+      var presMode = fx.presEras && sers.length === 1 && fx.xType !== 'months';
       sers.forEach(function (s) {
         var best = null, bd = Infinity;
         s.pts.forEach(function (p) { var d = Math.abs(p[0] - x); if (d < bd) { bd = d; best = p; } });
         if (!best || bd > tol) return;
         var row = div('tt-row', tip);
-        var key = div('tt-key', row); key.style.borderColor = s.color;
+        var key = div('tt-key', row); key.style.borderColor = presMode ? eraColor(best[0]) : s.color;
         txt(div('tt-val', row), fmt(best[1], fx.fmt));
         if (sers.length > 1) txt(div('tt-lab', row), s.label);
+        else if (presMode) txt(div('tt-lab', row), presAt(best[0]));
       });
       tip.style.display = 'block';
       var px = g.X(x), left = px + 14;
@@ -1643,7 +1825,7 @@
         tr.appendChild(td0);
         fx.series.forEach(function (s, si) {
           var td = document.createElement('td');
-          td.textContent = union[k][si] != null ? fmt(union[k][si], fx.fmt) : '—';
+          td.textContent = union[k][si] != null ? fmt(union[k][si], fx.fmt) : 'n/a';
           tr.appendChild(td);
         });
         tbody.appendChild(tr);
@@ -1653,47 +1835,148 @@
   }
 
   /* ---------- expanded-card assembly (shared by all three templates) ---------- */
+  /* ---------- export helpers (CSV built from the active view; JSON = raw payload) ---------- */
+  function csvCell(v) { v = '' + (v == null ? '' : v); return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; }
+  function csvFromView(afx) {
+    var head, rows = [];
+    if (afx.template === 'bars') {
+      head = ['Period', afx.unitLabel || 'Value'];
+      afx.series[0].pts.forEach(function (p) { rows.push([p[3] || p[2], p[1] == null ? '' : p[1]]); });
+    } else {
+      var union = {};
+      afx.series.forEach(function (s, si) {
+        s.pts.forEach(function (p) { var k = afx.xType === 'months' ? Math.round(p[0]) : p[0]; (union[k] = union[k] || {})[si] = p[1]; });
+      });
+      head = [afx.xType === 'months' ? 'Month of term' : 'Date'].concat(afx.series.map(function (s) { return s.label; }));
+      Object.keys(union).map(Number).sort(function (a, b) { return a - b; }).forEach(function (k) {
+        var row = [afx.xType === 'months' ? ('Month ' + k) : dLab(k)];
+        afx.series.forEach(function (s, si) { row.push(union[k][si] != null ? union[k][si] : ''); });
+        rows.push(row);
+      });
+    }
+    return [head].concat(rows).map(function (r) { return r.map(csvCell).join(','); }).join('\n');
+  }
+  function saveFile(name, text, type) {
+    var url = URL.createObjectURL(new Blob([text], { type: type }));
+    var a = document.createElement('a'); a.href = url; a.download = name;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function () { URL.revokeObjectURL(url); }, 1500);
+  }
+  var DL_ICON = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" ' +
+    'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align:-1px">' +
+    '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline>' +
+    '<line x1="12" y1="15" x2="12" y2="3"></line></svg>';
+
   function buildDetail(card, fx) {
     var detail = card.querySelector('.detail');
     detail.innerHTML = '';
-    var state = { range: 'full', view: 'chart' };
     var hasChart = fx.series && fx.series.length;
+    var views = hasChart && fx.views && fx.views.length ? fx.views : null;
+    var threeView = !views && hasChart && fx.ownHist && fx.aligned && fx.aligned.series && fx.aligned.series.length;
+    var defView = views ? (views.filter(function (v) { return v.def; })[0] || views[views.length - 1]).key : 'full';
+    var state = { mode: defView, view: 'chart', real: false };   // mode: term | moi | full, or a custom view key
+
+    function ownFx() {
+      var oh = fx.ownHist || {};
+      var ser = (state.real && state.mode === 'full' && oh.seriesReal) ? oh.seriesReal : oh.series;
+      return Object.assign({}, fx, oh, { series: ser, template: 'line', aligned: null });
+    }
+    function viewFx() {
+      var v = views.filter(function (x) { return x.key === state.mode; })[0] || views[0];
+      return Object.assign({}, fx, v, { views: null });
+    }
+    function activeFx() {
+      if (views) return viewFx();
+      if (!threeView) return fx;
+      if (state.mode === 'moi') {
+        return Object.assign({}, fx, fx.aligned, { template: 'line', presEras: false, ownHist: null,
+          markers: fx.aligned.markers || [], gaps: fx.aligned.gaps || [], termStart: null, rangeToggle: false });
+      }
+      return ownFx();
+    }
+    function activeRange() { return (!views && state.mode === 'term') ? 'term' : 'full'; }
 
     var head = div('chart-head', detail);
-    txt(div('chart-title', head), fx.chartTitle || '');
+    var titleNode = div('chart-title', head);
     var ctrl = div('chart-ctrl', head);
     var btns = [];
     function mkBtn(lab, on, active) {
       var b = document.createElement('button'); b.className = 'ctrl-btn' + (active ? ' active' : '');
       b.type = 'button'; b.textContent = lab; b.addEventListener('click', on); ctrl.appendChild(b); return b;
     }
-    if (hasChart && fx.rangeToggle) {
-      var bT = mkBtn('This term', function () { state.range = 'term'; sync(); }, false);
-      var bF = mkBtn('Full history', function () { state.range = 'full'; sync(); }, true);
-      btns.push([bT, 'range', 'term'], [bF, 'range', 'full']);
-    }
-    if (hasChart) {
-      var bC = mkBtn('Chart', function () { state.view = 'chart'; sync(); }, true);
-      var bTab = mkBtn('Table', function () { state.view = 'table'; sync(); }, false);
-      btns.push([bC, 'view', 'chart'], [bTab, 'view', 'table']);
+    if (views) {
+      views.forEach(function (v) {
+        var bb = mkBtn(v.label, function () { state.mode = v.key; sync(); }, v.key === defView);
+        btns.push([bb, 'mode', v.key]);
+      });
+    } else if (threeView) {
+      var v1 = mkBtn('This term', function () { state.mode = 'term'; sync(); }, false);
+      var v2 = mkBtn(fx.moiLabel || 'Months in office', function () { state.mode = 'moi'; sync(); }, false);
+      var v3 = mkBtn('Full history', function () { state.mode = 'full'; sync(); }, true);
+      btns.push([v1, 'mode', 'term'], [v2, 'mode', 'moi'], [v3, 'mode', 'full']);
+    } else if (hasChart && fx.rangeToggle) {
+      var bT = mkBtn('This term', function () { state.mode = 'term'; sync(); }, false);
+      var bF = mkBtn('Full history', function () { state.mode = 'full'; sync(); }, true);
+      btns.push([bT, 'mode', 'term'], [bF, 'mode', 'full']);
     }
 
-    if (hasChart && fx.series.length > 1) {
-      var lg = div('legend', detail);
-      fx.series.forEach(function (s) {
-        var item = div('lg', lg);
-        var key = div('key', item); key.style.borderTopColor = s.color;
-        item.appendChild(document.createTextNode(s.label));
-      });
+    // Nominal/Real slider: a sub-control of Full history, sits BELOW the view filters
+    var realBar = null, rNom = null, rReal = null, rKnob = null;
+    if (fx.realToggle && fx.ownHist && fx.ownHist.seriesReal) {
+      realBar = div('realbar', detail);
+      txt(div('rlbl', realBar), 'Adjust for inflation');
+      var rsw = div('rswitch', realBar);
+      rKnob = div('rknob', rsw);
+      rNom = document.createElement('button'); rNom.type = 'button'; rNom.textContent = 'Nominal $';
+      rReal = document.createElement('button'); rReal.type = 'button'; rReal.textContent = 'Real ($' + (fx.realBase || '') + ')';
+      rsw.appendChild(rNom); rsw.appendChild(rReal);
+      rNom.addEventListener('click', function () { state.real = false; sync(); });
+      rReal.addEventListener('click', function () { state.real = true; sync(); });
     }
+    // Table is demoted (card-design pass): no longer a peer toggle, it's a quiet
+    // "values" link in the footer meta (built below), toggling this same view state.
+
+    var legendBox = div('legend', detail);
 
     var box = div('chart-box', detail);
     box.setAttribute('role', 'application');
-    box.setAttribute('aria-label', (fx.chartTitle || 'chart') + ' — arrow keys read values');
+    box.setAttribute('aria-label', (fx.chartTitle || 'chart') + ', arrow keys read values');
+
+    function drawLegend(afx) {
+      legendBox.innerHTML = '';
+      if (!hasChart) return;
+      if (afx.series && afx.series.length > 1) {
+        afx.series.forEach(function (s) {
+          var item = div('lg', legendBox);
+          var key = div('key', item); key.style.borderTopColor = s.color;
+          item.appendChild(document.createTextNode(s.label));
+        });
+      } else if (afx.presEras && afx.series && afx.series[0]) {
+        // only presidents actually present in the visible data; grey "earlier" omitted
+        var pts = afx.series[0].pts;
+        if (activeRange() === 'term' && afx.termStart) pts = pts.filter(function (p) { return p[0] >= afx.termStart; });
+        var present = {}; pts.forEach(function (p) { present[eraColor(p[0])] = 1; });
+        var eras = ERA.filter(function (e) { return present[e.c]; });
+        if (eras.length >= 2) {
+          eras.forEach(function (e) {
+            var item = div('lg', legendBox);
+            var key = div('key', item); key.style.borderTopColor = e.c;
+            item.appendChild(document.createTextNode(e.label));
+          });
+        }
+      }
+    }
 
     function sync() {
       btns.forEach(function (b) { b[0].classList.toggle('active', state[b[1]] === b[2]); });
+      if (realBar) {   // Real is a sub-control of Full history only
+        realBar.style.display = (state.mode === 'full') ? '' : 'none';
+        rNom.setAttribute('aria-pressed', String(!state.real));
+        rReal.setAttribute('aria-pressed', String(state.real));
+        rKnob.parentNode.classList.toggle('on', state.real);   // knob slides via CSS, no measurement
+      }
       if (!hasChart) {
+        legendBox.innerHTML = '';
         box.innerHTML = '';
         var ac = div('accrue', box);   /* sparse metric: the honest empty state */
         var b1 = document.createElement('b'); b1.textContent = fx.accrueTitle || 'History accrues from here';
@@ -1701,9 +1984,12 @@
         ac.appendChild(document.createTextNode(fx.accrueBody || ''));
         return;
       }
-      if (state.view === 'table') buildTable(box, fx);
-      else if (fx.template === 'bars') barChart(box, fx, state);
-      else lineChart(box, fx, state);
+      var afx = activeFx();
+      titleNode.textContent = fx.chartTitle || '';   // constant across views (the filter names the view)
+      drawLegend(afx);
+      if (state.view === 'table') buildTable(box, afx);
+      else if (afx.template === 'bars') barChart(box, afx, { range: activeRange() });
+      else lineChart(box, afx, { range: activeRange() });
     }
     sync();
 
@@ -1722,14 +2008,34 @@
       var p = document.createElement('p'); p.textContent = c; f2.appendChild(p);
     });
 
+    // Footer meta: source + cadence already live on the collapsed card, so they are not
+    // repeated here. Just a colourless graph/table toggle and a clear raw-data link.
     var meta = div('detail-meta', detail);
-    txt(div('', meta), 'Data as of ' + fx.asOf);
-    txt(div('', meta), 'Updates ' + fx.cadence);
-    var a = document.createElement('a'); a.href = fx.srcUrl; a.target = '_blank'; a.rel = 'noopener';
-    a.textContent = 'Source: ' + fx.srcName + ' ↗'; meta.appendChild(a);
-    var j = document.createElement('a'); j.href = 'd/' + fx.id + '.json'; j.target = '_blank'; j.rel = 'noopener';
-    j.textContent = 'Series (JSON)'; j.title = 'The chart’s exact data payload, as served';
-    meta.appendChild(j);
+    if (hasChart) {
+      var vtoggle = document.createElement('a'); vtoggle.href = '#'; vtoggle.className = 'vtoggle';
+      vtoggle.textContent = 'Table'; vtoggle.title = 'Switch between the chart and the underlying values';
+      vtoggle.addEventListener('click', function (ev) {
+        ev.preventDefault();
+        state.view = state.view === 'table' ? 'chart' : 'table';
+        vtoggle.textContent = state.view === 'table' ? 'Graph' : 'Table';
+        sync();
+      });
+      meta.appendChild(vtoggle);
+    }
+    if (hasChart) {
+      var exp = div('exp-group', meta);
+      var lbl = div('exp-lbl', exp); lbl.innerHTML = DL_ICON + ' Export';
+      var csvL = document.createElement('a'); csvL.href = '#'; csvL.className = 'exp-link';
+      csvL.textContent = 'CSV'; csvL.title = 'Download the current view as a spreadsheet (CSV)';
+      csvL.addEventListener('click', function (ev) {
+        ev.preventDefault();
+        saveFile(fx.id + (state.mode ? '-' + state.mode : '') + '.csv', csvFromView(activeFx()), 'text/csv');
+      });
+      exp.appendChild(csvL);
+      var jsonL = document.createElement('a'); jsonL.href = 'd/' + fx.id + '.json'; jsonL.download = fx.id + '.json';
+      jsonL.className = 'exp-link'; jsonL.textContent = 'JSON'; jsonL.title = 'The exact data payload behind this chart (JSON)';
+      exp.appendChild(jsonL);
+    }
 
     if (window.ResizeObserver) {
       var t; new ResizeObserver(function () {
@@ -1763,7 +2069,7 @@
   }
   function setLabel(card, open) {
     var span = card.querySelector('.expand-btn span');
-    if (span) span.textContent = open ? 'Collapse' : 'History & context';
+    if (span) span.textContent = open ? 'See less' : 'See more';
     var b = card.querySelector('.expand-btn');
     if (b) b.setAttribute('aria-expanded', open ? 'true' : 'false');
   }
@@ -1782,7 +2088,7 @@
     if (btn) btn.addEventListener('click', function () { toggle(card); });
   });
 
-  /* ---------- category tabs — All default; state in the URL hash, no storage ---------- */
+  /* ---------- category tabs, All default; state in the URL hash, no storage ---------- */
   var tabs = Array.prototype.slice.call(document.querySelectorAll('.tab'));
   var sections = Array.prototype.slice.call(document.querySelectorAll('.category'));
   function activate(slug, scroll) {
