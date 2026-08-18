@@ -334,7 +334,8 @@ ok(not _det["series"] and "62,517" in _det["accrueBody"], "sparse detention: acc
 
 print("== phase 7: full build render ==")
 B.build()
-_ndata = len([f for f in os.listdir(os.path.join(HERE, "data")) if f.endswith(".json")])
+_ndata = len([f for f in os.listdir(os.path.join(HERE, "data"))
+              if f.endswith(".json") and f[:-5] in B.ORDER])   # exclude support series (e.g. cpi_index deflator)
 _html = open(os.path.join(HERE, "site", "index.html")).read()
 ok(_html.count('data-id="') == _ndata and _ndata >= 23,
    f"index.html: one card per data file present ({_ndata})")
@@ -597,15 +598,15 @@ ok(_dt3["template"] == "bars" and _dt3["series"][0]["pts"][0][1] == 50165
    "detention payload: verified annual bars + FY2025 labelled hole, never a zero")
 _md = B.payload(_m("military_deaths", [{"date": "2026-02", "value": 0}, {"date": "2026-07", "value": 18}],
                    value=18, per_operation={}), {})
-ok(_md["series"] and _md["markers"][0]["label"].startswith("DCAS") and _md["limits"],
+ok(_md["series"] and _md["markers"][0]["label"].startswith("Defense Casualty Analysis System") and _md["limits"],
    "military-deaths payload: cumulative line + recategorisation marker + influence note")
 _ap3 = B.payload(_m("approval_rating", [{"date": "2025-02-01", "value": 51}, {"date": "2026-06-29", "value": 42}],
                     value=42, disapprove=56,
                     gallup={"quarterly": {"biden": {"1": 56.0, "7": 42.0},
                                           "trump1": {"7": 41.1}, "obama": {"7": 44.7}}}), {})
-ok(len(_ap3["series"]) == 4 and any("Gallup" in s["label"] for s in _ap3["series"])
+ok(len(_ap3["series"]) == 4 and [s["label"] for s in _ap3["series"]] == ["Trump ’25", "Biden", "Trump ’17", "Obama"]
    and [21, 42.0] in _ap3["series"][1]["pts"],
-   "approval payload: VoteHub line + three Gallup quarterly lines (Q7 plotted at month 21)")
+   "approval payload: VoteHub line + three Gallup quarterly lines (Q7 plotted at month 21), clean president labels")
 _rf = B.payload(_m("refugee_admissions", [{"date": "2026-06", "value": 7730}], value=7730,
                    ceiling={"label": "FY2026 presidential ceiling", "value": 7500}), {})
 ok(_rf["accrueBody"] and "7,730" in _rf["accrueBody"] and _rf["caveats"],
@@ -619,8 +620,9 @@ ok("Worst Biden-term year (2024)" in _mz3 and "285" in _mz3,
 _apt = B.tile(_m("approval_rating", [], value=42, category="Executive Power & Governance",
                  unit="% approve", disapprove=56, net=-14, note="x", cadence="Weekly",
                  gallup={"same_quarter": {"biden": 42.0, "trump1": 41.1, "obama": 44.7}}))
-ok("Biden at the same point (Gallup): 42%" in _apt and _apt.count("Gallup") >= 4,
-   "approval tile: v3 four-bar strip, every bar's survey basis labelled")
+ok("vs Biden at the same point: 42%" in _apt and "Trump &#8217;25" in _apt and "Obama" in _apt
+   and "VoteHub" not in _apt,
+   "approval tile: v3 four-bar strip with clean president labels (survey basis moved to the caveat)")
 _mdt = B.tile(_m("military_deaths", [], value=18, category="War & Defense", unit="deaths",
                  note="x. y.", cadence="Weekly", wounded_total=696,
                  per_operation={"Operation Epic Fury": {"deaths": 14},
@@ -648,7 +650,7 @@ _bp = B.payload(_m("border_encounters", _bseries, value=12901, as_of="2026-06",
                    cadence="Monthly"), {})
 ok(len(_bp["series"]) == 3 and not _bp.get("gaps"),
    "border payload: Trump-'17 line joins post-backfill; pre-backfill gap chip retired")
-ok(any("OHSS" in c for c in _bp["caveats"]),
+ok(any("Office of Homeland Security Statistics" in c for c in _bp["caveats"]),
    "border payload: backfill provenance + rounding stated in caveats")
 
 print("== stale_days override ==")

@@ -41,6 +41,7 @@ CONNECTORS = [
     "cms_medicaid.py",
     "fjc_judges.py",
     # --- v3 additions: keyless-API set (register locked 12 Aug 2026) ---
+    "fred_cpi.py",             # CPI-U deflator (support series) for real-price views
     "fred_electricity.py",
     "treasury_defense.py",
     "usaspending_aid.py",

@@ -1,111 +1,107 @@
 #!/usr/bin/env python3
-"""Render the FULL v3 board (all 35 cards) from synthetic-but-plausible fixture
-data files, in a throwaway copy of the repo — so the presentation layer for
-metrics whose connectors haven't produced live data yet can be built, eyeballed
-and browser-swept before delivery. Prints the temp path; pass --keep to leave
-it on disk (default cleans up after asserting).
+"""Defense outlays, U.S. Treasury Monthly Treasury Statement, Table 5
+(outlays by agency). Keyless, same Fiscal Data API family as debt/deficit/
+tariffs. v3 register #32 (War & Defense tab, locked 12 Aug 2026).
 
-Not part of the deploy. The daily pipeline renders only from real data/."""
-import json
+Verified structure (research, Aug 2026): the department aggregate line is
+classification_desc = "Total--Department of Defense--Military Programs"
+(June 2026: $78.78B gross / $78.33B net for the month), with gross/net
+outlay fields for the month and fiscal-YTD plus the prior year's FYTD , 
+the same built-in comparator as the tariffs table. History to ~2015.
+
+RENAME GUARD: the department is being rebranded Defense -> War (defense.gov
+already redirects to war.gov). The MTS label still said "Defense" at build
+time; if the exact-match filter returns nothing, we re-fetch recent records
+unfiltered and locate the aggregate line by regex on either name, so a quiet
+relabel degrades to a slightly bigger fetch instead of a dead metric.
+
+Stored series = fiscal-YTD NET outlays by month (resets each October, like
+the deficit series; validator max_jump absorbs the reset)."""
 import os
-import shutil
-import subprocess
+import re
 import sys
-import tempfile
+import requests
 
-HERE = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from common import publish  # noqa: E402
+
+API = "https://api.fiscaldata.treasury.gov/services/api/fiscal_service/v1/accounting/mts/mts_table_5"
+HISTORY_START = "2014-10-01"
+EXACT = "Total--Department of Defense--Military Programs"
+RENAME = re.compile(r"total--department of (defense|war)--military programs", re.I)
+FIELDS = ("record_date,classification_desc,"
+          "current_month_gross_outly_amt,current_month_net_outly_amt,"
+          "current_fytd_gross_outly_amt,current_fytd_net_outly_amt,"
+          "prior_fytd_net_outly_amt")
 
 
-def fixtures(D):
-    def w(mid, extra, series=None, value=None, as_of="2026-07", cadence="Monthly",
-          unit="", note="Fixture note. Second sentence."):
-        out = {"id": mid, "name": mid, "category": "x", "value": value, "unit": unit,
-               "as_of": as_of, "direction": "neutral", "cadence": cadence,
-               "source": {"name": "Fixture", "url": "https://example.gov"},
-               "note": note, "last_checked": "2026-08-12", "stale_after": "2026-12-01"}
-        out.update(extra)
-        if series:
-            out["series"] = series
-        json.dump(out, open(os.path.join(D, f"{mid}.json"), "w"))
+def _fetch(params):
+    r = requests.get(API, params=params, timeout=60)
+    r.raise_for_status()
+    return r.json()["data"]
 
-    mo = lambda n, v0, step: [{"date": f"{2024 + (m + 6) // 12}-{(m + 6) % 12 + 1:02d}",
-                               "value": round(v0 + i * step, 3)}
-                              for i, m in enumerate(range(n))]
-    w("electricity_price", {"baseline": {"label": "At inauguration (Jan 2025)", "value": 0.168}},
-      mo(30, 0.16, 0.001), 0.185)
-    w("crude_oil", {"baseline": {"label": "x", "value": 13.2},
-                    "record": {"value": 13.6, "date": "2026-05"}}, mo(30, 13.0, 0.02), 13.58)
-    w("renewable_share", {"baseline": {"label": "x", "value": 23.0}}, mo(30, 21.0, 0.1), 24.1)
-    w("ice_composition", {"detail": {"convicted_criminal": 19329, "pending_criminal_charges": 15000,
-                                     "other_immigration_violators": 31436, "total_detained": 65765}},
-      [{"date": "2026-07", "value": 70.6}], 70.6, cadence="Biweekly")
-    w("ice_custody_deaths", {"fy_counts": {str(fy): n for fy, n in
-                                           [(2018, 12), (2019, 8), (2020, 21), (2021, 5), (2022, 3),
-                                            (2023, 6), (2024, 9), (2025, 32), (2026, 23)]}},
-      [{"date": "2025-10", "value": 23}], 23, cadence="As posted")
-    w("refugee_admissions", {"ceiling": {"label": "FY2026 presidential ceiling", "value": 7500},
-                             "south_africa": 6665}, [{"date": "2026-06", "value": 7730}], 7730)
-    w("clemency", {"individuals_covered_approx": 1652,
-                   "per_president_individuals": {"biden": 4245, "obama": 1927, "trump1": 237}},
-      mo(18, 10, 8), 152, cadence="As granted")
-    w("national_emergencies", {"since": "2025-01-20",
-                               "prev_terms": {"biden": {"same_point": 5}, "trump1": {"same_point": 4},
-                                              "obama": {"same_point": 3}}}, mo(18, 1, 0.5), 10,
-      cadence="As signed")
-    w("defense_outlays", {"comparison": {"label": "Same point last fiscal year", "value": 640.0}},
-      mo(30, 60, 22), 700.5)
-    w("foreign_aid", {"comparison": {"label": "Same point FY2025", "value": 52.1}},
-      [{"date": f"{y}-09", "value": v} for y, v in
-       [(2019, 55), (2021, 60), (2023, 70), (2025, 47.3)]] + [{"date": "2026-06", "value": 38.2}],
-      38.2, cadence="Quarterly")
-    w("war_powers", {"since": "2025-01-20",
-                     "prev_terms": {"biden": {"same_point": 9}, "trump1": {"same_point": 11},
-                                    "obama": {"same_point": 8}}}, mo(18, 2, 1), 19, cadence="As filed")
-    w("military_deaths", {"per_operation": {"Operation Epic Fury": {"deaths": 14, "wounded": 417},
-                                            "Overseas Operations": {"deaths": 4, "wounded": 279}},
-                          "wounded_total": 696},
-      [{"date": "2026-02", "value": 0}, {"date": "2026-03", "value": 13},
-       {"date": "2026-07", "value": 18}], 18, cadence="Weekly")
 
-    # enrich two live cards with the v3 static-import fields their connectors
-    # now attach in production
-    det_p = os.path.join(D, "ice_detention.json")
-    if os.path.exists(det_p):
-        det = json.load(open(det_p))
-        det["annual_adp"] = {"values": {"2019": 50165, "2020": 33724, "2021": 19461,
-                                        "2022": 22630, "2023": 28289, "2024": 37721}}
-        json.dump(det, open(det_p, "w"))
-    ap_p = os.path.join(D, "approval_rating.json")
-    if os.path.exists(ap_p):
-        ap = json.load(open(ap_p))
-        g = json.load(open(os.path.join(os.path.dirname(D), "connectors", "static",
-                                        "gallup_terms.json")))
-        ap["gallup"] = {"term_quarter": 7,
-                        "same_quarter": {p: g["quarterly"][p].get("7") for p in
-                                         ("biden", "trump1", "obama")},
-                        "quarterly": g["quarterly"], "inauguration": g["inauguration"]}
-        json.dump(ap, open(ap_p, "w"))
+def fetch_defense_rows():
+    rows = _fetch({
+        "fields": FIELDS,
+        "filter": f"classification_desc:eq:{EXACT},record_date:gte:{HISTORY_START}",
+        "sort": "record_date", "page[size]": 10000,
+    })
+    if rows:
+        return rows
+    # rename guard: pull everything and match either department name
+    print("  ! defense_outlays: exact label returned no rows, scanning for a renamed line")
+    allrows = _fetch({
+        "fields": FIELDS,
+        "filter": f"record_date:gte:{HISTORY_START}",
+        "sort": "record_date", "page[size]": 10000,
+    })
+    rows = [r_ for r_ in allrows if RENAME.match(str(r_.get("classification_desc", "")).strip())]
+    if not rows:
+        raise RuntimeError("MTS table 5: no Department of Defense/War aggregate line found")
+    return rows
+
+
+def _b(row, key):
+    """Whole dollars -> $B (1 decimal), or None."""
+    try:
+        return round(float(row[key]) / 1e9, 1)
+    except (TypeError, ValueError, KeyError):
+        return None
 
 
 def main():
-    td = tempfile.mkdtemp(prefix="v3render-")
-    dst = os.path.join(td, "repo")
-    shutil.copytree(HERE, dst, ignore=shutil.ignore_patterns(".git", "__pycache__", "qa_shots"))
-    fixtures(os.path.join(dst, "data"))
-    r = subprocess.run([sys.executable, "build.py"], cwd=dst, capture_output=True, text=True)
-    print(r.stdout.strip().splitlines()[-1])
-    if r.returncode != 0:
-        print(r.stderr[-2000:])
-        sys.exit(1)
-    html = open(os.path.join(dst, "site", "index.html")).read()
-    n = html.count("<article")
-    payloads = len(os.listdir(os.path.join(dst, "site", "d")))
-    assert n == 35 and payloads == 35, (n, payloads)
-    print(f"fixture board: {n} cards, {payloads} payloads → {dst}")
-    if "--keep" not in sys.argv:
-        shutil.rmtree(td)
-        print("(cleaned up; pass --keep to inspect)")
-    return dst
+    rows = fetch_defense_rows()
+    series = []
+    for row in rows:
+        v = _b(row, "current_fytd_net_outly_amt")
+        if v is not None:
+            series.append({"date": row["record_date"][:7], "value": v})
+    if not series:
+        raise RuntimeError("defense_outlays: parsed zero FYTD points")
+
+    latest_row = rows[-1]
+    latest = series[-1]
+    prior = _b(latest_row, "prior_fytd_net_outly_amt")
+    month_gross = _b(latest_row, "current_month_gross_outly_amt")
+    month_net = _b(latest_row, "current_month_net_outly_amt")
+
+    out = {
+        "id": "defense_outlays", "name": "Defense outlays (fiscal-YTD)",
+        "category": "War & Defense", "value": latest["value"], "unit": "$B",
+        "as_of": latest["date"], "direction": "neutral",
+        "source": {"name": "U.S. Treasury Monthly Treasury Statement",
+                   "url": "https://fiscaldata.treasury.gov/datasets/monthly-treasury-statement/"},
+        "cadence": "Monthly",
+        "note": "Net outlays of the Department of Defense, Military Programs, fiscal-year-to-date "
+                "(military pay, operations, procurement, R&D; excludes VA and civil programs). "
+                "Congress appropriates; outlays lag decisions.",
+    }
+    if prior is not None:
+        out["comparison"] = {"label": "Same point last fiscal year", "value": prior}
+    if month_net is not None:
+        out["latest_month"] = {"gross": month_gross, "net": month_net}
+    publish(out, series=series)
 
 
 if __name__ == "__main__":

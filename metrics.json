@@ -1,77 +1,167 @@
-{
-  "entity": "US · Trump Administration",
-  "pilot": true,
-  "metrics": [
-    { "id": "inflation", "name": "Inflation (CPI-U, YoY)", "category": "Cost of Living",
-      "connector": "connectors/bls_inflation.py", "source": "BLS Public API v2", "bucket": "AUTO", "cadence": "monthly" },
-    { "id": "grocery_prices", "name": "Grocery prices (food at home, YoY)", "category": "Cost of Living",
-      "connector": "connectors/fred_groceries.py", "source": "BLS via FRED (CUSR0000SAF11, keyless)", "bucket": "AUTO", "cadence": "monthly" },
-    { "id": "gas_price", "name": "Gas price (regular)", "category": "Cost of Living",
-      "connector": "connectors/eia_gas.py", "source": "EIA via FRED (GASREGW, keyless)", "bucket": "AUTO", "cadence": "weekly" },
-    { "id": "real_gdp", "name": "Real GDP growth", "category": "Economy & Jobs",
-      "connector": "connectors/fred_gdp.py", "source": "BEA via FRED (A191RL1Q225SBEA, keyless)", "bucket": "AUTO", "cadence": "quarterly" },
-    { "id": "unemployment", "name": "Unemployment rate", "category": "Economy & Jobs",
-      "connector": "connectors/bls_unemployment.py", "source": "BLS Public API v2", "bucket": "AUTO", "cadence": "monthly" },
-    { "id": "real_wages", "name": "Real wages (median weekly earnings)", "category": "Economy & Jobs",
-      "connector": "connectors/fred_real_wages.py", "source": "BLS/CPS via FRED (LES1252881600Q, keyless)", "bucket": "AUTO", "cadence": "quarterly" },
-    { "id": "federal_workforce", "name": "Federal workforce (civilian employment)", "category": "Economy & Jobs",
-      "connector": "connectors/fred_federal_workforce.py", "source": "BLS CES via FRED (CES9091000001, keyless)", "bucket": "AUTO", "cadence": "monthly" },
-    { "id": "tariff_revenue", "name": "Tariff revenue (customs duties, fiscal-YTD)", "category": "Trade & Tariffs",
-      "connector": "connectors/treasury_tariffs.py", "source": "U.S. Treasury MTS table 4 (Fiscal Data API)", "bucket": "AUTO", "cadence": "monthly" },
-    { "id": "effective_tariff_rate", "name": "Effective tariff rate", "category": "Trade & Tariffs",
-      "connector": "connectors/tariff_rate.py", "source": "Computed: Treasury MTS ÷ Census/BEA imports (FRED BOPGIMP)", "bucket": "AUTO", "cadence": "monthly" },
-    { "id": "trade_deficit", "name": "Trade deficit (goods & services)", "category": "Trade & Tariffs",
-      "connector": "connectors/census_trade.py", "source": "Census/BEA via FRED (BOPGSTB, keyless)", "bucket": "AUTO", "cadence": "monthly" },
-    { "id": "national_debt", "name": "National debt", "category": "Public Finances",
-      "connector": "connectors/treasury_debt.py", "source": "U.S. Treasury Fiscal Data API", "bucket": "AUTO", "cadence": "daily" },
-    { "id": "budget_deficit", "name": "Federal budget deficit (fiscal-YTD)", "category": "Public Finances",
-      "connector": "connectors/treasury_deficit.py", "source": "U.S. Treasury MTS (Fiscal Data API)", "bucket": "AUTO", "cadence": "monthly" },
-    { "id": "interest_on_debt", "name": "Interest on the public debt (fiscal-YTD)", "category": "Public Finances",
-      "connector": "connectors/treasury_interest.py", "source": "U.S. Treasury Fiscal Data API (interest expense)", "bucket": "AUTO", "cadence": "monthly" },
-    { "id": "border_encounters", "name": "Southwest border encounters", "category": "Immigration",
-      "connector": "connectors/cbp_border.py", "source": "CBP encounters CSV (landing-page scrape)", "bucket": "SEMI", "cadence": "monthly" },
-    { "id": "ice_removals", "name": "ICE removals (fiscal-YTD)", "category": "Immigration",
-      "connector": "connectors/ice_removals.py", "source": "ICE detention statistics workbook (dated snapshots, discovered)", "bucket": "SEMI", "cadence": "biweekly" },
-    { "id": "ice_detention", "name": "ICE detention population (ADP)", "category": "Immigration",
-      "connector": "connectors/ice_detention.py", "source": "ICE detention statistics workbook (dated snapshots, discovered)", "bucket": "SEMI", "cadence": "biweekly" },
-    { "id": "overdose_deaths", "name": "Drug overdose deaths (trailing 12 months)", "category": "Health & Safety Net",
-      "connector": "connectors/cdc_overdoses.py", "source": "CDC NCHS VSRR (data.cdc.gov, keyless)", "bucket": "AUTO", "cadence": "monthly (~5-mo lag)" },
-    { "id": "measles_cases", "name": "Measles cases (year to date)", "category": "Health & Safety Net",
-      "connector": "connectors/cdc_measles.py", "source": "CDC measles surveillance page (scrape)", "bucket": "SEMI", "cadence": "weekly (source permitting)" },
-    { "id": "medicaid_enrollment", "name": "Medicaid & CHIP enrollment", "category": "Health & Safety Net",
-      "connector": "connectors/cms_medicaid.py", "source": "CMS data.medicaid.gov (keyless)", "bucket": "AUTO", "cadence": "monthly (~4-mo lag)" },
-    { "id": "va_claims_backlog", "name": "VA claims backlog", "category": "Health & Safety Net",
-      "connector": "connectors/va_backlog.py", "source": "VA Monday Morning Workload Report (weekly XLSX)", "bucket": "SEMI", "cadence": "weekly" },
-    { "id": "executive_orders", "name": "Executive orders signed", "category": "Executive Power & Governance",
-      "connector": "connectors/federal_register_eo.py", "source": "Federal Register API", "bucket": "AUTO", "cadence": "as signed" },
-    { "id": "judges_confirmed", "name": "Federal judges confirmed (Article III)", "category": "Executive Power & Governance",
-      "connector": "connectors/fjc_judges.py", "source": "Federal Judicial Center judges.csv (nightly, keyless)", "bucket": "AUTO", "cadence": "as confirmed" },
-    { "id": "approval_rating", "name": "Presidential approval", "category": "Executive Power & Governance",
-      "connector": "connectors/votehub_approval.py", "source": "VoteHub poll aggregate (keyless, CC-BY; the board's one opinion metric)", "bucket": "AUTO", "cadence": "weekly" },
-    { "id": "electricity_price", "name": "Electricity price (residential)", "category": "Energy",
-      "connector": "connectors/fred_electricity.py", "source": "BLS via FRED (APU000072610, keyless)", "bucket": "AUTO", "cadence": "monthly" },
-    { "id": "crude_oil", "name": "US crude oil production", "category": "Energy",
-      "connector": "connectors/eia_crude.py", "source": "EIA petroleum history page (keyless)", "bucket": "SEMI", "cadence": "monthly" },
-    { "id": "renewable_share", "name": "Renewable share of electricity generation", "category": "Energy",
-      "connector": "connectors/eia_renewables.py", "source": "EIA Electric Power Monthly Table 1.1 (keyless XLSX; computed share)", "bucket": "SEMI", "cadence": "monthly" },
-    { "id": "ice_composition", "name": "ICE detainees with no criminal conviction", "category": "Immigration",
-      "connector": "connectors/ice_composition.py", "source": "ICE detention statistics workbook (same fetch as detention/removals)", "bucket": "SEMI", "cadence": "biweekly" },
-    { "id": "ice_custody_deaths", "name": "Deaths in ICE custody", "category": "Immigration",
-      "connector": "connectors/ice_custody_deaths.py", "source": "ICE Detainee Death Reporting page", "bucket": "SEMI", "cadence": "as posted" },
-    { "id": "refugee_admissions", "name": "Refugee admissions (fiscal-YTD)", "category": "Immigration",
-      "connector": "connectors/rpc_refugees.py", "source": "State Dept Refugee Processing Center monthly PDF (needs pypdf)", "bucket": "SEMI", "cadence": "monthly" },
-    { "id": "clemency", "name": "Clemency (pardons & commutations)", "category": "Executive Power & Governance",
-      "connector": "connectors/doj_clemency.py", "source": "DOJ Office of the Pardon Attorney grants pages", "bucket": "SEMI", "cadence": "as granted" },
-    { "id": "national_emergencies", "name": "National emergencies declared", "category": "Executive Power & Governance",
-      "connector": "connectors/fr_emergencies.py", "source": "Federal Register API (derived count, rules printed)", "bucket": "AUTO", "cadence": "as signed" },
-    { "id": "defense_outlays", "name": "Defense outlays (fiscal-YTD)", "category": "War & Defense",
-      "connector": "connectors/treasury_defense.py", "source": "U.S. Treasury MTS table 5 (Fiscal Data API)", "bucket": "AUTO", "cadence": "monthly" },
-    { "id": "foreign_aid", "name": "Foreign aid & international affairs (obligations)", "category": "War & Defense",
-      "connector": "connectors/usaspending_aid.py", "source": "USAspending API (budget function 150, keyless)", "bucket": "AUTO", "cadence": "quarterly" },
-    { "id": "war_powers", "name": "War-powers reports to Congress", "category": "War & Defense",
-      "connector": "connectors/nyu_warpowers.py", "source": "NYU Reiss Center WPRRP CSV (compilation of official reports — labelled non-gov)", "bucket": "SEMI", "cadence": "as filed" },
-    { "id": "military_deaths", "name": "US military deaths (current operations)", "category": "War & Defense",
-      "connector": "connectors/dcas_military_deaths.py", "source": "DCAS (DMDC) internal JSON API (keyless; endpoints pinned via creator capture)", "bucket": "SEMI", "cadence": "weekly" }
-  ],
-  "_next": "v2 register complete: 23 metrics across 7 category tabs, all keyless (project doc 03 has the full mini-specs; 07 has the backlog). Every connector stores a full historical series and publishes through connectors/validators.py + connectors/common.py (bounds + max-jump validation, merge-don't-overwrite, freshness stamps). Presentation layer live (phase 7, Aug 2026): every card expands into its chart (build.py payload() emits site/d/<id>.json; assets/chart.js renders client-side; category tabs, All default). Next phase: shareable cards."
-}
+#!/usr/bin/env python3
+"""Federal judges confirmed (Article III), Federal Judicial Center biographical
+directory export (judicial-branch .gov, updated nightly, keyless CSV).
+
+judges.csv is Article-III-only by construction (every lifetime federal judge
+since 1789), which cleanly excludes magistrate/bankruptcy judges. Appointment
+fields repeat per appointment ("Appointing President (1)"… "(6)"), so columns
+are detected by name pattern, not position. We count SENATE CONFIRMATION dates
+(commissions trail votes by days; the Federal Judicial Center row itself can appear a few days
+after the vote, acceptable lag for this cadence).
+
+The same file yields the term-aligned comparison: Trump's first term and
+Biden's term counted over the equivalent number of days, the cleanest
+cross-president dataset on the board."""
+import os
+import sys
+import csv
+import io
+import re
+import datetime
+import requests
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from common import publish, today_iso, UA  # noqa: E402
+
+CSV_URL = "https://www.fjc.gov/sites/default/files/history/judges.csv"
+TERM2 = datetime.date(2025, 1, 20)
+TERM1 = datetime.date(2017, 1, 20)
+BIDEN = datetime.date(2021, 1, 20)
+OBAMA = datetime.date(2009, 1, 20)  # v3: Obama joins the months-in-office view
+
+
+def _parse_date(s):
+    s = (s or "").strip()
+    for fmt in ("%Y-%m-%d", "%m/%d/%Y"):
+        try:
+            return datetime.datetime.strptime(s, fmt).date()
+        except ValueError:
+            continue
+    return None
+
+
+def appointment_pairs(text):
+    """CSV text -> [(president_name, confirmation_date), ...] across every
+    numbered appointment column pair."""
+    reader = csv.DictReader(io.StringIO(text))
+    fields = reader.fieldnames or []
+
+    def cols(prefix):
+        out = {}
+        for c in fields:
+            m = re.match(rf"^{prefix}\s*(?:\((\d+)\))?$", c.strip(), re.IGNORECASE)
+            if m:
+                out[m.group(1) or "1"] = c
+        return out
+
+    pres_cols = cols("Appointing President")
+    conf_cols = cols("Confirmation Date")
+    if not pres_cols or not conf_cols:
+        raise RuntimeError(f"Federal Judicial Center export columns not recognised (have {len(fields)} columns)")
+
+    pairs = []
+    for row in reader:
+        for k, pcol in pres_cols.items():
+            ccol = conf_cols.get(k)
+            if not ccol:
+                continue
+            pres = (row.get(pcol) or "").strip()
+            conf = _parse_date(row.get(ccol))
+            if pres and conf:
+                pairs.append((pres, conf))
+    return pairs
+
+
+def count_window(pairs, president_substr, start, days):
+    end = start + datetime.timedelta(days=days)
+    return sum(1 for pres, d in pairs
+               if president_substr in pres and start <= d <= end)
+
+
+def term_curve(pairs, president_substr, start, today=None, months=48):
+    """Dense cumulative-by-month confirmation curve for one term's first
+    `months` months: [{"month": m, "value": cum}]. Distinguishes the two Trump
+    terms by date-windowing (the same name appears in both). Zero-confirmation
+    months carry the running count, that IS a cumulative counter's meaning."""
+    end_m = months
+    if today is not None:
+        elapsed = (today.year - start.year) * 12 + (today.month - start.month)
+        end_m = min(months, max(0, elapsed))
+    per = {}
+    for pres, d in pairs:
+        if president_substr not in pres:
+            continue
+        mi = (d.year - start.year) * 12 + (d.month - start.month)
+        if 0 <= mi <= months:
+            per[mi] = per.get(mi, 0) + 1
+    out, cum = [], 0
+    for m in range(0, end_m + 1):
+        cum += per.get(m, 0)
+        out.append({"month": m, "value": cum})
+    return out
+
+
+def all_time_totals(pairs):
+    """Confirmations per appointing president, whole directory (1789->now),
+    in first-confirmation order, the all-time context bars (v3)."""
+    counts, first = {}, {}
+    for pres, d in pairs:
+        counts[pres] = counts.get(pres, 0) + 1
+        if pres not in first or d < first[pres]:
+            first[pres] = d
+    return [{"president": p, "total": counts[p], "from": first[p].isoformat()[:4]}
+            for p in sorted(counts, key=lambda p: first[p])]
+
+
+def main():
+    r = requests.get(CSV_URL, headers=UA, timeout=120)
+    r.raise_for_status()
+    pairs = appointment_pairs(r.text)
+
+    today = datetime.date.today()
+    days_in = (today - TERM2).days
+
+    term2 = [(p, d) for p, d in pairs if "Trump" in p and d >= TERM2]
+    trump1 = count_window(pairs, "Trump", TERM1, days_in)
+    biden = count_window(pairs, "Biden", BIDEN, days_in)
+
+    # cumulative-by-month series for the pace chart
+    monthly = {}
+    for _, d in term2:
+        ym = d.strftime("%Y-%m")
+        monthly[ym] = monthly.get(ym, 0) + 1
+    cum, series = 0, []
+    for ym in sorted(monthly):
+        cum += monthly[ym]
+        series.append({"date": ym, "value": cum})
+
+    out = {
+        "id": "judges_confirmed", "name": "Federal judges confirmed (Article III)",
+        "category": "Executive Power & Governance", "value": len(term2), "unit": "judges",
+        "as_of": today_iso(), "since": TERM2.isoformat(), "direction": "neutral",
+        "comparison": {"label": "His first term at the same point", "value": trump1},
+        "biden_same_point": biden,
+        # Term-aligned curves for the expanded chart (phase 7): same CSV, every
+        # president, recomputed each run (idempotent; the source is the full
+        # directory every time). Current term's curve runs only to the current
+        # month; prior terms' full 48.
+        "aligned": {
+            "trump2": term_curve(pairs, "Trump", TERM2, today=today),
+            "trump1": term_curve(pairs, "Trump", TERM1),
+            "biden": term_curve(pairs, "Biden", BIDEN),
+            "obama": term_curve(pairs, "Obama", OBAMA),  # first term (v3 lock)
+        },
+        # v3: all-time per-president totals, the Federal Judicial Center file covers every judge
+        # since 1789, so this is the board's one true every-president context.
+        "all_time": all_time_totals(pairs),
+        "source": {"name": "Federal Judicial Center, biographical directory",
+                   "url": "https://www.fjc.gov/history/judges/biographical-directory-article-iii-federal-judges-export"},
+        "cadence": "As confirmed",
+        "note": "Lifetime (Article III) judges confirmed this term, counted by Senate "
+                "confirmation date from the Federal Judicial Center's directory of every federal judge since 1789.",
+    }
+    publish(out, series=series)
+
+
+if __name__ == "__main__":
+    main()

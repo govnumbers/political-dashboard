@@ -76,13 +76,13 @@ async def main():
         for mid in misses:
             failures.append(f"{mid}: payload fetch failed")
 
-        # table view + term toggle still work post-recolor
+        # table view via the demoted "values" link still works post-redesign
         await pg.eval_on_selector("#card-national_debt", """c => {
-            [...c.querySelectorAll('.ctrl-btn')].find(b => b.textContent === 'Table').click(); }""")
+            [...c.querySelectorAll('.detail-meta a')].find(b => b.textContent === 'Table').click(); }""")
         await pg.wait_for_timeout(150)
         has_table = await pg.eval_on_selector("#card-national_debt", "c => !!c.querySelector('.dtable table')")
         if not has_table:
-            failures.append("debt: table view missing")
+            failures.append("debt: values/table view missing")
 
         # tabs: Immigration filter + deep link
         await pg.eval_on_selector('[data-tab="immigration"]', "b => b.click()")
