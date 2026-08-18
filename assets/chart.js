@@ -1,4 +1,4 @@
-/* Presentation layer — tabs, expandable cards, and the three chart templates.
+/* Presentation layer, tabs, expandable cards, and the three chart templates.
  *
  * Inlined into site/index.html by build.py (assets/ is source; site/ is a build
  * artifact). Hand-rolled SVG, no libraries, no keys, no storage of any kind.
@@ -10,7 +10,7 @@
  *  - bars are always zero-based; %-change and index views baseline at 0/100;
  *  - every chart has a Table view twin and a link to the raw stored series.
  *
- * Charts fetch their payload (site/d/<id>.json) on first expand — the homepage
+ * Charts fetch their payload (site/d/<id>.json) on first expand, the homepage
  * stays light; history loads only when someone asks for it.
  */
 (function () {
@@ -24,7 +24,7 @@
   /* ---------- formatting ---------- */
   function fnum(v) { return Math.round(v).toLocaleString('en-US'); }
   function fmt(v, kind, axis) {
-    if (v == null || isNaN(v)) return '—';
+    if (v == null || isNaN(v)) return 'n/a';
     var a = Math.abs(v), s = v < 0 ? '−' : '';
     switch (kind) {
       case 'pct':     return (Math.round(v * 10) / 10) + '%';
@@ -70,6 +70,7 @@
   function dLab(x) { var d = new Date(x); return MONTH[d.getUTCMonth()] + ' ' + d.getUTCFullYear(); }
 
   function xTicks(fx, x0, x1) {
+    if (fx.xLabels) return fx.xLabels.filter(function (t) { return t.x >= x0 - 0.001 && t.x <= x1 + 0.001; });
     var out = [];
     if (fx.xType === 'months') {
       for (var m = 0; m <= x1; m += 6) out.push({ x: m, lab: '' + m });
@@ -93,7 +94,7 @@
     return out.filter(function (t) { return t.x >= x0 - 1; });
   }
 
-  /* split a series into gap-free segments — holes render as breaks, never bridged */
+  /* split a series into gap-free segments, holes render as breaks, never bridged */
   function segments(pts) {
     if (!pts.length) return [];
     var xs = pts.map(function (p) { return p[0]; }), steps = [];
@@ -110,6 +111,29 @@
   }
 
   /* ---------- line template (own-history · term-aligned · vs-benchmark) ---------- */
+  /* president identity eras, colour long histories: 4 palette presidents, rest grey */
+  var ERA = [
+    { t: Date.UTC(2009, 0, 20), c: '#c98500', label: 'Obama' },
+    { t: Date.UTC(2017, 0, 20), c: '#199e70', label: 'Trump ’17' },
+    { t: Date.UTC(2021, 0, 20), c: '#3987e5', label: 'Biden' },
+    { t: Date.UTC(2025, 0, 20), c: '#e66767', label: 'Trump ’25' }
+  ];
+  var ERA_GREY = '#6c7280';
+  function eraColor(x) { var c = ERA_GREY; for (var i = 0; i < ERA.length; i++) { if (x >= ERA[i].t) c = ERA[i].c; } return c; }
+  /* full president list for hover labels (incl. pre-Obama, shown in neutral grey) */
+  var PRESLIST = [
+    { t: Date.UTC(1929, 2, 4), n: 'Hoover' }, { t: Date.UTC(1933, 2, 4), n: 'F. Roosevelt' },
+    { t: Date.UTC(1945, 3, 12), n: 'Truman' }, { t: Date.UTC(1953, 0, 20), n: 'Eisenhower' },
+    { t: Date.UTC(1961, 0, 20), n: 'Kennedy' }, { t: Date.UTC(1963, 10, 22), n: 'L. Johnson' },
+    { t: Date.UTC(1969, 0, 20), n: 'Nixon' }, { t: Date.UTC(1974, 7, 9), n: 'Ford' },
+    { t: Date.UTC(1977, 0, 20), n: 'Carter' }, { t: Date.UTC(1981, 0, 20), n: 'Reagan' },
+    { t: Date.UTC(1989, 0, 20), n: 'G.H.W. Bush' }, { t: Date.UTC(1993, 0, 20), n: 'Clinton' },
+    { t: Date.UTC(2001, 0, 20), n: 'G.W. Bush' }, { t: Date.UTC(2009, 0, 20), n: 'Obama' },
+    { t: Date.UTC(2017, 0, 20), n: 'Trump ’17' }, { t: Date.UTC(2021, 0, 20), n: 'Biden' },
+    { t: Date.UTC(2025, 0, 20), n: 'Trump ’25' }
+  ];
+  function presAt(t) { var n = ''; for (var i = 0; i < PRESLIST.length; i++) { if (t >= PRESLIST[i].t) n = PRESLIST[i].n; } return n; }
+
   function lineChart(box, fx, state) {
     box.innerHTML = '';
     var W = Math.max(300, box.clientWidth), narrow = W < 540;
@@ -121,6 +145,8 @@
       if (state.range === 'term' && fx.termStart) pts = pts.filter(function (p) { return p[0] >= fx.termStart; });
       return { label: s.label, color: s.color, pts: pts };
     }).filter(function (s) { return s.pts.length; });
+
+    var presMode = fx.presEras && sers.length === 1 && fx.xType !== 'months';
 
     var allY = [], allX = [];
     sers.forEach(function (s) { s.pts.forEach(function (p) { allX.push(p[0]); allY.push(p[1]); }); });
@@ -169,9 +195,9 @@
     });
     if (capH) {
       var cap = el('text', { x: ml + pw / 2, y: H - 4, 'text-anchor': 'middle', fill: CLR.mut, 'font-size': '10.5' });
-      cap.textContent = 'Months in office'; svg.appendChild(cap);
+      cap.textContent = fx.xCaption || 'Months in office'; svg.appendChild(cap);
     }
-    /* vertical markers: inauguration (solid) · definition breaks (dashed) — marked, never smoothed */
+    /* vertical markers: inauguration (solid) · definition breaks (dashed), marked, never smoothed */
     (fx.markers || []).forEach(function (mk) {
       if (mk.x < x0 || mk.x > x1) return;
       var lx = X(mk.x);
@@ -189,15 +215,30 @@
                            fill: CLR.mut, 'font-size': '10.5', 'font-style': 'italic' }));
       t.textContent = g.label; svg.appendChild(t);
     });
-    if (sers.length === 1 && fx.area) {
+    if (fx.area !== false) {
       var base = Y(Math.max(0, yMin));
-      segments(sers[0].pts).forEach(function (seg) {
+      var areaSeg = function (seg, col, op) {
         if (seg.length < 2) return;
         var d = 'M' + X(seg[0][0]) + ' ' + base;
         seg.forEach(function (p) { d += ' L' + X(p[0]).toFixed(1) + ' ' + Y(p[1]).toFixed(1); });
         d += ' L' + X(seg[seg.length - 1][0]) + ' ' + base + ' Z';
-        svg.appendChild(el('path', { d: d, fill: sers[0].color, opacity: 0.09 }));
-      });
+        svg.appendChild(el('path', { d: d, fill: col, opacity: op }));
+      };
+      if (sers.length === 1 && presMode) {
+        segments(sers[0].pts).forEach(function (seg) {
+          var run = [seg[0]], curC = eraColor(seg[0][0]);
+          for (var i2 = 1; i2 < seg.length; i2++) {
+            var c2 = eraColor(seg[i2][0]);
+            run.push(seg[i2]);
+            if (c2 !== curC) { areaSeg(run, curC, 0.10); run = [seg[i2]]; curC = c2; }
+          }
+          areaSeg(run, curC, 0.10);
+        });
+      } else if (sers.length === 1) {
+        segments(sers[0].pts).forEach(function (seg) { areaSeg(seg, sers[0].color, 0.09); });
+      } else {
+        sers.forEach(function (s) { segments(s.pts).forEach(function (seg) { areaSeg(seg, s.color, 0.05); }); });
+      }
     }
     if (fx.benchmark != null) {
       svg.appendChild(el('line', { x1: ml, x2: ml + pw, y1: Y(fx.benchmark), y2: Y(fx.benchmark),
@@ -209,7 +250,25 @@
     sers.forEach(function (s) {
       segments(s.pts).forEach(function (seg) {
         if (seg.length === 1) {
-          svg.appendChild(el('circle', { cx: X(seg[0][0]), cy: Y(seg[0][1]), r: 3, fill: s.color }));
+          svg.appendChild(el('circle', { cx: X(seg[0][0]), cy: Y(seg[0][1]), r: 3,
+            fill: presMode ? eraColor(seg[0][0]) : s.color }));
+          return;
+        }
+        if (presMode) {
+          var run = [seg[0]], curC = eraColor(seg[0][0]);
+          var flush = function () {
+            if (run.length < 2) return;
+            var dd = '';
+            run.forEach(function (p, i) { dd += (i ? ' L' : 'M') + X(p[0]).toFixed(1) + ' ' + Y(p[1]).toFixed(1); });
+            svg.appendChild(el('path', { d: dd, fill: 'none', stroke: curC, 'stroke-width': 2,
+              'stroke-linejoin': 'round', 'stroke-linecap': 'round' }));
+          };
+          for (var j = 1; j < seg.length; j++) {
+            var c = eraColor(seg[j][0]);
+            run.push(seg[j]);
+            if (c !== curC) { flush(); run = [seg[j]]; curC = c; }
+          }
+          flush();
           return;
         }
         var d = '';
@@ -231,10 +290,10 @@
     });
     var ends = sers.map(function (s) {
       var p = s.pts[s.pts.length - 1];
-      return { s: s, x: X(p[0]), y: Y(p[1]), v: p[1] };
+      return { s: s, x: X(p[0]), y: Y(p[1]), v: p[1], px: p[0] };
     });
     ends.forEach(function (e) {
-      svg.appendChild(el('circle', { cx: e.x, cy: e.y, r: 4.5, fill: e.s.color,
+      svg.appendChild(el('circle', { cx: e.x, cy: e.y, r: 4.5, fill: presMode ? eraColor(e.px) : e.s.color,
         stroke: CLR.surface, 'stroke-width': 2 }));
     });
     if (endLab) {
@@ -300,7 +359,7 @@
       var d = 'M' + x + ' ' + (mt + ph) + ' L' + x + ' ' + (y + r) + ' Q' + x + ' ' + y + ' ' + (x + r) + ' ' + y +
               ' L' + (x + bw - r) + ' ' + y + ' Q' + (x + bw) + ' ' + y + ' ' + (x + bw) + ' ' + (y + r) +
               ' L' + (x + bw) + ' ' + (mt + ph) + ' Z';
-      var bar = el('path', { d: d, fill: color });
+      var bar = el('path', { d: d, fill: p[4] || color });
       svg.appendChild(bar);
       bars.push({ el: bar, cx: cx, y: y, p: p });
       var lab = el('text', { x: cx, y: mt + ph + 16, 'text-anchor': 'middle', fill: CLR.mut, 'font-size': '10.5' });
@@ -362,14 +421,16 @@
       cross.setAttribute('visibility', 'visible');
       tip.innerHTML = '';
       txt(div('tt-x', tip), fx.xType === 'months' ? ('Month ' + x + ' of term') : dLab(x));
+      var presMode = fx.presEras && sers.length === 1 && fx.xType !== 'months';
       sers.forEach(function (s) {
         var best = null, bd = Infinity;
         s.pts.forEach(function (p) { var d = Math.abs(p[0] - x); if (d < bd) { bd = d; best = p; } });
         if (!best || bd > tol) return;
         var row = div('tt-row', tip);
-        var key = div('tt-key', row); key.style.borderColor = s.color;
+        var key = div('tt-key', row); key.style.borderColor = presMode ? eraColor(best[0]) : s.color;
         txt(div('tt-val', row), fmt(best[1], fx.fmt));
         if (sers.length > 1) txt(div('tt-lab', row), s.label);
+        else if (presMode) txt(div('tt-lab', row), presAt(best[0]));
       });
       tip.style.display = 'block';
       var px = g.X(x), left = px + 14;
@@ -433,7 +494,7 @@
         tr.appendChild(td0);
         fx.series.forEach(function (s, si) {
           var td = document.createElement('td');
-          td.textContent = union[k][si] != null ? fmt(union[k][si], fx.fmt) : '—';
+          td.textContent = union[k][si] != null ? fmt(union[k][si], fx.fmt) : 'n/a';
           tr.appendChild(td);
         });
         tbody.appendChild(tr);
@@ -443,47 +504,148 @@
   }
 
   /* ---------- expanded-card assembly (shared by all three templates) ---------- */
+  /* ---------- export helpers (CSV built from the active view; JSON = raw payload) ---------- */
+  function csvCell(v) { v = '' + (v == null ? '' : v); return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; }
+  function csvFromView(afx) {
+    var head, rows = [];
+    if (afx.template === 'bars') {
+      head = ['Period', afx.unitLabel || 'Value'];
+      afx.series[0].pts.forEach(function (p) { rows.push([p[3] || p[2], p[1] == null ? '' : p[1]]); });
+    } else {
+      var union = {};
+      afx.series.forEach(function (s, si) {
+        s.pts.forEach(function (p) { var k = afx.xType === 'months' ? Math.round(p[0]) : p[0]; (union[k] = union[k] || {})[si] = p[1]; });
+      });
+      head = [afx.xType === 'months' ? 'Month of term' : 'Date'].concat(afx.series.map(function (s) { return s.label; }));
+      Object.keys(union).map(Number).sort(function (a, b) { return a - b; }).forEach(function (k) {
+        var row = [afx.xType === 'months' ? ('Month ' + k) : dLab(k)];
+        afx.series.forEach(function (s, si) { row.push(union[k][si] != null ? union[k][si] : ''); });
+        rows.push(row);
+      });
+    }
+    return [head].concat(rows).map(function (r) { return r.map(csvCell).join(','); }).join('\n');
+  }
+  function saveFile(name, text, type) {
+    var url = URL.createObjectURL(new Blob([text], { type: type }));
+    var a = document.createElement('a'); a.href = url; a.download = name;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function () { URL.revokeObjectURL(url); }, 1500);
+  }
+  var DL_ICON = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" ' +
+    'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align:-1px">' +
+    '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline>' +
+    '<line x1="12" y1="15" x2="12" y2="3"></line></svg>';
+
   function buildDetail(card, fx) {
     var detail = card.querySelector('.detail');
     detail.innerHTML = '';
-    var state = { range: 'full', view: 'chart' };
     var hasChart = fx.series && fx.series.length;
+    var views = hasChart && fx.views && fx.views.length ? fx.views : null;
+    var threeView = !views && hasChart && fx.ownHist && fx.aligned && fx.aligned.series && fx.aligned.series.length;
+    var defView = views ? (views.filter(function (v) { return v.def; })[0] || views[views.length - 1]).key : 'full';
+    var state = { mode: defView, view: 'chart', real: false };   // mode: term | moi | full, or a custom view key
+
+    function ownFx() {
+      var oh = fx.ownHist || {};
+      var ser = (state.real && state.mode === 'full' && oh.seriesReal) ? oh.seriesReal : oh.series;
+      return Object.assign({}, fx, oh, { series: ser, template: 'line', aligned: null });
+    }
+    function viewFx() {
+      var v = views.filter(function (x) { return x.key === state.mode; })[0] || views[0];
+      return Object.assign({}, fx, v, { views: null });
+    }
+    function activeFx() {
+      if (views) return viewFx();
+      if (!threeView) return fx;
+      if (state.mode === 'moi') {
+        return Object.assign({}, fx, fx.aligned, { template: 'line', presEras: false, ownHist: null,
+          markers: fx.aligned.markers || [], gaps: fx.aligned.gaps || [], termStart: null, rangeToggle: false });
+      }
+      return ownFx();
+    }
+    function activeRange() { return (!views && state.mode === 'term') ? 'term' : 'full'; }
 
     var head = div('chart-head', detail);
-    txt(div('chart-title', head), fx.chartTitle || '');
+    var titleNode = div('chart-title', head);
     var ctrl = div('chart-ctrl', head);
     var btns = [];
     function mkBtn(lab, on, active) {
       var b = document.createElement('button'); b.className = 'ctrl-btn' + (active ? ' active' : '');
       b.type = 'button'; b.textContent = lab; b.addEventListener('click', on); ctrl.appendChild(b); return b;
     }
-    if (hasChart && fx.rangeToggle) {
-      var bT = mkBtn('This term', function () { state.range = 'term'; sync(); }, false);
-      var bF = mkBtn('Full history', function () { state.range = 'full'; sync(); }, true);
-      btns.push([bT, 'range', 'term'], [bF, 'range', 'full']);
-    }
-    if (hasChart) {
-      var bC = mkBtn('Chart', function () { state.view = 'chart'; sync(); }, true);
-      var bTab = mkBtn('Table', function () { state.view = 'table'; sync(); }, false);
-      btns.push([bC, 'view', 'chart'], [bTab, 'view', 'table']);
+    if (views) {
+      views.forEach(function (v) {
+        var bb = mkBtn(v.label, function () { state.mode = v.key; sync(); }, v.key === defView);
+        btns.push([bb, 'mode', v.key]);
+      });
+    } else if (threeView) {
+      var v1 = mkBtn('This term', function () { state.mode = 'term'; sync(); }, false);
+      var v2 = mkBtn(fx.moiLabel || 'Months in office', function () { state.mode = 'moi'; sync(); }, false);
+      var v3 = mkBtn('Full history', function () { state.mode = 'full'; sync(); }, true);
+      btns.push([v1, 'mode', 'term'], [v2, 'mode', 'moi'], [v3, 'mode', 'full']);
+    } else if (hasChart && fx.rangeToggle) {
+      var bT = mkBtn('This term', function () { state.mode = 'term'; sync(); }, false);
+      var bF = mkBtn('Full history', function () { state.mode = 'full'; sync(); }, true);
+      btns.push([bT, 'mode', 'term'], [bF, 'mode', 'full']);
     }
 
-    if (hasChart && fx.series.length > 1) {
-      var lg = div('legend', detail);
-      fx.series.forEach(function (s) {
-        var item = div('lg', lg);
-        var key = div('key', item); key.style.borderTopColor = s.color;
-        item.appendChild(document.createTextNode(s.label));
-      });
+    // Nominal/Real slider: a sub-control of Full history, sits BELOW the view filters
+    var realBar = null, rNom = null, rReal = null, rKnob = null;
+    if (fx.realToggle && fx.ownHist && fx.ownHist.seriesReal) {
+      realBar = div('realbar', detail);
+      txt(div('rlbl', realBar), 'Adjust for inflation');
+      var rsw = div('rswitch', realBar);
+      rKnob = div('rknob', rsw);
+      rNom = document.createElement('button'); rNom.type = 'button'; rNom.textContent = 'Nominal $';
+      rReal = document.createElement('button'); rReal.type = 'button'; rReal.textContent = 'Real ($' + (fx.realBase || '') + ')';
+      rsw.appendChild(rNom); rsw.appendChild(rReal);
+      rNom.addEventListener('click', function () { state.real = false; sync(); });
+      rReal.addEventListener('click', function () { state.real = true; sync(); });
     }
+    // Table is demoted (card-design pass): no longer a peer toggle, it's a quiet
+    // "values" link in the footer meta (built below), toggling this same view state.
+
+    var legendBox = div('legend', detail);
 
     var box = div('chart-box', detail);
     box.setAttribute('role', 'application');
-    box.setAttribute('aria-label', (fx.chartTitle || 'chart') + ' — arrow keys read values');
+    box.setAttribute('aria-label', (fx.chartTitle || 'chart') + ', arrow keys read values');
+
+    function drawLegend(afx) {
+      legendBox.innerHTML = '';
+      if (!hasChart) return;
+      if (afx.series && afx.series.length > 1) {
+        afx.series.forEach(function (s) {
+          var item = div('lg', legendBox);
+          var key = div('key', item); key.style.borderTopColor = s.color;
+          item.appendChild(document.createTextNode(s.label));
+        });
+      } else if (afx.presEras && afx.series && afx.series[0]) {
+        // only presidents actually present in the visible data; grey "earlier" omitted
+        var pts = afx.series[0].pts;
+        if (activeRange() === 'term' && afx.termStart) pts = pts.filter(function (p) { return p[0] >= afx.termStart; });
+        var present = {}; pts.forEach(function (p) { present[eraColor(p[0])] = 1; });
+        var eras = ERA.filter(function (e) { return present[e.c]; });
+        if (eras.length >= 2) {
+          eras.forEach(function (e) {
+            var item = div('lg', legendBox);
+            var key = div('key', item); key.style.borderTopColor = e.c;
+            item.appendChild(document.createTextNode(e.label));
+          });
+        }
+      }
+    }
 
     function sync() {
       btns.forEach(function (b) { b[0].classList.toggle('active', state[b[1]] === b[2]); });
+      if (realBar) {   // Real is a sub-control of Full history only
+        realBar.style.display = (state.mode === 'full') ? '' : 'none';
+        rNom.setAttribute('aria-pressed', String(!state.real));
+        rReal.setAttribute('aria-pressed', String(state.real));
+        rKnob.parentNode.classList.toggle('on', state.real);   // knob slides via CSS, no measurement
+      }
       if (!hasChart) {
+        legendBox.innerHTML = '';
         box.innerHTML = '';
         var ac = div('accrue', box);   /* sparse metric: the honest empty state */
         var b1 = document.createElement('b'); b1.textContent = fx.accrueTitle || 'History accrues from here';
@@ -491,9 +653,12 @@
         ac.appendChild(document.createTextNode(fx.accrueBody || ''));
         return;
       }
-      if (state.view === 'table') buildTable(box, fx);
-      else if (fx.template === 'bars') barChart(box, fx, state);
-      else lineChart(box, fx, state);
+      var afx = activeFx();
+      titleNode.textContent = fx.chartTitle || '';   // constant across views (the filter names the view)
+      drawLegend(afx);
+      if (state.view === 'table') buildTable(box, afx);
+      else if (afx.template === 'bars') barChart(box, afx, { range: activeRange() });
+      else lineChart(box, afx, { range: activeRange() });
     }
     sync();
 
@@ -512,14 +677,34 @@
       var p = document.createElement('p'); p.textContent = c; f2.appendChild(p);
     });
 
+    // Footer meta: source + cadence already live on the collapsed card, so they are not
+    // repeated here. Just a colourless graph/table toggle and a clear raw-data link.
     var meta = div('detail-meta', detail);
-    txt(div('', meta), 'Data as of ' + fx.asOf);
-    txt(div('', meta), 'Updates ' + fx.cadence);
-    var a = document.createElement('a'); a.href = fx.srcUrl; a.target = '_blank'; a.rel = 'noopener';
-    a.textContent = 'Source: ' + fx.srcName + ' ↗'; meta.appendChild(a);
-    var j = document.createElement('a'); j.href = 'd/' + fx.id + '.json'; j.target = '_blank'; j.rel = 'noopener';
-    j.textContent = 'Series (JSON)'; j.title = 'The chart’s exact data payload, as served';
-    meta.appendChild(j);
+    if (hasChart) {
+      var vtoggle = document.createElement('a'); vtoggle.href = '#'; vtoggle.className = 'vtoggle';
+      vtoggle.textContent = 'Table'; vtoggle.title = 'Switch between the chart and the underlying values';
+      vtoggle.addEventListener('click', function (ev) {
+        ev.preventDefault();
+        state.view = state.view === 'table' ? 'chart' : 'table';
+        vtoggle.textContent = state.view === 'table' ? 'Graph' : 'Table';
+        sync();
+      });
+      meta.appendChild(vtoggle);
+    }
+    if (hasChart) {
+      var exp = div('exp-group', meta);
+      var lbl = div('exp-lbl', exp); lbl.innerHTML = DL_ICON + ' Export';
+      var csvL = document.createElement('a'); csvL.href = '#'; csvL.className = 'exp-link';
+      csvL.textContent = 'CSV'; csvL.title = 'Download the current view as a spreadsheet (CSV)';
+      csvL.addEventListener('click', function (ev) {
+        ev.preventDefault();
+        saveFile(fx.id + (state.mode ? '-' + state.mode : '') + '.csv', csvFromView(activeFx()), 'text/csv');
+      });
+      exp.appendChild(csvL);
+      var jsonL = document.createElement('a'); jsonL.href = 'd/' + fx.id + '.json'; jsonL.download = fx.id + '.json';
+      jsonL.className = 'exp-link'; jsonL.textContent = 'JSON'; jsonL.title = 'The exact data payload behind this chart (JSON)';
+      exp.appendChild(jsonL);
+    }
 
     if (window.ResizeObserver) {
       var t; new ResizeObserver(function () {
@@ -553,7 +738,7 @@
   }
   function setLabel(card, open) {
     var span = card.querySelector('.expand-btn span');
-    if (span) span.textContent = open ? 'Collapse' : 'History & context';
+    if (span) span.textContent = open ? 'See less' : 'See more';
     var b = card.querySelector('.expand-btn');
     if (b) b.setAttribute('aria-expanded', open ? 'true' : 'false');
   }
@@ -572,7 +757,7 @@
     if (btn) btn.addEventListener('click', function () { toggle(card); });
   });
 
-  /* ---------- category tabs — All default; state in the URL hash, no storage ---------- */
+  /* ---------- category tabs, All default; state in the URL hash, no storage ---------- */
   var tabs = Array.prototype.slice.call(document.querySelectorAll('.tab'));
   var sections = Array.prototype.slice.call(document.querySelectorAll('.category'));
   function activate(slug, scroll) {
