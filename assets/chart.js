@@ -537,7 +537,7 @@
     '<line x1="12" y1="15" x2="12" y2="3"></line></svg>';
 
   function buildDetail(card, fx) {
-    var detail = card.querySelector('.detail');
+    var detail = card._detail || card.querySelector('.detail');
     detail.innerHTML = '';
     var hasChart = fx.series && fx.series.length;
     var views = hasChart && fx.views && fx.views.length ? fx.views : null;
@@ -729,7 +729,7 @@
       card._fx = fx; inflight[id] = false; cb(fx);
     }).catch(function () {
       inflight[id] = false;
-      var detail = card.querySelector('.detail');
+      var detail = card._detail || card.querySelector('.detail');
       detail.innerHTML = '';
       var p = div('accrue', detail);
       txt(p, 'History couldn’t load just now. The figures above are complete; reload to try again.');
@@ -742,19 +742,63 @@
     var b = card.querySelector('.expand-btn');
     if (b) b.setAttribute('aria-expanded', open ? 'true' : 'false');
   }
-  function toggle(card, forceOpen) {
-    var detail = card.querySelector('.detail');
-    var open = card.classList.contains('open');
-    if (open && forceOpen) return;
-    if (open) { card.classList.remove('open'); detail.hidden = true; setLabel(card, false); return; }
+  /* Drawer expansion: the collapsed card stays in its grid slot; its detail opens
+     full-width directly beneath that card's row. One card open at a time. */
+  var openCard = null, openDrawer = null;
+  function rowLastPeer(card) {
+    var grid = card.closest('.grid'); if (!grid) return card;
+    var tiles = Array.prototype.slice.call(grid.querySelectorAll(':scope > .tile'));
+    var top = card.offsetTop, last = card;
+    tiles.forEach(function (t) { if (Math.abs(t.offsetTop - top) < 4) last = t; });
+    return last;
+  }
+  function placeDrawer(card) {
+    if (openDrawer) rowLastPeer(card).insertAdjacentElement('afterend', openDrawer);
+  }
+  function closeOpen(instant) {
+    if (!openCard) return;
+    var card = openCard, drawer = openDrawer, det = card._detail;
+    card.classList.remove('open'); setLabel(card, false);
+    openCard = null; openDrawer = null;
+    function finish() {
+      if (det && det.parentNode === drawer) { det.hidden = true; card.appendChild(det); }
+      if (drawer && drawer.parentNode) drawer.parentNode.removeChild(drawer);
+    }
+    if (instant) { finish(); return; }
+    drawer.style.maxHeight = '0';
+    setTimeout(finish, 340);
+  }
+  function openCardDrawer(card, scroll) {
+    if (openCard === card) return;
+    closeOpen(true);
     loadDetail(card, function (fx) {
-      if (!detail.dataset.built) { buildDetail(card, fx); detail.dataset.built = '1'; }
-      card.classList.add('open'); detail.hidden = false; setLabel(card, true);
+      var det = card._detail;
+      openDrawer = document.createElement('div');
+      openDrawer.className = 'detail-drawer';
+      placeDrawer(card);
+      det.hidden = false; openDrawer.appendChild(det);           // move into full-width drawer first
+      if (!det.dataset.built) { buildDetail(card, fx); det.dataset.built = '1'; }  // then build at full width
+      openCard = card; card.classList.add('open'); setLabel(card, true);
+      var h = det.offsetHeight;
+      requestAnimationFrame(function () { openDrawer.style.maxHeight = (h + 48) + 'px'; });
+      setTimeout(function () { if (openCard === card && openDrawer) openDrawer.style.maxHeight = 'none'; }, 360);
+      if (scroll) setTimeout(function () { card.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 60);
     });
   }
+  function toggleDrawer(card) {
+    if (openCard === card) closeOpen(false); else openCardDrawer(card, false);
+  }
   document.querySelectorAll('.tile[data-id]').forEach(function (card) {
-    var btn = card.querySelector('.expand-btn');
-    if (btn) btn.addEventListener('click', function () { toggle(card); });
+    card._detail = card.querySelector('.detail');
+    card.addEventListener('click', function (e) {
+      if (e.target.closest('a')) return;                                  // let source links work
+      if (window.getSelection && String(window.getSelection())) return;   // ignore click that ends a text selection
+      toggleDrawer(card);
+    });
+  });
+  var _rt; window.addEventListener('resize', function () {
+    if (!openCard) return;
+    clearTimeout(_rt); _rt = setTimeout(function () { placeDrawer(openCard); }, 150);
   });
 
   /* ---------- category tabs, All default; state in the URL hash, no storage ---------- */
@@ -762,7 +806,11 @@
   var sections = Array.prototype.slice.call(document.querySelectorAll('.category'));
   function activate(slug, scroll) {
     tabs.forEach(function (t) { t.classList.toggle('active', t.dataset.tab === slug); });
-    sections.forEach(function (s) { s.hidden = (slug !== 'all' && s.dataset.tab !== slug); });
+    sections.forEach(function (s) {
+      s.hidden = (slug !== 'all' && s.dataset.tab !== slug);
+      var head = s.querySelector('.cat-head');
+      if (head) head.style.display = (slug === 'all') ? '' : 'none';
+    });
     if (scroll) {
       var bar = document.getElementById('tabs');
       if (bar) window.scrollTo({ top: bar.offsetTop - 12, behavior: 'smooth' });
@@ -770,6 +818,7 @@
   }
   tabs.forEach(function (t) {
     t.addEventListener('click', function () {
+      closeOpen(true);
       var slug = t.dataset.tab;
       if (history.replaceState) history.replaceState(null, '', slug === 'all' ? '#' : '#t/' + slug);
       var bar = document.getElementById('tabs');
@@ -778,13 +827,13 @@
   });
   function route() {
     var h = location.hash || '';
+    closeOpen(true);
     if (h.indexOf('#m/') === 0) {
       var id = h.slice(3), card = document.getElementById('card-' + id);
       if (card && card.getAttribute('data-id')) {
         var sec = card.closest('.category');
         activate(sec ? sec.dataset.tab : 'all', false);
-        toggle(card, true);
-        setTimeout(function () { card.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 80);
+        openCardDrawer(card, true);
         return;
       }
     }
