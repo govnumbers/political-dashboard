@@ -1651,6 +1651,7 @@ def build():
     dark_tokens = (
         "color-scheme:dark;"
         "--plane:#0d0d0d;--surface:#1a1a19;--drawer:#242422;--tile-hover:#1f1f1e;"
+        "--tile-hover-border:rgba(255,255,255,0.20);--tile-hover-shadow:none;"
         "--primary:#ffffff;--secondary:#c3c2b7;--muted:#898781;"
         "--hair:rgba(255,255,255,0.10);--hair-strong:rgba(255,255,255,0.28);"
         "--hair-faint:rgba(255,255,255,0.05);--tile-open:rgba(255,255,255,0.32);--grid:#2c2c2a;"
@@ -1667,8 +1668,9 @@ def build():
     )
     light_tokens = (
         "color-scheme:light;"
-        "--plane:#f7f6f2;--surface:#ffffff;--drawer:#fbfaf8;--tile-hover:#f4f2ec;"
-        "--primary:#1b1a17;--secondary:#55534b;--muted:#73716a;"
+        "--plane:#f7f6f2;--surface:#ffffff;--drawer:#fdfcfb;--tile-hover:#fdfdfc;"
+        "--tile-hover-border:rgba(0,0,0,0.14);--tile-hover-shadow:0 2px 10px rgba(0,0,0,0.06);"
+        "--primary:#2a2723;--secondary:#55534b;--muted:#73716a;"
         "--hair:rgba(0,0,0,0.12);--hair-strong:rgba(0,0,0,0.28);"
         "--hair-faint:rgba(0,0,0,0.06);--tile-open:rgba(0,0,0,0.32);--grid:#e6e4dd;"
         "--panel:rgba(0,0,0,0.028);--tab-track:rgba(0,0,0,0.06);"
@@ -1677,10 +1679,10 @@ def build():
         "--drawer-shadow:0 1px 2px rgba(0,0,0,0.05),0 10px 28px rgba(0,0,0,0.06);--focus:rgba(31,111,208,0.55);"
         "--series-1:#1f6fd0;--series-2:#c24a1e;--critical:#c62828;--good:#137a2b;--warn:#976a00;"
         "--accent-tint:rgba(31,111,208,0.12);--warn-line:rgba(151,106,0,0.4);--warn-tile:rgba(151,106,0,0.5);"
-        "--pres-t25:#d23f3f;--pres-biden:#1f6fd0;--pres-t17:#12805a;--pres-obama:#b57f00;"
+        "--pres-t25:#d23f3f;--pres-biden:#1f6fd0;--pres-t17:#12805a;--pres-obama:#c98500;"
         "--era-grey:#6b7078;--bar-g1:#7c828c;--bar-g3:#3f444c;"
-        "--chart-ink:#1b1a17;--chart-sec:#55534b;--chart-mut:#73716a;--chart-grid:#e6e4dd;"
-        "--chart-axis:#b7b4ab;--chart-surface:#fbfaf8;--chart-dash:#a9a69d;"
+        "--chart-ink:#2a2723;--chart-sec:#55534b;--chart-mut:#73716a;--chart-grid:#e6e4dd;"
+        "--chart-axis:#b7b4ab;--chart-surface:#fdfcfb;--chart-dash:#a9a69d;"
     )
 
     html = f"""<!doctype html>
@@ -1785,7 +1787,7 @@ def build():
   .detail-drawer > .detail {{ margin-top:0; border-top:0; padding:24px 26px 20px; }}
   /* whole collapsed card is clickable */
   .tile[data-id] {{ cursor:pointer; }}
-  .tile[data-id]:not(.open):hover {{ border-color:var(--hair-strong); background:var(--tile-hover); }}
+  .tile[data-id]:not(.open):hover {{ border-color:var(--tile-hover-border); background:var(--tile-hover); box-shadow:var(--tile-hover-shadow); }}
   .detail[hidden] {{ display:none; }}
   @keyframes reveal {{ from {{ opacity:0; transform:translateY(-4px); }} to {{ opacity:1; transform:none; }} }}
   .chart-head {{ display:flex; justify-content:space-between; align-items:baseline; gap:12px; flex-wrap:wrap; margin-bottom:10px; }}
