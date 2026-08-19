@@ -4,19 +4,19 @@
   "category": "War & Defense",
   "value": 18,
   "unit": "deaths",
-  "as_of": "2026-08-11",
+  "as_of": "2026-08-18",
   "direction": "up_is_bad",
   "per_operation": {
     "Operation Epic Fury": {
       "deaths": 14,
-      "wounded": 417
+      "wounded": 418
     },
     "Overseas Operations": {
       "deaths": 4,
       "wounded": 279
     }
   },
-  "wounded_total": 696,
+  "wounded_total": 697,
   "source": {
     "name": "Defense Casualty Analysis System (DMDC)",
     "url": "https://dcas.dmdc.osd.mil/dcas/conflictCasualties"
@@ -48,8 +48,12 @@
     {
       "date": "2026-07",
       "value": 14
+    },
+    {
+      "date": "2026-08",
+      "value": 14
     }
   ],
-  "last_checked": "2026-08-18",
-  "stale_after": "2026-09-10"
+  "last_checked": "2026-08-19",
+  "stale_after": "2026-09-17"
 }
