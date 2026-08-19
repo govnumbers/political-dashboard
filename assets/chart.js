@@ -17,8 +17,32 @@
   'use strict';
   document.documentElement.classList.remove('no-js');
 
-  var CLR = { ink:'#ffffff', sec:'#c3c2b7', mut:'#898781', grid:'#2c2c2a', axis:'#4a4a47',
-              surface:'#1a1a19', dash:'#6b6965' };
+  /* ---------- theme-aware palette ----------
+   * Chart chrome, the four president colours and the baked-in series colours all
+   * resolve from CSS variables, so the SVG charts follow the active theme (system
+   * default or toggled) with the light values re-tuned for contrast on a light
+   * background. refreshTheme() is called on boot and on every theme change; charts
+   * render from these cached values. mapColor() re-points the payload's baked hex
+   * (dark palette, written by build.py) to the current theme's value — in dark it
+   * resolves to the same hex, so dark output is byte-for-byte unchanged. */
+  var ROOT = document.documentElement;
+  function css(name, fb) { var v = getComputedStyle(ROOT).getPropertyValue(name); return (v && v.trim()) || fb; }
+  var CLR = {}, PAY = {};
+  function refreshTheme() {
+    CLR.ink = css('--chart-ink', '#ffffff');   CLR.sec = css('--chart-sec', '#c3c2b7');
+    CLR.mut = css('--chart-mut', '#898781');   CLR.grid = css('--chart-grid', '#2c2c2a');
+    CLR.axis = css('--chart-axis', '#4a4a47'); CLR.surface = css('--chart-surface', '#1a1a19');
+    CLR.dash = css('--chart-dash', '#6b6965');
+    ERA[0].c = css('--pres-obama', '#c98500'); ERA[1].c = css('--pres-t17', '#199e70');
+    ERA[2].c = css('--pres-biden', '#3987e5'); ERA[3].c = css('--pres-t25', '#e66767');
+    ERA_GREY = css('--era-grey', '#6c7280');
+    PAY = {
+      '#c98500': ERA[0].c, '#199e70': ERA[1].c, '#3987e5': ERA[2].c, '#e66767': ERA[3].c,
+      '#6c7280': ERA_GREY, '#d95926': css('--series-2', '#d95926'),
+      '#8b9198': css('--bar-g1', '#8b9198'), '#4a4d53': css('--bar-g3', '#4a4d53')
+    };
+  }
+  function mapColor(c) { return (c && PAY[c]) || c; }
   var MONTH = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
   /* ---------- formatting ---------- */
@@ -235,9 +259,9 @@
           areaSeg(run, curC, 0.10);
         });
       } else if (sers.length === 1) {
-        segments(sers[0].pts).forEach(function (seg) { areaSeg(seg, sers[0].color, 0.09); });
+        segments(sers[0].pts).forEach(function (seg) { areaSeg(seg, mapColor(sers[0].color), 0.09); });
       } else {
-        sers.forEach(function (s) { segments(s.pts).forEach(function (seg) { areaSeg(seg, s.color, 0.05); }); });
+        sers.forEach(function (s) { segments(s.pts).forEach(function (seg) { areaSeg(seg, mapColor(s.color), 0.05); }); });
       }
     }
     if (fx.benchmark != null) {
@@ -251,7 +275,7 @@
       segments(s.pts).forEach(function (seg) {
         if (seg.length === 1) {
           svg.appendChild(el('circle', { cx: X(seg[0][0]), cy: Y(seg[0][1]), r: 3,
-            fill: presMode ? eraColor(seg[0][0]) : s.color }));
+            fill: presMode ? eraColor(seg[0][0]) : mapColor(s.color) }));
           return;
         }
         if (presMode) {
@@ -273,13 +297,13 @@
         }
         var d = '';
         seg.forEach(function (p, i) { d += (i ? ' L' : 'M') + X(p[0]).toFixed(1) + ' ' + Y(p[1]).toFixed(1); });
-        svg.appendChild(el('path', { d: d, fill: 'none', stroke: s.color, 'stroke-width': 2,
+        svg.appendChild(el('path', { d: d, fill: 'none', stroke: mapColor(s.color), 'stroke-width': 2,
           'stroke-linejoin': 'round', 'stroke-linecap': 'round' }));
       });
     });
     /* standalone comparison dots (e.g. a prior president's same-point total pending full backfill) */
     (fx.dots || []).forEach(function (dt) {
-      svg.appendChild(el('circle', { cx: X(dt.x), cy: Y(dt.y), r: 4.5, fill: dt.color,
+      svg.appendChild(el('circle', { cx: X(dt.x), cy: Y(dt.y), r: 4.5, fill: mapColor(dt.color),
         stroke: CLR.surface, 'stroke-width': 2 }));
       if (!narrow) {
         var right = X(dt.x) > ml + pw * 0.6;
@@ -293,7 +317,7 @@
       return { s: s, x: X(p[0]), y: Y(p[1]), v: p[1], px: p[0] };
     });
     ends.forEach(function (e) {
-      svg.appendChild(el('circle', { cx: e.x, cy: e.y, r: 4.5, fill: presMode ? eraColor(e.px) : e.s.color,
+      svg.appendChild(el('circle', { cx: e.x, cy: e.y, r: 4.5, fill: presMode ? eraColor(e.px) : mapColor(e.s.color),
         stroke: CLR.surface, 'stroke-width': 2 }));
     });
     if (endLab) {
@@ -359,7 +383,7 @@
       var d = 'M' + x + ' ' + (mt + ph) + ' L' + x + ' ' + (y + r) + ' Q' + x + ' ' + y + ' ' + (x + r) + ' ' + y +
               ' L' + (x + bw - r) + ' ' + y + ' Q' + (x + bw) + ' ' + y + ' ' + (x + bw) + ' ' + (y + r) +
               ' L' + (x + bw) + ' ' + (mt + ph) + ' Z';
-      var bar = el('path', { d: d, fill: p[4] || color });
+      var bar = el('path', { d: d, fill: mapColor(p[4] || color) });
       svg.appendChild(bar);
       bars.push({ el: bar, cx: cx, y: y, p: p });
       var lab = el('text', { x: cx, y: mt + ph + 16, 'text-anchor': 'middle', fill: CLR.mut, 'font-size': '10.5' });
@@ -427,7 +451,7 @@
         s.pts.forEach(function (p) { var d = Math.abs(p[0] - x); if (d < bd) { bd = d; best = p; } });
         if (!best || bd > tol) return;
         var row = div('tt-row', tip);
-        var key = div('tt-key', row); key.style.borderColor = presMode ? eraColor(best[0]) : s.color;
+        var key = div('tt-key', row); key.style.borderColor = presMode ? eraColor(best[0]) : mapColor(s.color);
         txt(div('tt-val', row), fmt(best[1], fx.fmt));
         if (sers.length > 1) txt(div('tt-lab', row), s.label);
         else if (presMode) txt(div('tt-lab', row), presAt(best[0]));
@@ -617,7 +641,7 @@
       if (afx.series && afx.series.length > 1) {
         afx.series.forEach(function (s) {
           var item = div('lg', legendBox);
-          var key = div('key', item); key.style.borderTopColor = s.color;
+          var key = div('key', item); key.style.borderTopColor = mapColor(s.color);
           item.appendChild(document.createTextNode(s.label));
         });
       } else if (afx.presEras && afx.series && afx.series[0]) {
@@ -660,6 +684,7 @@
       else if (afx.template === 'bars') barChart(box, afx, { range: activeRange() });
       else lineChart(box, afx, { range: activeRange() });
     }
+    card._sync = sync;   // exposed so a theme change can re-render this card's chart
     sync();
 
     var fur = div('furniture', detail);
@@ -778,6 +803,7 @@
       placeDrawer(card);
       det.hidden = false; openDrawer.appendChild(det);           // move into full-width drawer first
       if (!det.dataset.built) { buildDetail(card, fx); det.dataset.built = '1'; }  // then build at full width
+      else if (card._sync) card._sync();   // rebuilt already: re-render for the current theme/width
       openCard = card; card.classList.add('open'); setLabel(card, true);
       var h = det.offsetHeight;
       requestAnimationFrame(function () { openDrawer.style.maxHeight = (h + 48) + 'px'; });
@@ -840,6 +866,46 @@
     if (h.indexOf('#t/') === 0) { activate(h.slice(3), false); return; }
     activate('all', false);
   }
+  /* ---------- colour theme: system-follow by default, on-page toggle, no storage ----------
+     CSS drives the palette (dark default, light via prefers-color-scheme even with JS off).
+     The toggle forces a theme for this visit only by setting data-theme; a reload clears it
+     and control returns to the system setting. Charts re-render on any change. */
+  var mq = window.matchMedia ? window.matchMedia('(prefers-color-scheme: light)') : null;
+  function effectiveTheme() {
+    var t = ROOT.getAttribute('data-theme');
+    if (t === 'light' || t === 'dark') return t;
+    return (mq && mq.matches) ? 'light' : 'dark';
+  }
+  var ICON_SUN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" ' +
+    'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"></circle>' +
+    '<path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"></path></svg>';
+  var ICON_MOON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" ' +
+    'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"></path></svg>';
+  var toggleBtn = document.getElementById('themeToggle');
+  function updateToggle() {
+    if (!toggleBtn) return;
+    var light = effectiveTheme() === 'light';
+    toggleBtn.innerHTML = light ? ICON_MOON : ICON_SUN;   // icon = the theme you'd switch TO
+    toggleBtn.setAttribute('aria-label', light ? 'Switch to dark theme' : 'Switch to light theme');
+    toggleBtn.setAttribute('aria-pressed', light ? 'true' : 'false');
+  }
+  function applyTheme() {
+    refreshTheme();
+    updateToggle();
+    if (openCard && openCard._sync) openCard._sync();     // live re-render of the open chart
+  }
+  if (toggleBtn) toggleBtn.addEventListener('click', function () {
+    ROOT.setAttribute('data-theme', effectiveTheme() === 'dark' ? 'light' : 'dark');
+    applyTheme();
+  });
+  if (mq) {
+    var onSys = function () { if (!ROOT.getAttribute('data-theme')) applyTheme(); };
+    if (mq.addEventListener) mq.addEventListener('change', onSys);
+    else if (mq.addListener) mq.addListener(onSys);       // older Safari
+  }
+  refreshTheme();   // populate CLR / ERA / PAY before the first chart can render
+  updateToggle();
+
   window.addEventListener('hashchange', route);
   route();
 
