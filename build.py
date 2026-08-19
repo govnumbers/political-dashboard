@@ -24,6 +24,21 @@ CATEGORY_ORDER = [
     "Energy", "Immigration", "Health & Safety Net",
     "Executive Power & Governance", "War & Defense",
 ]
+# Short display labels for the tab bar ONLY. The internal category names above
+# (and in CATEGORIES) and the slugs derived from them are UNCHANGED — so grouping,
+# deep links (#t/<slug>) and the connectors' category stamps are all unaffected.
+# This map only renames what the tab button shows.
+TAB_LABEL = {
+    "Cost of Living": "Prices",
+    "Economy & Jobs": "Economy",
+    "Trade & Tariffs": "Trade",
+    "Public Finances": "Finances",
+    "Energy": "Energy",
+    "Immigration": "Immigration",
+    "Health & Safety Net": "Health",
+    "Executive Power & Governance": "Governance",
+    "War & Defense": "Defense",
+}
 ORDER = [
     "inflation", "grocery_prices", "gas_price",
     "real_gdp", "unemployment", "real_wages", "federal_workforce",
@@ -614,7 +629,6 @@ def tile(m):
     qual_html = f'\n      <div class="tile-qual">{name_qual}</div>' if name_qual else ""
     return f"""
     <article class="tile" data-as-of="{m['as_of']}" data-stale-after="{sa}" data-cadence="{m['cadence'].lower()}">
-      <div class="tile-cat">{cat}</div>
       <h2 class="tile-name">{name_main}</h2>{qual_html}
       <div class="hero">{hero}</div>
       {delta}
@@ -1546,10 +1560,7 @@ def frozen_strip(today=None):
     return f"""
     <section class="frozen" id="frozen">
       <h2>Official sources that have stopped updating</h2>
-      <p class="fz-def">Some official series stopped publishing during this administration. This list is
-      factual and automatic: each row names a source this dashboard uses or would use, the date of its
-      last release, and the days since, recomputed at every daily build. A source leaves this list by
-      publishing again.</p>
+      <p class="fz-def">Each row shows the source, its last release, and how long it has been silent, recomputed daily. A source leaves the list by publishing again.</p>
       <table class="fz-table">
         <thead><tr><th>Source</th><th>Last official release</th><th>Silent for</th><th>What happened</th></tr></thead>
         <tbody>{''.join(rows)}</tbody>
@@ -1576,6 +1587,11 @@ def build():
     for m in metrics:
         try:
             fx = payload(m, loaded)
+            # chart title mirrors the card exactly: "<name> · <qualifier>" (no date-range clutter,
+            # the x-axis already shows the range). Same split as the tile so they never drift.
+            _tm = re.match(r'^(.*?)\s*\(([^)]*)\)\s*$', m["name"])
+            _tmain, _tqual = (_tm.group(1), _tm.group(2)) if _tm else (m["name"], "")
+            fx["chartTitle"] = _tmain + (" · " + _tqual if _tqual else "")
             with open(os.path.join(SITE_D, f"{m['id']}.json"), "w") as f:
                 json.dump(fx, f, separators=(",", ":"))
         except Exception as e:
@@ -1606,10 +1622,10 @@ def build():
             if m["id"] in expandable:
                 h = h.replace('<div class="tile-foot">', expand_btn + '\n      <div class="tile-foot">', 1)
             tiles.append(h)
-        tab_btns.append(f'<button class="tab" type="button" data-tab="{slug}">{cat}</button>')
+        tab_btns.append(f'<button class="tab" type="button" data-tab="{slug}">{TAB_LABEL.get(cat, cat)}</button>')
         sections.append(f"""
       <section class="category" data-tab="{slug}" id="{slug}">
-        <h2 class="cat-head">{cat}<span class="cat-count">{len(cat_metrics)}</span></h2>
+        <h2 class="cat-head">{cat}</h2>
         <div class="grid">{"".join(tiles)}</div>
       </section>""")
     body = "".join(sections)
@@ -1648,8 +1664,11 @@ def build():
   .wrap {{ max-width:1080px; margin:0 auto; padding:56px 24px 80px; }}
   header {{ margin-bottom:36px; }}
   .kicker {{ color:var(--series-1); font-size:12px; letter-spacing:.14em; text-transform:uppercase; font-weight:600; }}
-  h1 {{ font-size:30px; font-weight:650; margin:12px 0 10px; letter-spacing:-0.01em; }}
-  .lede {{ color:var(--secondary); max-width:60ch; margin:0; }}
+  h1 {{ font-family:Georgia,"Iowan Old Style","Palatino Linotype","Book Antiqua",serif;
+       font-size:clamp(42px,7.5vw,68px); font-weight:700; margin:0 0 14px;
+       letter-spacing:-0.015em; line-height:1.03; }}
+  .h1-accent {{ color:var(--pres-t25); }}
+  .lede {{ color:var(--secondary); max-width:none; margin:0; font-size:15px; }}
   .pilot {{ display:inline-block; margin-top:16px; font-size:12px; color:var(--muted);
            border:1px solid var(--hair); border-radius:100px; padding:5px 12px; }}
   .category {{ margin-top:40px; }}
@@ -1686,12 +1705,14 @@ def build():
   .tile-foot a {{ color:var(--secondary); text-decoration:none; font-weight:550; }}
   .tile-foot a:hover {{ color:var(--series-1); }}
   /* ---- category tabs (All default; JS-off shows the whole board) ---- */
-  .tabs {{ display:flex; gap:8px; overflow-x:auto; margin:30px 0 0; padding:2px 0 8px; scrollbar-width:none; }}
+  .tabs {{ display:flex; gap:3px; margin:28px 0 4px; padding:4px; background:rgba(255,255,255,0.045);
+          border:1px solid var(--hair); border-radius:12px; overflow-x:auto; scrollbar-width:none; }}
   .tabs::-webkit-scrollbar {{ display:none; }}
-  .tab {{ white-space:nowrap; font-size:12.5px; font-weight:600; color:var(--secondary); background:none;
-         border:1px solid var(--hair); border-radius:100px; padding:7px 14px; cursor:pointer; font-family:inherit; }}
-  .tab:hover {{ color:var(--primary); border-color:rgba(255,255,255,0.28); }}
-  .tab.active {{ color:var(--primary); border-color:var(--series-1); background:rgba(57,135,229,0.12); }}
+  .tab {{ flex:1 0 auto; white-space:nowrap; text-align:center; font-size:13px; font-weight:600;
+         color:var(--secondary); background:none; border:0; border-radius:8px; padding:8px 14px;
+         cursor:pointer; font-family:inherit; transition:background .15s ease, color .15s ease; }}
+  .tab:hover {{ color:var(--primary); }}
+  .tab.active {{ color:var(--primary); background:rgba(255,255,255,0.10); }}
   .no-js .tabs {{ display:none; }}
   .category[hidden] {{ display:none; }}
 
@@ -1704,8 +1725,16 @@ def build():
   .expand-btn svg {{ transition:transform .25s ease; }}
   .tile.open .expand-btn svg {{ transform:rotate(180deg); }}
   .no-js .expand-btn {{ display:none; }}
-  .tile.open {{ grid-column:1 / -1; }}
+  .tile.open {{ border-color:rgba(255,255,255,0.32); }}
   .detail {{ margin-top:18px; border-top:1px solid var(--hair); padding-top:18px; animation:reveal .28s ease; }}
+  /* expanded detail opens in a full-width drawer beneath the card's row; drawer surface is a
+     step lighter than the cards so the expanded panel reads as distinct (esp. stacked on mobile) */
+  .detail-drawer {{ grid-column:1 / -1; background:#242422; border:1px solid var(--hair);
+    border-radius:16px; overflow:hidden; max-height:0; transition:max-height .34s ease; }}
+  .detail-drawer > .detail {{ margin-top:0; border-top:0; padding:24px 26px 20px; }}
+  /* whole collapsed card is clickable */
+  .tile[data-id] {{ cursor:pointer; }}
+  .tile[data-id]:not(.open):hover {{ border-color:rgba(255,255,255,0.2); background:#1f1f1e; }}
   .detail[hidden] {{ display:none; }}
   @keyframes reveal {{ from {{ opacity:0; transform:translateY(-4px); }} to {{ opacity:1; transform:none; }} }}
   .chart-head {{ display:flex; justify-content:space-between; align-items:baseline; gap:12px; flex-wrap:wrap; margin-bottom:10px; }}
@@ -1771,15 +1800,20 @@ def build():
   .detail-meta .exp-link:hover {{ color:var(--series-1); }}
   .detail-meta a:hover {{ color:var(--series-1); }}
 
-  footer {{ margin-top:48px; color:var(--muted); font-size:12px; max-width:70ch; }}
+  footer {{ margin-top:52px; border-top:1px solid var(--hair); padding-top:24px;
+           color:var(--muted); font-size:12px; text-align:center; line-height:1.6; }}
   footer a {{ color:var(--secondary); }}
   .built {{ opacity:.6; font-size:11px; margin-top:14px; }}
-  .frozen {{ margin-top:44px; border-top:1px solid var(--line); padding-top:22px; }}
-  .frozen h2 {{ font-size:16px; margin:0 0 6px; }}
-  .fz-def {{ color:var(--muted); font-size:13px; max-width:78ch; margin:0 0 14px; }}
+  .frozen {{ margin-top:44px; background:rgba(255,255,255,0.03); border:1px solid var(--hair);
+            border-radius:14px; padding:22px 24px 8px; }}
+  .frozen h2 {{ font-size:15px; margin:0 0 6px; }}
+  .fz-def {{ color:var(--muted); font-size:13px; max-width:none; margin:0 0 16px; }}
+  .frozen a {{ color:var(--secondary); text-decoration:underline; text-underline-offset:2px; }}
+  .frozen a:hover {{ color:var(--primary); }}
   .fz-table {{ width:100%; border-collapse:collapse; font-size:13px; }}
-  .fz-table th {{ text-align:left; color:var(--muted); font-weight:600; padding:6px 10px 6px 0; border-bottom:1px solid var(--line); }}
-  .fz-table td {{ padding:8px 10px 8px 0; border-bottom:1px solid var(--line); vertical-align:top; }}
+  .fz-table th {{ text-align:left; color:var(--muted); font-weight:600; padding:6px 12px 8px 0; border-bottom:1px solid var(--hair); }}
+  .fz-table td {{ padding:9px 12px 9px 0; border-bottom:1px solid var(--hair); vertical-align:top; }}
+  .fz-table tbody tr:last-child td {{ border-bottom:0; }}
   .fz-date, .fz-days {{ white-space:nowrap; }}
   .fz-days {{ font-variant-numeric:tabular-nums; }}
   .fz-note {{ color:var(--muted); max-width:52ch; }}
@@ -1788,10 +1822,8 @@ def build():
 <body>
   <div class="wrap">
     <header>
-      <div class="kicker">United States · Trump Administration</div>
-      <h1>The record, tracked in data</h1>
-      <p class="lede">Official, sourced metrics, pulled automatically from government data, shown with history and comparisons. Every number links to its primary source. You draw the conclusions.</p>
-      <div class="pilot">Pilot · {live} of {TOTAL_PLANNED} planned metrics</div>
+      <h1><span class="h1-accent">Trump</span> by Numbers</h1>
+      <p class="lede">The administration's record, in official numbers. Sourced, dated, updated automatically.</p>
     </header>
     <nav class="tabs" id="tabs" aria-label="Categories">{tabs_html}</nav>
     <main>
@@ -1799,8 +1831,7 @@ def build():
     </main>
     {frozen_strip()}
     <footer>
-      Each figure is collected automatically from an authoritative source and shown against a comparison so a single number has context. Favourable and unfavourable numbers are shown alike, and nothing is removed when it moves in either direction. Each card shows its own data date and flags itself when a figure is older than its source's normal update schedule. Expanded charts show the full stored history, gaps in official publication render as gaps, definition changes are marked on the chart, and every chart can be read as a table or downloaded as the exact data served.
-      <div class="built">Site rebuilt {built}. Freshness is judged per metric (see each card's date), not by this build time.</div>
+      Every number links to its official source. Favourable and unfavourable figures alike. No metric is removed based on which way it moves.
     </footer>
   </div>
   <script>
