@@ -13,10 +13,10 @@
     },
     "Overseas Operations": {
       "deaths": 4,
-      "wounded": 279
+      "wounded": 339
     }
   },
-  "wounded_total": 697,
+  "wounded_total": 757,
   "source": {
     "name": "Defense Casualty Analysis System (DMDC)",
     "url": "https://dcas.dmdc.osd.mil/dcas/conflictCasualties"
