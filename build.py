@@ -1965,7 +1965,7 @@ def build():
   @media (prefers-color-scheme: light) {{ :root:not([data-theme]) {{ {light_tokens} }} }}
   :root[data-theme="light"] {{ {light_tokens} }}
   :root[data-theme="dark"] {{ {dark_tokens} }}
-  html {{ background:var(--plane); }}
+  html {{ background:var(--plane); -webkit-tap-highlight-color:transparent; }}
   * {{ box-sizing:border-box; }}
   body {{
     margin:0; background:var(--plane); color:var(--primary);
@@ -2108,9 +2108,10 @@ def build():
   .legend {{ display:flex; gap:14px; flex-wrap:wrap; margin:0 0 8px; }}
   .lg {{ display:flex; align-items:center; gap:7px; font-size:12px; color:var(--secondary); font-weight:550; }}
   .lg .key {{ width:14px; height:0; border-top:2.5px solid; border-radius:2px; }}
-  .chart-box {{ position:relative; outline:none; border-radius:8px; }}
+  .chart-box {{ position:relative; outline:none; border-radius:8px;
+    -webkit-user-select:none; user-select:none; -webkit-touch-callout:none; touch-action:none; }}
   .chart-box:focus-visible {{ box-shadow:0 0 0 2px var(--focus); }}
-  .chart-box svg {{ display:block; }}
+  .chart-box svg {{ display:block; touch-action:none; }}
   .chart-box svg text {{ font-family:inherit; }}
   .tooltip {{ position:absolute; pointer-events:none; background:var(--tooltip); border:1px solid var(--hair);
              border-radius:10px; padding:8px 11px; font-size:12px; display:none; z-index:5;
