@@ -2141,11 +2141,15 @@
       var h = det.offsetHeight;
       requestAnimationFrame(function () { openDrawer.style.maxHeight = (h + 48) + 'px'; });
       setTimeout(function () { if (openCard === card && openDrawer) openDrawer.style.maxHeight = 'none'; }, 360);
-      if (scroll) setTimeout(function () { card.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 60);
+      if (scroll) setTimeout(function () {
+        var y = card.getBoundingClientRect().top + window.pageYOffset - 12;
+        window.scrollTo({ top: y, behavior: 'smooth' });
+      }, 60);
     });
   }
   function toggleDrawer(card) {
-    if (openCard === card) closeOpen(false); else openCardDrawer(card, false);
+    // opening scrolls the card up so the drawer that opens beneath it is in view
+    if (openCard === card) closeOpen(false); else openCardDrawer(card, true);
   }
   document.querySelectorAll('.tile[data-id]').forEach(function (card) {
     card._detail = card.querySelector('.detail');
@@ -2184,6 +2188,27 @@
       activate(slug, bar && window.scrollY > bar.offsetTop);
     });
   });
+
+  /* ---------- "i" button: jump to the footer page-links ---------- */
+  var infoBtn = document.getElementById('infoScroll');
+  if (infoBtn) infoBtn.addEventListener('click', function () {
+    window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+  });
+
+  /* ---------- tab bar overflow cue: fade the edge(s) that have more tabs ---------- */
+  (function () {
+    var bar = document.getElementById('tabs');
+    if (!bar || !bar.parentNode) return;
+    var wrap = bar.parentNode;
+    function upd() {
+      var max = bar.scrollWidth - bar.clientWidth;
+      wrap.classList.toggle('more-right', bar.scrollLeft < max - 1);
+      wrap.classList.toggle('more-left', bar.scrollLeft > 1);
+    }
+    bar.addEventListener('scroll', upd, { passive: true });
+    window.addEventListener('resize', upd);
+    upd();
+  })();
   function route() {
     var h = location.hash || '';
     closeOpen(true);
