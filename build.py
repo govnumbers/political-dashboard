@@ -1973,7 +1973,7 @@ def build():
     -webkit-font-smoothing:antialiased;
   }}
   .wrap {{ max-width:1080px; margin:0 auto; padding:0 24px; }}
-  .wrap-hero {{ padding-top:56px; padding-bottom:16px; }}
+  .wrap-hero {{ padding-top:56px; padding-bottom:10px; }}
   .sb-inner {{ padding-top:0; padding-bottom:0; }}
   .wrap-main {{ padding-bottom:80px; }}
   #sbSentinel {{ height:0; }}
@@ -1989,13 +1989,13 @@ def build():
   .head-ctrls {{ display:flex; gap:8px; flex:0 0 auto; }}
   .head-ctrls .theme-toggle {{ float:none; margin:0; }}
   /* ---- sticky condensing header: hero scrolls away, this bar pins ---- */
-  #hero {{ position:relative; }}
+  #hero {{ position:relative; margin-bottom:0; }}
   #hero .head-ctrls {{ float:right; margin-left:18px; }}
   .stickybar {{ position:sticky; top:0; z-index:30; background:transparent; padding:8px 0;
     transition:background .2s ease, box-shadow .2s ease; }}
   .stickybar.stuck {{ background:var(--surface); border-bottom:1px solid var(--hair); box-shadow:0 4px 14px var(--shadow); }}
-  .sb-top {{ display:flex; align-items:center; justify-content:space-between; gap:12px; min-height:0; }}
-  .stickybar.stuck .sb-top {{ min-height:38px; }}
+  .sb-top {{ display:flex; align-items:center; justify-content:space-between; gap:12px; min-height:38px; }}
+  .stickybar:not(.stuck) .sb-top {{ display:none; }}   /* nothing to show here until pinned */
   .stickybar .tabs-wrap {{ margin:9px 0 0; }}
   .mini-title {{ font-family:Georgia,"Iowan Old Style","Palatino Linotype","Book Antiqua",serif;
     font-weight:700; font-size:20px; letter-spacing:-0.01em; line-height:1; color:var(--primary);
