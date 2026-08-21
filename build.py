@@ -1568,6 +1568,260 @@ def frozen_strip(today=None):
     </section>"""
 
 
+# ---------------------------------------------------------------------------
+# Phase 4: meta pages (About/methodology, Support, Contact), footer nav,
+# security headers and the cookieless analytics beacon. These reuse the same
+# theme tokens as the board so light/dark and the serif hero match exactly.
+# ---------------------------------------------------------------------------
+REPO_URL        = "https://github.com/neonatlas1/political-dashboard"
+DISCUSSIONS_URL = "https://github.com/neonatlas1/political-dashboard/discussions"
+KOFI_URL        = "https://ko-fi.com/trumpbynumbers"
+SPONSORS_URL    = "https://github.com/sponsors/neonatlas1"
+TALLY_EMBED     = "https://tally.so/embed/J9EW5Y?alignLeft=1&hideTitle=1"
+
+# The site's single external script: cookieless Cloudflare Web Analytics. Baked
+# before </body> on every page so each path (/, /methodology, /support, /contact)
+# is counted. Snippet is exactly the one from brief 12.
+BEACON = ("""<!-- Cloudflare Web Analytics --><script type="module" """
+          """src="https://static.cloudflareinsights.com/beacon.min.js" """
+          """data-cf-beacon='{"token": "d38cfd52e6ef4782a773d0e7b1f2e212"}'>"""
+          """</script><!-- End Cloudflare Web Analytics -->""")
+
+_ICON_SUN = ('<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" '
+    'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"></circle>'
+    '<path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"></path></svg>')
+_ICON_MOON = ('<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" '
+    'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"></path></svg>')
+
+# Standalone theme toggle for the meta pages (the board's copy lives inside
+# chart.js, which these pages don't load). Same behaviour: system-follow by
+# default via CSS, on-page toggle forces a theme for the visit via data-theme,
+# resets on reload (no storage).
+_META_TOGGLE_JS = ("""<script>
+(function () {
+  var ROOT = document.documentElement;
+  ROOT.classList.remove('no-js');
+  var mq = window.matchMedia ? window.matchMedia('(prefers-color-scheme: light)') : null;
+  function eff() {
+    var t = ROOT.getAttribute('data-theme');
+    if (t === 'light' || t === 'dark') return t;
+    return (mq && mq.matches) ? 'light' : 'dark';
+  }
+  var SUN = '""" + _ICON_SUN + """';
+  var MOON = '""" + _ICON_MOON + """';
+  var btn = document.getElementById('themeToggle');
+  function upd() {
+    if (!btn) return;
+    var light = eff() === 'light';
+    btn.innerHTML = light ? MOON : SUN;
+    btn.setAttribute('aria-label', light ? 'Switch to dark theme' : 'Switch to light theme');
+    btn.setAttribute('aria-pressed', light ? 'true' : 'false');
+  }
+  if (btn) btn.addEventListener('click', function () {
+    ROOT.setAttribute('data-theme', eff() === 'dark' ? 'light' : 'dark');
+    upd();
+  });
+  if (mq) {
+    var onSys = function () { if (!ROOT.getAttribute('data-theme')) upd(); };
+    if (mq.addEventListener) mq.addEventListener('change', onSys);
+    else if (mq.addListener) mq.addListener(onSys);
+  }
+  upd();
+})();
+</script>""")
+
+_META_CSS = """
+  :root { %%DARK%% }
+  @media (prefers-color-scheme: light) { :root:not([data-theme]) { %%LIGHT%% } }
+  :root[data-theme="light"] { %%LIGHT%% }
+  :root[data-theme="dark"] { %%DARK%% }
+  html { background:var(--plane); }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--plane); color:var(--primary);
+    font-family:system-ui,-apple-system,"Segoe UI",sans-serif; line-height:1.5;
+    -webkit-font-smoothing:antialiased; }
+  .wrap { max-width:720px; margin:0 auto; padding:56px 24px 80px; }
+  header { margin-bottom:28px; }
+  .theme-toggle { float:right; margin:2px 0 8px 18px; width:38px; height:38px; padding:0;
+                  display:inline-flex; align-items:center; justify-content:center;
+                  background:var(--panel); border:1px solid var(--hair); border-radius:10px;
+                  color:var(--secondary); cursor:pointer; transition:color .15s ease, border-color .15s ease; }
+  .theme-toggle:hover { color:var(--primary); border-color:var(--hair-strong); }
+  .theme-toggle:focus-visible { outline:none; box-shadow:0 0 0 2px var(--focus); }
+  .theme-toggle svg { width:18px; height:18px; display:block; }
+  .no-js .theme-toggle { display:none; }
+  .brand { display:inline-block; font-size:13px; font-weight:600; letter-spacing:.01em;
+           color:var(--muted); text-decoration:none; margin-bottom:14px; }
+  .brand:hover { color:var(--series-1); }
+  h1 { font-family:Georgia,"Iowan Old Style","Palatino Linotype","Book Antiqua",serif;
+       font-size:clamp(38px,6vw,58px); font-weight:700; margin:0 0 12px;
+       letter-spacing:-0.015em; line-height:1.04; }
+  .lede { color:var(--secondary); margin:0; font-size:15.5px; max-width:56ch; }
+  .page { margin-top:6px; }
+  .block { padding:22px 0; border-top:1px solid var(--hair); }
+  .block:first-child { border-top:0; padding-top:12px; }
+  .eyebrow { font-size:12px; letter-spacing:.12em; text-transform:uppercase; font-weight:600;
+             color:var(--muted); margin:0 0 9px; }
+  .block p { margin:0 0 11px; color:var(--secondary); font-size:15.5px; line-height:1.62; }
+  .block p:last-child { margin-bottom:0; }
+  .block a { color:var(--series-1); text-decoration:none; }
+  .block a:hover { text-decoration:underline; }
+  .btn-row { display:flex; gap:12px; flex-wrap:wrap; margin:4px 0 2px; }
+  .btn { display:inline-flex; align-items:center; gap:8px; padding:11px 18px; border-radius:12px;
+         font-size:14px; font-weight:600; text-decoration:none; border:1px solid var(--hair-strong);
+         color:var(--primary); background:var(--panel); transition:border-color .15s ease, color .15s ease; }
+  .btn:hover { border-color:var(--series-1); color:var(--series-1); text-decoration:none; }
+  .btn.primary { background:var(--series-1); border-color:var(--series-1); color:#fff; }
+  .btn.primary:hover { color:#fff; opacity:.92; }
+  ul.help { list-style:none; padding:0; margin:4px 0 0; }
+  ul.help li { padding:10px 0; border-top:1px solid var(--hair-faint); color:var(--secondary);
+               font-size:15.5px; line-height:1.55; }
+  ul.help li:first-child { border-top:0; }
+  ul.help b { color:var(--primary); font-weight:600; }
+  ul.help a { color:var(--series-1); text-decoration:none; }
+  ul.help a:hover { text-decoration:underline; }
+  .form-embed { margin-top:2px; border:1px solid var(--hair); border-radius:14px; overflow:hidden;
+                background:#fff; }
+  .form-embed iframe { display:block; width:100%; border:0; }
+  footer { margin-top:52px; border-top:1px solid var(--hair); padding-top:24px;
+           color:var(--muted); font-size:12px; text-align:center; line-height:1.7; }
+  footer a { color:var(--secondary); text-decoration:none; }
+  footer a:hover { color:var(--series-1); }
+  .footer-nav { margin-bottom:8px; }
+  .footer-nav a, .footer-nav span { margin:0 5px; }
+  .footer-nav [aria-current] { color:var(--muted); }
+  .built { opacity:.6; font-size:11px; }
+"""
+
+
+def _footer_nav(current):
+    """Footer meta-nav for the sub-pages: Home + the three pages, current one flat."""
+    items = [("/", "Home"), ("/methodology", "About"),
+             ("/support", "Support"), ("/contact", "Contact")]
+    parts = []
+    for href, label in items:
+        if href == current:
+            parts.append(f'<span aria-current="page">{label}</span>')
+        else:
+            parts.append(f'<a href="{href}">{label}</a>')
+    return '<div class="footer-nav">' + ' · '.join(parts) + '</div>'
+
+
+def render_meta_page(current, title, hero, lede, desc, content, dark_tokens, light_tokens):
+    """A standalone page that matches the board's visual system (serif hero,
+    light/dark tokens, theme toggle) but carries no charts/tabs/drawers."""
+    css = _META_CSS.replace("%%DARK%%", dark_tokens).replace("%%LIGHT%%", light_tokens)
+    return f"""<!doctype html>
+<html lang="en" class="no-js">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{title} · Trump by Numbers</title>
+<meta name="description" content="{desc}">
+<style>{css}</style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <button class="theme-toggle" id="themeToggle" type="button" aria-label="Switch to light theme" aria-pressed="false"></button>
+      <a class="brand" href="/">Trump by Numbers</a>
+      <h1>{hero}</h1>
+      <p class="lede">{lede}</p>
+    </header>
+    <main class="page">
+      {content}
+    </main>
+    <footer>
+      {_footer_nav(current)}
+      <div class="built">Trump by Numbers</div>
+    </footer>
+  </div>
+  {_META_TOGGLE_JS}
+  {BEACON}
+</body>
+</html>"""
+
+
+def _about_content():
+    return f"""
+      <section class="block">
+        <p class="eyebrow">What this is</p>
+        <p>Trump by Numbers tracks the record of the Trump administration using official statistics. Every number comes from a primary government source, it's dated, and it's shown with its history, so you can see how it's changed over time and not just where it stands today.</p>
+      </section>
+      <section class="block">
+        <p class="eyebrow">How we pick metrics</p>
+        <p>We decide which metrics to show based on what we think matters, not on the direction they happen to point in. If there isn't a reliable official source for a number, we don't include it.</p>
+      </section>
+      <section class="block">
+        <p class="eyebrow">How we handle the numbers</p>
+        <p>The numbers themselves are shown as they are. Each one is sourced, dated, and plotted over time, usually next to previous administrations at the same point. Figures that look good and figures that look bad are both there. We don't take a metric down because it's started to look better, and when the official data has gaps, we leave them visible rather than fill them in with estimates.</p>
+      </section>
+      <section class="block">
+        <p class="eyebrow">What this isn't</p>
+        <p>This isn't a neutral utility, and it isn't an attack site. We have a clear view on which measures of a presidency are worth paying attention to, but not on the numbers themselves, and we don't add any commentary or narrative on top of them.</p>
+      </section>
+      <section class="block">
+        <p class="eyebrow">How it runs</p>
+        <p>The board updates itself from official sources every day, and it's <a href="{REPO_URL}" target="_blank" rel="noopener">open source</a>, so you can look at the code and the data behind any number yourself. If you notice a mistake or something that looks wrong, <a href="/contact">let us know</a>.</p>
+      </section>"""
+
+
+def _support_content():
+    return f"""
+      <section class="block">
+        <p>If you find the site useful and want to support it, you can leave a one-off tip. Thanks for considering it.</p>
+        <div class="btn-row">
+          <a class="btn primary" href="{KOFI_URL}" target="_blank" rel="noopener"><svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>Tip on Ko-fi</a>
+          <a class="btn" href="{SPONSORS_URL}" target="_blank" rel="noopener">Sponsor on GitHub</a>
+        </div>
+      </section>
+      <section class="block">
+        <p class="eyebrow">Free ways to help</p>
+        <ul class="help">
+          <li><b>Share a card.</b> It's mostly word of mouth that brings people here.</li>
+          <li><b>Star the <a href="{REPO_URL}" target="_blank" rel="noopener">repo on GitHub</a>.</b> It helps more people find it.</li>
+          <li><b>Suggest a metric.</b> If there's something official and important we're missing, <a href="/contact">let us know</a>.</li>
+          <li><b>Check the numbers.</b> If a source looks wrong or out of date, <a href="/contact">tell us</a>.</li>
+        </ul>
+      </section>"""
+
+
+def _contact_content():
+    return f"""
+      <section class="block">
+        <div class="form-embed">
+          <iframe src="{TALLY_EMBED}" title="Contact form" height="640" loading="lazy"></iframe>
+        </div>
+        <p style="margin-top:18px;">You can also post publicly or start a discussion on <a href="{DISCUSSIONS_URL}" target="_blank" rel="noopener">GitHub Discussions</a>.</p>
+      </section>"""
+
+
+def _headers_text():
+    """Cloudflare Pages security headers. One CSP for all paths; it permits the
+    analytics beacon (script + connect) and the Tally form frame on /contact,
+    and otherwise keeps the site locked to itself. chart.js is inlined into the
+    page, so script-src carries 'unsafe-inline'."""
+    csp = ("default-src 'self'; "
+           "script-src 'self' 'unsafe-inline' https://static.cloudflareinsights.com; "
+           "style-src 'self' 'unsafe-inline'; "
+           "img-src 'self' data:; "
+           "font-src 'self'; "
+           "connect-src 'self' https://cloudflareinsights.com; "
+           "frame-src https://tally.so; "
+           "frame-ancestors 'none'; "
+           "base-uri 'self'; "
+           "form-action 'self'; "
+           "object-src 'none'")
+    return (
+        "/*\n"
+        "  X-Frame-Options: DENY\n"
+        "  X-Content-Type-Options: nosniff\n"
+        "  Referrer-Policy: strict-origin-when-cross-origin\n"
+        "  Permissions-Policy: geolocation=(), microphone=(), camera=(), payment=(), usb=()\n"
+        f"  Content-Security-Policy: {csp}\n"
+    )
+
+
 def build():
     loaded = {}
     for f in glob.glob(os.path.join(DATA, "*.json")):
@@ -1856,6 +2110,9 @@ def build():
   footer {{ margin-top:52px; border-top:1px solid var(--hair); padding-top:24px;
            color:var(--muted); font-size:12px; text-align:center; line-height:1.6; }}
   footer a {{ color:var(--secondary); }}
+  .footer-nav {{ margin-top:12px; }}
+  .footer-nav a {{ margin:0 5px; text-decoration:none; }}
+  .footer-nav a:hover {{ color:var(--series-1); }}
   .built {{ opacity:.6; font-size:11px; margin-top:14px; }}
   .frozen {{ margin-top:44px; background:var(--panel); border:1px solid var(--hair);
             border-radius:14px; padding:22px 24px 8px; }}
@@ -1886,11 +2143,13 @@ def build():
     {frozen_strip()}
     <footer>
       Every number links to its official source. Favourable and unfavourable figures alike. No metric is removed based on which way it moves.
+      <div class="footer-nav"><a href="/methodology">About</a> · <a href="/support">Support</a> · <a href="/contact">Contact</a></div>
     </footer>
   </div>
   <script>
 %%CHARTJS%%
   </script>
+  {BEACON}
 </body>
 </html>"""
     html = html.replace("%%CHARTJS%%", chart_js)
@@ -1900,6 +2159,36 @@ def build():
           f"{len(expandable)} expandable, {len(os.listdir(SITE_D))} series payloads)")
     if payload_fail:
         print(f"  ! {len(payload_fail)} payload(s) failed, board still shipped")
+
+    # ---- phase 4: meta pages + security headers (into the build output dir) ----
+    site_dir = os.path.dirname(OUT)
+    meta_pages = [
+        ("methodology.html", "/methodology",
+         "About", "About",
+         "What this site is, and how it works.",
+         "How Trump by Numbers is built, sourced, and kept factual: official primary sources, shown with history, chosen for importance not direction.",
+         _about_content()),
+        ("support.html", "/support",
+         "Support", "Support",
+         "The site is free to use. If you'd like to help keep it going, here's how.",
+         "Support Trump by Numbers: a one-off tip on Ko-fi or GitHub Sponsors, or free ways to help like sharing a card or suggesting a metric.",
+         _support_content()),
+        ("contact.html", "/contact",
+         "Contact", "Say hello",
+         "Ask a question. Suggest a metric. Share feedback.",
+         "Contact Trump by Numbers: suggest a metric, send feedback, or discuss the numbers in public on GitHub Discussions.",
+         _contact_content()),
+    ]
+    for fname, current, title, hero, lede, desc, content in meta_pages:
+        page = render_meta_page(current, title, hero, lede, desc, content,
+                                dark_tokens, light_tokens)
+        with open(os.path.join(site_dir, fname), "w") as f:
+            f.write(page)
+        print("wrote", os.path.join(site_dir, fname), f"({len(page)} bytes)")
+
+    with open(os.path.join(site_dir, "_headers"), "w") as f:
+        f.write(_headers_text())
+    print("wrote", os.path.join(site_dir, "_headers"))
 
 
 if __name__ == "__main__":
