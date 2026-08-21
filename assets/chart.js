@@ -871,6 +871,7 @@
     var mini = document.getElementById('miniTitle');
     var ctrls = document.getElementById('headCtrls');
     var sbTop = sb ? sb.querySelector('.sb-top') : null;
+    var sentinel = document.getElementById('sbSentinel');
     var isStuck = null;
     function place(stuck) {
       if (stuck === isStuck) return;
@@ -884,17 +885,22 @@
       }
     }
     if (sb && hero) {
-      var ticking = false;
-      function onScroll() {
-        if (ticking) return;
-        ticking = true;
-        requestAnimationFrame(function () {
-          place(window.pageYOffset > (hero.offsetHeight - 6));
-          ticking = false;
-        });
+      place(false);   // start with controls in the hero
+      if (sentinel && 'IntersectionObserver' in window) {
+        new IntersectionObserver(function (es) {
+          place(!es[0].isIntersecting);
+        }, { threshold: 0 }).observe(sentinel);
+      } else {
+        var ticking = false;
+        window.addEventListener('scroll', function () {
+          if (ticking) return;
+          ticking = true;
+          requestAnimationFrame(function () {
+            place(window.pageYOffset > sb.offsetTop + 4);
+            ticking = false;
+          });
+        }, { passive: true });
       }
-      window.addEventListener('scroll', onScroll, { passive: true });
-      onScroll();
     }
     if (mini) mini.addEventListener('click', function () {
       window.scrollTo({ top: 0, behavior: 'smooth' });
