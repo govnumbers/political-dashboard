@@ -1972,7 +1972,11 @@ def build():
     font-family:system-ui,-apple-system,"Segoe UI",sans-serif; line-height:1.5;
     -webkit-font-smoothing:antialiased;
   }}
-  .wrap {{ max-width:1080px; margin:0 auto; padding:56px 24px 80px; }}
+  .wrap {{ max-width:1080px; margin:0 auto; padding:0 24px; }}
+  .wrap-hero {{ padding-top:56px; padding-bottom:16px; }}
+  .sb-inner {{ padding-top:0; padding-bottom:0; }}
+  .wrap-main {{ padding-bottom:80px; }}
+  #sbSentinel {{ height:0; }}
   header {{ margin-bottom:36px; }}
   .theme-toggle {{ float:right; margin:2px 0 8px 18px; width:38px; height:38px; padding:0;
                   display:inline-flex; align-items:center; justify-content:center;
@@ -1985,10 +1989,11 @@ def build():
   .head-ctrls {{ display:flex; gap:8px; flex:0 0 auto; }}
   .head-ctrls .theme-toggle {{ float:none; margin:0; }}
   /* ---- sticky condensing header: hero scrolls away, this bar pins ---- */
-  #hero {{ position:relative; margin-bottom:16px; }}
+  #hero {{ position:relative; }}
   #hero .head-ctrls {{ float:right; margin-left:18px; }}
-  .stickybar {{ position:sticky; top:0; z-index:30; background:var(--plane); padding:8px 0; }}
-  .stickybar.stuck {{ border-bottom:1px solid var(--hair); box-shadow:0 4px 14px var(--shadow); }}
+  .stickybar {{ position:sticky; top:0; z-index:30; background:transparent; padding:8px 0;
+    transition:background .2s ease, box-shadow .2s ease; }}
+  .stickybar.stuck {{ background:var(--surface); border-bottom:1px solid var(--hair); box-shadow:0 4px 14px var(--shadow); }}
   .sb-top {{ display:flex; align-items:center; justify-content:space-between; gap:12px; min-height:0; }}
   .stickybar.stuck .sb-top {{ min-height:38px; }}
   .stickybar .tabs-wrap {{ margin:9px 0 0; }}
@@ -2045,6 +2050,8 @@ def build():
           pointer-events:none; opacity:0; transition:opacity .18s ease; z-index:1; border-radius:12px; }}
   .tabs-wrap::after {{ right:0; background:linear-gradient(to right, transparent, var(--plane)); }}
   .tabs-wrap::before {{ left:0; background:linear-gradient(to left, transparent, var(--plane)); }}
+  .stickybar.stuck .tabs-wrap::after {{ background:linear-gradient(to right, transparent, var(--surface)); }}
+  .stickybar.stuck .tabs-wrap::before {{ background:linear-gradient(to left, transparent, var(--surface)); }}
   .tabs-wrap.more-right::after {{ opacity:1; }}
   .tabs-wrap.more-left::before {{ opacity:1; }}
   .tabs {{ display:flex; gap:3px; margin:0; padding:4px; background:var(--tab-track);
@@ -2165,12 +2172,15 @@ def build():
 </style>
 </head>
 <body>
-  <div class="wrap">
+  <div class="wrap wrap-hero">
     <header id="hero">
       <h1><span class="h1-accent">Trump</span> by Numbers</h1>
       <p class="lede">The administration's record, in data.</p>
     </header>
-    <div class="stickybar" id="stickybar">
+  </div>
+  <div id="sbSentinel"></div>
+  <div class="stickybar" id="stickybar">
+    <div class="wrap sb-inner">
       <div class="sb-top">
         <button class="mini-title" id="miniTitle" type="button" aria-label="Back to top"><span class="h1-accent">Trump</span> by Numbers</button>
         <div class="head-ctrls" id="headCtrls">
@@ -2180,6 +2190,8 @@ def build():
       </div>
       <div class="tabs-wrap"><nav class="tabs" id="tabs" aria-label="Categories">{tabs_html}</nav></div>
     </div>
+  </div>
+  <div class="wrap wrap-main">
     <main>
       {body}
     </main>
