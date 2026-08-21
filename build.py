@@ -1733,7 +1733,6 @@ def render_meta_page(current, title, hero, lede, desc, content, dark_tokens, lig
     </main>
     <footer>
       {_footer_nav(current)}
-      <div class="built">Trump by Numbers</div>
     </footer>
   </div>
   {_META_TOGGLE_JS}
@@ -2134,7 +2133,7 @@ def build():
     <header>
       <button class="theme-toggle" id="themeToggle" type="button" aria-label="Switch to light theme" aria-pressed="false"></button>
       <h1><span class="h1-accent">Trump</span> by Numbers</h1>
-      <p class="lede">The administration's record, in official numbers. Sourced, dated, updated automatically.</p>
+      <p class="lede">The administration's record, in data.</p>
     </header>
     <nav class="tabs" id="tabs" aria-label="Categories">{tabs_html}</nav>
     <main>
@@ -2142,7 +2141,6 @@ def build():
     </main>
     {frozen_strip()}
     <footer>
-      Every number links to its official source. Favourable and unfavourable figures alike. No metric is removed based on which way it moves.
       <div class="footer-nav"><a href="/methodology">About</a> · <a href="/support">Support</a> · <a href="/contact">Contact</a></div>
     </footer>
   </div>
