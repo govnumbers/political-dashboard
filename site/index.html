@@ -29,6 +29,8 @@
   .theme-toggle:focus-visible { outline:none; box-shadow:0 0 0 2px var(--focus); }
   .theme-toggle svg { width:18px; height:18px; display:block; }
   .no-js .theme-toggle { display:none; }
+  .head-ctrls { float:right; display:flex; gap:8px; margin:2px 0 8px 18px; }
+  .head-ctrls .theme-toggle { float:none; margin:0; }
   .kicker { color:var(--series-1); font-size:12px; letter-spacing:.14em; text-transform:uppercase; font-weight:600; }
   h1 { font-family:Georgia,"Iowan Old Style","Palatino Linotype","Book Antiqua",serif;
        font-size:clamp(42px,7.5vw,68px); font-weight:700; margin:0 0 14px;
@@ -71,7 +73,14 @@
   .tile-foot a { color:var(--secondary); text-decoration:none; font-weight:550; }
   .tile-foot a:hover { color:var(--series-1); }
   /* ---- category tabs (All default; JS-off shows the whole board) ---- */
-  .tabs { display:flex; gap:3px; margin:28px 0 4px; padding:4px; background:var(--tab-track);
+  .tabs-wrap { position:relative; margin:28px 0 4px; }
+  .tabs-wrap::before, .tabs-wrap::after { content:""; position:absolute; top:0; bottom:0; width:40px;
+          pointer-events:none; opacity:0; transition:opacity .18s ease; z-index:1; border-radius:12px; }
+  .tabs-wrap::after { right:0; background:linear-gradient(to right, transparent, var(--plane)); }
+  .tabs-wrap::before { left:0; background:linear-gradient(to left, transparent, var(--plane)); }
+  .tabs-wrap.more-right::after { opacity:1; }
+  .tabs-wrap.more-left::before { opacity:1; }
+  .tabs { display:flex; gap:3px; margin:0; padding:4px; background:var(--tab-track);
           border:1px solid var(--hair); border-radius:12px; overflow-x:auto; scrollbar-width:none; }
   .tabs::-webkit-scrollbar { display:none; }
   .tab { flex:1 0 auto; white-space:nowrap; text-align:center; font-size:13px; font-weight:600;
@@ -191,11 +200,14 @@
 <body>
   <div class="wrap">
     <header>
-      <button class="theme-toggle" id="themeToggle" type="button" aria-label="Switch to light theme" aria-pressed="false"></button>
+      <div class="head-ctrls">
+        <button class="theme-toggle" id="infoScroll" type="button" aria-label="Jump to page links"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9.5"></circle><path d="M12 11v5"></path><path d="M12 7.6h.01"></path></svg></button>
+        <button class="theme-toggle" id="themeToggle" type="button" aria-label="Switch to light theme" aria-pressed="false"></button>
+      </div>
       <h1><span class="h1-accent">Trump</span> by Numbers</h1>
       <p class="lede">The administration's record, in data.</p>
     </header>
-    <nav class="tabs" id="tabs" aria-label="Categories"><button class="tab active" type="button" data-tab="all">All</button><button class="tab" type="button" data-tab="cost-of-living">Prices</button><button class="tab" type="button" data-tab="economy-jobs">Economy</button><button class="tab" type="button" data-tab="trade-tariffs">Trade</button><button class="tab" type="button" data-tab="public-finances">Finances</button><button class="tab" type="button" data-tab="energy">Energy</button><button class="tab" type="button" data-tab="immigration">Immigration</button><button class="tab" type="button" data-tab="health-safety-net">Health</button><button class="tab" type="button" data-tab="executive-power-governance">Governance</button><button class="tab" type="button" data-tab="war-defense">Defense</button></nav>
+    <div class="tabs-wrap"><nav class="tabs" id="tabs" aria-label="Categories"><button class="tab active" type="button" data-tab="all">All</button><button class="tab" type="button" data-tab="cost-of-living">Prices</button><button class="tab" type="button" data-tab="economy-jobs">Economy</button><button class="tab" type="button" data-tab="trade-tariffs">Trade</button><button class="tab" type="button" data-tab="public-finances">Finances</button><button class="tab" type="button" data-tab="energy">Energy</button><button class="tab" type="button" data-tab="immigration">Immigration</button><button class="tab" type="button" data-tab="health-safety-net">Health</button><button class="tab" type="button" data-tab="executive-power-governance">Governance</button><button class="tab" type="button" data-tab="war-defense">Defense</button></nav></div>
     <main>
       
       <section class="category" data-tab="cost-of-living" id="cost-of-living">
