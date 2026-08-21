@@ -1592,6 +1592,10 @@ _ICON_SUN = ('<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-
     '<path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"></path></svg>')
 _ICON_MOON = ('<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" '
     'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"></path></svg>')
+# Static "info" glyph for the button that jumps to the footer page-links.
+_ICON_INFO = ('<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" '
+    'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9.5"></circle>'
+    '<path d="M12 11v5"></path><path d="M12 7.6h.01"></path></svg>')
 
 # Standalone theme toggle for the meta pages (the board's copy lives inside
 # chart.js, which these pages don't load). Same behaviour: system-follow by
@@ -1626,6 +1630,10 @@ _META_TOGGLE_JS = ("""<script>
     if (mq.addEventListener) mq.addEventListener('change', onSys);
     else if (mq.addListener) mq.addListener(onSys);
   }
+  var info = document.getElementById('infoScroll');
+  if (info) info.addEventListener('click', function () {
+    window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+  });
   upd();
 })();
 </script>""")
@@ -1650,6 +1658,8 @@ _META_CSS = """
   .theme-toggle:focus-visible { outline:none; box-shadow:0 0 0 2px var(--focus); }
   .theme-toggle svg { width:18px; height:18px; display:block; }
   .no-js .theme-toggle { display:none; }
+  .head-ctrls { float:right; display:flex; gap:8px; margin:2px 0 8px 18px; }
+  .head-ctrls .theme-toggle { float:none; margin:0; }
   .brand { display:inline-block; font-size:13px; font-weight:600; letter-spacing:.01em;
            color:var(--muted); text-decoration:none; margin-bottom:14px; }
   .brand:hover { color:var(--series-1); }
@@ -1723,7 +1733,10 @@ def render_meta_page(current, title, hero, lede, desc, content, dark_tokens, lig
 <body>
   <div class="wrap">
     <header>
-      <button class="theme-toggle" id="themeToggle" type="button" aria-label="Switch to light theme" aria-pressed="false"></button>
+      <div class="head-ctrls">
+        <button class="theme-toggle" id="infoScroll" type="button" aria-label="Jump to page links">{_ICON_INFO}</button>
+        <button class="theme-toggle" id="themeToggle" type="button" aria-label="Switch to light theme" aria-pressed="false"></button>
+      </div>
       <a class="brand" href="/">Trump by Numbers</a>
       <h1>{hero}</h1>
       <p class="lede">{lede}</p>
@@ -1969,6 +1982,8 @@ def build():
   .theme-toggle:focus-visible {{ outline:none; box-shadow:0 0 0 2px var(--focus); }}
   .theme-toggle svg {{ width:18px; height:18px; display:block; }}
   .no-js .theme-toggle {{ display:none; }}
+  .head-ctrls {{ float:right; display:flex; gap:8px; margin:2px 0 8px 18px; }}
+  .head-ctrls .theme-toggle {{ float:none; margin:0; }}
   .kicker {{ color:var(--series-1); font-size:12px; letter-spacing:.14em; text-transform:uppercase; font-weight:600; }}
   h1 {{ font-family:Georgia,"Iowan Old Style","Palatino Linotype","Book Antiqua",serif;
        font-size:clamp(42px,7.5vw,68px); font-weight:700; margin:0 0 14px;
@@ -2011,7 +2026,14 @@ def build():
   .tile-foot a {{ color:var(--secondary); text-decoration:none; font-weight:550; }}
   .tile-foot a:hover {{ color:var(--series-1); }}
   /* ---- category tabs (All default; JS-off shows the whole board) ---- */
-  .tabs {{ display:flex; gap:3px; margin:28px 0 4px; padding:4px; background:var(--tab-track);
+  .tabs-wrap {{ position:relative; margin:28px 0 4px; }}
+  .tabs-wrap::before, .tabs-wrap::after {{ content:""; position:absolute; top:0; bottom:0; width:40px;
+          pointer-events:none; opacity:0; transition:opacity .18s ease; z-index:1; border-radius:12px; }}
+  .tabs-wrap::after {{ right:0; background:linear-gradient(to right, transparent, var(--plane)); }}
+  .tabs-wrap::before {{ left:0; background:linear-gradient(to left, transparent, var(--plane)); }}
+  .tabs-wrap.more-right::after {{ opacity:1; }}
+  .tabs-wrap.more-left::before {{ opacity:1; }}
+  .tabs {{ display:flex; gap:3px; margin:0; padding:4px; background:var(--tab-track);
           border:1px solid var(--hair); border-radius:12px; overflow-x:auto; scrollbar-width:none; }}
   .tabs::-webkit-scrollbar {{ display:none; }}
   .tab {{ flex:1 0 auto; white-space:nowrap; text-align:center; font-size:13px; font-weight:600;
@@ -2131,11 +2153,14 @@ def build():
 <body>
   <div class="wrap">
     <header>
-      <button class="theme-toggle" id="themeToggle" type="button" aria-label="Switch to light theme" aria-pressed="false"></button>
+      <div class="head-ctrls">
+        <button class="theme-toggle" id="infoScroll" type="button" aria-label="Jump to page links">{_ICON_INFO}</button>
+        <button class="theme-toggle" id="themeToggle" type="button" aria-label="Switch to light theme" aria-pressed="false"></button>
+      </div>
       <h1><span class="h1-accent">Trump</span> by Numbers</h1>
       <p class="lede">The administration's record, in data.</p>
     </header>
-    <nav class="tabs" id="tabs" aria-label="Categories">{tabs_html}</nav>
+    <div class="tabs-wrap"><nav class="tabs" id="tabs" aria-label="Categories">{tabs_html}</nav></div>
     <main>
       {body}
     </main>
