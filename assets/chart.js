@@ -463,14 +463,26 @@
       tip.style.top = (g.mt + 8) + 'px';
     }
     function hide() { cross.setAttribute('visibility', 'hidden'); tip.style.display = 'none'; }
-    svg.addEventListener('pointermove', function (ev) {
+    function move(ev) {
       var r = svg.getBoundingClientRect();
       var vx = (ev.clientX - r.left - g.ml) / (g.pw || 1) * (g.x1 - g.x0) + g.x0;
       var bi = 0, bd = Infinity;
       xs.forEach(function (x, i) { var d = Math.abs(x - vx); if (d < bd) { bd = d; bi = i; } });
       show(bi);
+    }
+    // Touch: claim the gesture so the browser doesn't scroll/select/long-press it
+    // away, and capture the pointer so a hold-and-drag keeps tracking the curve.
+    svg.addEventListener('pointerdown', function (ev) {
+      if (ev.pointerType === 'touch') {
+        ev.preventDefault();
+        try { svg.setPointerCapture(ev.pointerId); } catch (e) {}
+      }
+      move(ev);
     });
+    svg.addEventListener('pointermove', move);
     svg.addEventListener('pointerleave', hide);
+    svg.addEventListener('pointerup', function (ev) { if (ev.pointerType === 'touch') hide(); });
+    svg.addEventListener('pointercancel', hide);
     box.tabIndex = 0;
     box.addEventListener('keydown', function (ev) {
       if (ev.key === 'ArrowRight') { show(Math.min(xs.length - 1, (idx < 0 ? xs.length - 1 : idx + 1))); ev.preventDefault(); }
