@@ -1573,8 +1573,8 @@ def frozen_strip(today=None):
 # security headers and the cookieless analytics beacon. These reuse the same
 # theme tokens as the board so light/dark and the serif hero match exactly.
 # ---------------------------------------------------------------------------
-REPO_URL        = "https://github.com/neonatlas1/political-dashboard"
-DISCUSSIONS_URL = "https://github.com/neonatlas1/political-dashboard/discussions"
+REPO_URL        = "https://github.com/neonatlas1/trump-by-numbers"
+DISCUSSIONS_URL = "https://github.com/neonatlas1/trump-by-numbers/discussions"
 KOFI_URL        = "https://ko-fi.com/trumpbynumbers"
 SPONSORS_URL    = "https://github.com/sponsors/neonatlas1"
 TALLY_EMBED     = "https://tally.so/embed/J9EW5Y?alignLeft=1&hideTitle=1"
