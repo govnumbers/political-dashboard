@@ -29,8 +29,20 @@
   .theme-toggle:focus-visible { outline:none; box-shadow:0 0 0 2px var(--focus); }
   .theme-toggle svg { width:18px; height:18px; display:block; }
   .no-js .theme-toggle { display:none; }
-  .head-ctrls { float:right; display:flex; gap:8px; margin:2px 0 8px 18px; }
+  .head-ctrls { display:flex; gap:8px; flex:0 0 auto; }
   .head-ctrls .theme-toggle { float:none; margin:0; }
+  /* ---- sticky condensing header: hero scrolls away, this bar pins ---- */
+  #hero { margin-bottom:16px; }
+  .stickybar { position:sticky; top:0; z-index:30; background:var(--plane); padding:8px 0; }
+  .stickybar.stuck { border-bottom:1px solid var(--hair); box-shadow:0 4px 14px var(--shadow); }
+  .sb-top { display:flex; align-items:center; justify-content:space-between; gap:12px; min-height:38px; }
+  .stickybar .tabs-wrap { margin:9px 0 0; }
+  .mini-title { font-family:Georgia,"Iowan Old Style","Palatino Linotype","Book Antiqua",serif;
+    font-weight:700; font-size:20px; letter-spacing:-0.01em; line-height:1; color:var(--primary);
+    background:none; border:0; padding:0; cursor:pointer; white-space:nowrap; max-width:0; overflow:hidden;
+    opacity:0; transition:max-width .28s ease, opacity .2s ease; }
+  .stickybar.stuck .mini-title { max-width:320px; opacity:1; }
+  .no-js .stickybar { display:none; }
   .kicker { color:var(--series-1); font-size:12px; letter-spacing:.14em; text-transform:uppercase; font-weight:600; }
   h1 { font-family:Georgia,"Iowan Old Style","Palatino Linotype","Book Antiqua",serif;
        font-size:clamp(42px,7.5vw,68px); font-weight:700; margin:0 0 14px;
@@ -199,15 +211,20 @@
 </head>
 <body>
   <div class="wrap">
-    <header>
-      <div class="head-ctrls">
-        <button class="theme-toggle" id="infoScroll" type="button" aria-label="Jump to page links"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9.5"></circle><path d="M12 11v5"></path><path d="M12 7.6h.01"></path></svg></button>
-        <button class="theme-toggle" id="themeToggle" type="button" aria-label="Switch to light theme" aria-pressed="false"></button>
-      </div>
+    <header id="hero">
       <h1><span class="h1-accent">Trump</span> by Numbers</h1>
       <p class="lede">The administration's record, in data.</p>
     </header>
-    <div class="tabs-wrap"><nav class="tabs" id="tabs" aria-label="Categories"><button class="tab active" type="button" data-tab="all">All</button><button class="tab" type="button" data-tab="cost-of-living">Prices</button><button class="tab" type="button" data-tab="economy-jobs">Economy</button><button class="tab" type="button" data-tab="trade-tariffs">Trade</button><button class="tab" type="button" data-tab="public-finances">Finances</button><button class="tab" type="button" data-tab="energy">Energy</button><button class="tab" type="button" data-tab="immigration">Immigration</button><button class="tab" type="button" data-tab="health-safety-net">Health</button><button class="tab" type="button" data-tab="executive-power-governance">Governance</button><button class="tab" type="button" data-tab="war-defense">Defense</button></nav></div>
+    <div class="stickybar" id="stickybar">
+      <div class="sb-top">
+        <button class="mini-title" id="miniTitle" type="button" aria-label="Back to top"><span class="h1-accent">Trump</span> by Numbers</button>
+        <div class="head-ctrls">
+          <button class="theme-toggle" id="infoScroll" type="button" aria-label="Jump to page links"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9.5"></circle><path d="M12 11v5"></path><path d="M12 7.6h.01"></path></svg></button>
+          <button class="theme-toggle" id="themeToggle" type="button" aria-label="Switch to light theme" aria-pressed="false"></button>
+        </div>
+      </div>
+      <div class="tabs-wrap"><nav class="tabs" id="tabs" aria-label="Categories"><button class="tab active" type="button" data-tab="all">All</button><button class="tab" type="button" data-tab="cost-of-living">Prices</button><button class="tab" type="button" data-tab="economy-jobs">Economy</button><button class="tab" type="button" data-tab="trade-tariffs">Trade</button><button class="tab" type="button" data-tab="public-finances">Finances</button><button class="tab" type="button" data-tab="energy">Energy</button><button class="tab" type="button" data-tab="immigration">Immigration</button><button class="tab" type="button" data-tab="health-safety-net">Health</button><button class="tab" type="button" data-tab="executive-power-governance">Governance</button><button class="tab" type="button" data-tab="war-defense">Defense</button></nav></div>
+    </div>
     <main>
       
       <section class="category" data-tab="cost-of-living" id="cost-of-living">
@@ -2142,7 +2159,9 @@
       requestAnimationFrame(function () { openDrawer.style.maxHeight = (h + 48) + 'px'; });
       setTimeout(function () { if (openCard === card && openDrawer) openDrawer.style.maxHeight = 'none'; }, 360);
       if (scroll) setTimeout(function () {
-        var y = card.getBoundingClientRect().top + window.pageYOffset - 12;
+        var sb = document.getElementById('stickybar');
+        var off = (sb ? sb.offsetHeight : 0) + 12;   // clear the sticky bar
+        var y = card.getBoundingClientRect().top + window.pageYOffset - off;
         window.scrollTo({ top: y, behavior: 'smooth' });
       }, 60);
     });
@@ -2194,6 +2213,29 @@
   if (infoBtn) infoBtn.addEventListener('click', function () {
     window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
   });
+
+  /* ---------- sticky header: condense once the hero scrolls past ---------- */
+  (function () {
+    var sb = document.getElementById('stickybar');
+    var hero = document.getElementById('hero');
+    var mini = document.getElementById('miniTitle');
+    if (sb && hero) {
+      var ticking = false;
+      function onScroll() {
+        if (ticking) return;
+        ticking = true;
+        requestAnimationFrame(function () {
+          sb.classList.toggle('stuck', window.pageYOffset > (hero.offsetHeight - 6));
+          ticking = false;
+        });
+      }
+      window.addEventListener('scroll', onScroll, { passive: true });
+      onScroll();
+    }
+    if (mini) mini.addEventListener('click', function () {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+  })();
 
   /* ---------- tab bar overflow cue: fade the edge(s) that have more tabs ---------- */
   (function () {
