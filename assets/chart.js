@@ -869,13 +869,27 @@
     var sb = document.getElementById('stickybar');
     var hero = document.getElementById('hero');
     var mini = document.getElementById('miniTitle');
+    var ctrls = document.getElementById('headCtrls');
+    var sbTop = sb ? sb.querySelector('.sb-top') : null;
+    var isStuck = null;
+    function place(stuck) {
+      if (stuck === isStuck) return;
+      isStuck = stuck;
+      sb.classList.toggle('stuck', stuck);
+      // controls ride in the hero (top-right of the big title) at rest, and drop
+      // into the pinned bar once it sticks — one set of buttons, moved in place.
+      if (ctrls) {
+        if (stuck) { if (ctrls.parentNode !== sbTop) sbTop.appendChild(ctrls); }
+        else if (ctrls.parentNode !== hero) { hero.insertBefore(ctrls, hero.firstChild); }
+      }
+    }
     if (sb && hero) {
       var ticking = false;
       function onScroll() {
         if (ticking) return;
         ticking = true;
         requestAnimationFrame(function () {
-          sb.classList.toggle('stuck', window.pageYOffset > (hero.offsetHeight - 6));
+          place(window.pageYOffset > (hero.offsetHeight - 6));
           ticking = false;
         });
       }
