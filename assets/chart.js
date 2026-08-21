@@ -809,7 +809,9 @@
       requestAnimationFrame(function () { openDrawer.style.maxHeight = (h + 48) + 'px'; });
       setTimeout(function () { if (openCard === card && openDrawer) openDrawer.style.maxHeight = 'none'; }, 360);
       if (scroll) setTimeout(function () {
-        var y = card.getBoundingClientRect().top + window.pageYOffset - 12;
+        var sb = document.getElementById('stickybar');
+        var off = (sb ? sb.offsetHeight : 0) + 12;   // clear the sticky bar
+        var y = card.getBoundingClientRect().top + window.pageYOffset - off;
         window.scrollTo({ top: y, behavior: 'smooth' });
       }, 60);
     });
@@ -861,6 +863,29 @@
   if (infoBtn) infoBtn.addEventListener('click', function () {
     window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
   });
+
+  /* ---------- sticky header: condense once the hero scrolls past ---------- */
+  (function () {
+    var sb = document.getElementById('stickybar');
+    var hero = document.getElementById('hero');
+    var mini = document.getElementById('miniTitle');
+    if (sb && hero) {
+      var ticking = false;
+      function onScroll() {
+        if (ticking) return;
+        ticking = true;
+        requestAnimationFrame(function () {
+          sb.classList.toggle('stuck', window.pageYOffset > (hero.offsetHeight - 6));
+          ticking = false;
+        });
+      }
+      window.addEventListener('scroll', onScroll, { passive: true });
+      onScroll();
+    }
+    if (mini) mini.addEventListener('click', function () {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+  })();
 
   /* ---------- tab bar overflow cue: fade the edge(s) that have more tabs ---------- */
   (function () {
