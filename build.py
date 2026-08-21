@@ -1985,10 +1985,12 @@ def build():
   .head-ctrls {{ display:flex; gap:8px; flex:0 0 auto; }}
   .head-ctrls .theme-toggle {{ float:none; margin:0; }}
   /* ---- sticky condensing header: hero scrolls away, this bar pins ---- */
-  #hero {{ margin-bottom:16px; }}
+  #hero {{ position:relative; margin-bottom:16px; }}
+  #hero .head-ctrls {{ float:right; margin-left:18px; }}
   .stickybar {{ position:sticky; top:0; z-index:30; background:var(--plane); padding:8px 0; }}
   .stickybar.stuck {{ border-bottom:1px solid var(--hair); box-shadow:0 4px 14px var(--shadow); }}
-  .sb-top {{ display:flex; align-items:center; justify-content:space-between; gap:12px; min-height:38px; }}
+  .sb-top {{ display:flex; align-items:center; justify-content:space-between; gap:12px; min-height:0; }}
+  .stickybar.stuck .sb-top {{ min-height:38px; }}
   .stickybar .tabs-wrap {{ margin:9px 0 0; }}
   .mini-title {{ font-family:Georgia,"Iowan Old Style","Palatino Linotype","Book Antiqua",serif;
     font-weight:700; font-size:20px; letter-spacing:-0.01em; line-height:1; color:var(--primary);
@@ -2171,7 +2173,7 @@ def build():
     <div class="stickybar" id="stickybar">
       <div class="sb-top">
         <button class="mini-title" id="miniTitle" type="button" aria-label="Back to top"><span class="h1-accent">Trump</span> by Numbers</button>
-        <div class="head-ctrls">
+        <div class="head-ctrls" id="headCtrls">
           <button class="theme-toggle" id="infoScroll" type="button" aria-label="Jump to page links">{_ICON_INFO}</button>
           <button class="theme-toggle" id="themeToggle" type="button" aria-label="Switch to light theme" aria-pressed="false"></button>
         </div>
