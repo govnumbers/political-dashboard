@@ -1982,8 +1982,20 @@ def build():
   .theme-toggle:focus-visible {{ outline:none; box-shadow:0 0 0 2px var(--focus); }}
   .theme-toggle svg {{ width:18px; height:18px; display:block; }}
   .no-js .theme-toggle {{ display:none; }}
-  .head-ctrls {{ float:right; display:flex; gap:8px; margin:2px 0 8px 18px; }}
+  .head-ctrls {{ display:flex; gap:8px; flex:0 0 auto; }}
   .head-ctrls .theme-toggle {{ float:none; margin:0; }}
+  /* ---- sticky condensing header: hero scrolls away, this bar pins ---- */
+  #hero {{ margin-bottom:16px; }}
+  .stickybar {{ position:sticky; top:0; z-index:30; background:var(--plane); padding:8px 0; }}
+  .stickybar.stuck {{ border-bottom:1px solid var(--hair); box-shadow:0 4px 14px var(--shadow); }}
+  .sb-top {{ display:flex; align-items:center; justify-content:space-between; gap:12px; min-height:38px; }}
+  .stickybar .tabs-wrap {{ margin:9px 0 0; }}
+  .mini-title {{ font-family:Georgia,"Iowan Old Style","Palatino Linotype","Book Antiqua",serif;
+    font-weight:700; font-size:20px; letter-spacing:-0.01em; line-height:1; color:var(--primary);
+    background:none; border:0; padding:0; cursor:pointer; white-space:nowrap; max-width:0; overflow:hidden;
+    opacity:0; transition:max-width .28s ease, opacity .2s ease; }}
+  .stickybar.stuck .mini-title {{ max-width:320px; opacity:1; }}
+  .no-js .stickybar {{ display:none; }}
   .kicker {{ color:var(--series-1); font-size:12px; letter-spacing:.14em; text-transform:uppercase; font-weight:600; }}
   h1 {{ font-family:Georgia,"Iowan Old Style","Palatino Linotype","Book Antiqua",serif;
        font-size:clamp(42px,7.5vw,68px); font-weight:700; margin:0 0 14px;
@@ -2152,15 +2164,20 @@ def build():
 </head>
 <body>
   <div class="wrap">
-    <header>
-      <div class="head-ctrls">
-        <button class="theme-toggle" id="infoScroll" type="button" aria-label="Jump to page links">{_ICON_INFO}</button>
-        <button class="theme-toggle" id="themeToggle" type="button" aria-label="Switch to light theme" aria-pressed="false"></button>
-      </div>
+    <header id="hero">
       <h1><span class="h1-accent">Trump</span> by Numbers</h1>
       <p class="lede">The administration's record, in data.</p>
     </header>
-    <div class="tabs-wrap"><nav class="tabs" id="tabs" aria-label="Categories">{tabs_html}</nav></div>
+    <div class="stickybar" id="stickybar">
+      <div class="sb-top">
+        <button class="mini-title" id="miniTitle" type="button" aria-label="Back to top"><span class="h1-accent">Trump</span> by Numbers</button>
+        <div class="head-ctrls">
+          <button class="theme-toggle" id="infoScroll" type="button" aria-label="Jump to page links">{_ICON_INFO}</button>
+          <button class="theme-toggle" id="themeToggle" type="button" aria-label="Switch to light theme" aria-pressed="false"></button>
+        </div>
+      </div>
+      <div class="tabs-wrap"><nav class="tabs" id="tabs" aria-label="Categories">{tabs_html}</nav></div>
+    </div>
     <main>
       {body}
     </main>
