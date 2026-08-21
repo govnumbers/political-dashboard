@@ -1681,7 +1681,7 @@ _META_CSS = """
   ul.help a { color:var(--series-1); text-decoration:none; }
   ul.help a:hover { text-decoration:underline; }
   .form-embed { margin-top:2px; border:1px solid var(--hair); border-radius:14px; overflow:hidden;
-                background:#fff; }
+                background:#fff; padding:0 22px; }
   .form-embed iframe { display:block; width:100%; border:0; }
   footer { margin-top:52px; border-top:1px solid var(--hair); padding-top:24px;
            color:var(--muted); font-size:12px; text-align:center; line-height:1.7; }
