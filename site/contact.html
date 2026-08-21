@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en" class="no-js">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Contact · Trump by Numbers</title>
+<meta name="description" content="Contact Trump by Numbers: suggest a metric, send feedback, or discuss the numbers in public on GitHub Discussions.">
+<style>
+  :root { color-scheme:dark;--plane:#0d0d0d;--surface:#1a1a19;--drawer:#242422;--tile-hover:#1f1f1e;--tile-hover-border:rgba(255,255,255,0.20);--tile-hover-shadow:none;--primary:#ffffff;--secondary:#c3c2b7;--muted:#898781;--hair:rgba(255,255,255,0.10);--hair-strong:rgba(255,255,255,0.28);--hair-faint:rgba(255,255,255,0.05);--tile-open:rgba(255,255,255,0.32);--grid:#2c2c2a;--panel:rgba(255,255,255,0.03);--tab-track:rgba(255,255,255,0.045);--tab-active:rgba(255,255,255,0.10);--seg-shadow:none;--rswitch:#141414;--rknob:#2a2c31;--tooltip:#232322;--shadow:rgba(0,0,0,0.5);--drawer-shadow:none;--focus:rgba(57,135,229,0.5);--series-1:#3987e5;--series-2:#d95926;--critical:#d03b3b;--good:#0ca30c;--warn:#e0a83b;--accent-tint:rgba(57,135,229,0.12);--warn-line:rgba(224,168,59,0.4);--warn-tile:rgba(224,168,59,0.45);--pres-t25:#e66767;--pres-biden:#3987e5;--pres-t17:#199e70;--pres-obama:#c98500;--era-grey:#6c7280;--bar-g1:#8b9198;--bar-g3:#4a4d53;--chart-ink:#ffffff;--chart-sec:#c3c2b7;--chart-mut:#898781;--chart-grid:#2c2c2a;--chart-axis:#4a4a47;--chart-surface:#1a1a19;--chart-dash:#6b6965; }
+  @media (prefers-color-scheme: light) { :root:not([data-theme]) { color-scheme:light;--plane:#f7f6f2;--surface:#ffffff;--drawer:#fdfcfb;--tile-hover:#fdfdfc;--tile-hover-border:rgba(0,0,0,0.14);--tile-hover-shadow:0 2px 10px rgba(0,0,0,0.06);--primary:#2a2723;--secondary:#55534b;--muted:#73716a;--hair:rgba(0,0,0,0.12);--hair-strong:rgba(0,0,0,0.28);--hair-faint:rgba(0,0,0,0.06);--tile-open:rgba(0,0,0,0.32);--grid:#e6e4dd;--panel:rgba(0,0,0,0.028);--tab-track:rgba(0,0,0,0.06);--tab-active:#ffffff;--seg-shadow:0 1px 2px rgba(0,0,0,0.12);--rswitch:#eceae4;--rknob:#ffffff;--tooltip:#ffffff;--shadow:rgba(0,0,0,0.16);--drawer-shadow:0 1px 2px rgba(0,0,0,0.05),0 10px 28px rgba(0,0,0,0.06);--focus:rgba(31,111,208,0.55);--series-1:#1f6fd0;--series-2:#c24a1e;--critical:#c62828;--good:#137a2b;--warn:#976a00;--accent-tint:rgba(31,111,208,0.12);--warn-line:rgba(151,106,0,0.4);--warn-tile:rgba(151,106,0,0.5);--pres-t25:#d23f3f;--pres-biden:#1f6fd0;--pres-t17:#12805a;--pres-obama:#c98500;--era-grey:#6b7078;--bar-g1:#7c828c;--bar-g3:#3f444c;--chart-ink:#2a2723;--chart-sec:#55534b;--chart-mut:#73716a;--chart-grid:#e6e4dd;--chart-axis:#b7b4ab;--chart-surface:#fdfcfb;--chart-dash:#a9a69d; } }
+  :root[data-theme="light"] { color-scheme:light;--plane:#f7f6f2;--surface:#ffffff;--drawer:#fdfcfb;--tile-hover:#fdfdfc;--tile-hover-border:rgba(0,0,0,0.14);--tile-hover-shadow:0 2px 10px rgba(0,0,0,0.06);--primary:#2a2723;--secondary:#55534b;--muted:#73716a;--hair:rgba(0,0,0,0.12);--hair-strong:rgba(0,0,0,0.28);--hair-faint:rgba(0,0,0,0.06);--tile-open:rgba(0,0,0,0.32);--grid:#e6e4dd;--panel:rgba(0,0,0,0.028);--tab-track:rgba(0,0,0,0.06);--tab-active:#ffffff;--seg-shadow:0 1px 2px rgba(0,0,0,0.12);--rswitch:#eceae4;--rknob:#ffffff;--tooltip:#ffffff;--shadow:rgba(0,0,0,0.16);--drawer-shadow:0 1px 2px rgba(0,0,0,0.05),0 10px 28px rgba(0,0,0,0.06);--focus:rgba(31,111,208,0.55);--series-1:#1f6fd0;--series-2:#c24a1e;--critical:#c62828;--good:#137a2b;--warn:#976a00;--accent-tint:rgba(31,111,208,0.12);--warn-line:rgba(151,106,0,0.4);--warn-tile:rgba(151,106,0,0.5);--pres-t25:#d23f3f;--pres-biden:#1f6fd0;--pres-t17:#12805a;--pres-obama:#c98500;--era-grey:#6b7078;--bar-g1:#7c828c;--bar-g3:#3f444c;--chart-ink:#2a2723;--chart-sec:#55534b;--chart-mut:#73716a;--chart-grid:#e6e4dd;--chart-axis:#b7b4ab;--chart-surface:#fdfcfb;--chart-dash:#a9a69d; }
+  :root[data-theme="dark"] { color-scheme:dark;--plane:#0d0d0d;--surface:#1a1a19;--drawer:#242422;--tile-hover:#1f1f1e;--tile-hover-border:rgba(255,255,255,0.20);--tile-hover-shadow:none;--primary:#ffffff;--secondary:#c3c2b7;--muted:#898781;--hair:rgba(255,255,255,0.10);--hair-strong:rgba(255,255,255,0.28);--hair-faint:rgba(255,255,255,0.05);--tile-open:rgba(255,255,255,0.32);--grid:#2c2c2a;--panel:rgba(255,255,255,0.03);--tab-track:rgba(255,255,255,0.045);--tab-active:rgba(255,255,255,0.10);--seg-shadow:none;--rswitch:#141414;--rknob:#2a2c31;--tooltip:#232322;--shadow:rgba(0,0,0,0.5);--drawer-shadow:none;--focus:rgba(57,135,229,0.5);--series-1:#3987e5;--series-2:#d95926;--critical:#d03b3b;--good:#0ca30c;--warn:#e0a83b;--accent-tint:rgba(57,135,229,0.12);--warn-line:rgba(224,168,59,0.4);--warn-tile:rgba(224,168,59,0.45);--pres-t25:#e66767;--pres-biden:#3987e5;--pres-t17:#199e70;--pres-obama:#c98500;--era-grey:#6c7280;--bar-g1:#8b9198;--bar-g3:#4a4d53;--chart-ink:#ffffff;--chart-sec:#c3c2b7;--chart-mut:#898781;--chart-grid:#2c2c2a;--chart-axis:#4a4a47;--chart-surface:#1a1a19;--chart-dash:#6b6965; }
+  html { background:var(--plane); }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--plane); color:var(--primary);
+    font-family:system-ui,-apple-system,"Segoe UI",sans-serif; line-height:1.5;
+    -webkit-font-smoothing:antialiased; }
+  .wrap { max-width:720px; margin:0 auto; padding:56px 24px 80px; }
+  header { margin-bottom:28px; }
+  .theme-toggle { float:right; margin:2px 0 8px 18px; width:38px; height:38px; padding:0;
+                  display:inline-flex; align-items:center; justify-content:center;
+                  background:var(--panel); border:1px solid var(--hair); border-radius:10px;
+                  color:var(--secondary); cursor:pointer; transition:color .15s ease, border-color .15s ease; }
+  .theme-toggle:hover { color:var(--primary); border-color:var(--hair-strong); }
+  .theme-toggle:focus-visible { outline:none; box-shadow:0 0 0 2px var(--focus); }
+  .theme-toggle svg { width:18px; height:18px; display:block; }
+  .no-js .theme-toggle { display:none; }
+  .brand { display:inline-block; font-size:13px; font-weight:600; letter-spacing:.01em;
+           color:var(--muted); text-decoration:none; margin-bottom:14px; }
+  .brand:hover { color:var(--series-1); }
+  h1 { font-family:Georgia,"Iowan Old Style","Palatino Linotype","Book Antiqua",serif;
+       font-size:clamp(38px,6vw,58px); font-weight:700; margin:0 0 12px;
+       letter-spacing:-0.015em; line-height:1.04; }
+  .lede { color:var(--secondary); margin:0; font-size:15.5px; max-width:56ch; }
+  .page { margin-top:6px; }
+  .block { padding:22px 0; border-top:1px solid var(--hair); }
+  .block:first-child { border-top:0; padding-top:12px; }
+  .eyebrow { font-size:12px; letter-spacing:.12em; text-transform:uppercase; font-weight:600;
+             color:var(--muted); margin:0 0 9px; }
+  .block p { margin:0 0 11px; color:var(--secondary); font-size:15.5px; line-height:1.62; }
+  .block p:last-child { margin-bottom:0; }
+  .block a { color:var(--series-1); text-decoration:none; }
+  .block a:hover { text-decoration:underline; }
+  .btn-row { display:flex; gap:12px; flex-wrap:wrap; margin:4px 0 2px; }
+  .btn { display:inline-flex; align-items:center; gap:8px; padding:11px 18px; border-radius:12px;
+         font-size:14px; font-weight:600; text-decoration:none; border:1px solid var(--hair-strong);
+         color:var(--primary); background:var(--panel); transition:border-color .15s ease, color .15s ease; }
+  .btn:hover { border-color:var(--series-1); color:var(--series-1); text-decoration:none; }
+  .btn.primary { background:var(--series-1); border-color:var(--series-1); color:#fff; }
+  .btn.primary:hover { color:#fff; opacity:.92; }
+  ul.help { list-style:none; padding:0; margin:4px 0 0; }
+  ul.help li { padding:10px 0; border-top:1px solid var(--hair-faint); color:var(--secondary);
+               font-size:15.5px; line-height:1.55; }
+  ul.help li:first-child { border-top:0; }
+  ul.help b { color:var(--primary); font-weight:600; }
+  ul.help a { color:var(--series-1); text-decoration:none; }
+  ul.help a:hover { text-decoration:underline; }
+  .form-embed { margin-top:2px; border:1px solid var(--hair); border-radius:14px; overflow:hidden;
+                background:#fff; }
+  .form-embed iframe { display:block; width:100%; border:0; }
+  footer { margin-top:52px; border-top:1px solid var(--hair); padding-top:24px;
+           color:var(--muted); font-size:12px; text-align:center; line-height:1.7; }
+  footer a { color:var(--secondary); text-decoration:none; }
+  footer a:hover { color:var(--series-1); }
+  .footer-nav { margin-bottom:8px; }
+  .footer-nav a, .footer-nav span { margin:0 5px; }
+  .footer-nav [aria-current] { color:var(--muted); }
+  .built { opacity:.6; font-size:11px; }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <button class="theme-toggle" id="themeToggle" type="button" aria-label="Switch to light theme" aria-pressed="false"></button>
+      <a class="brand" href="/">Trump by Numbers</a>
+      <h1>Say hello</h1>
+      <p class="lede">Ask a question. Suggest a metric. Share feedback.</p>
+    </header>
+    <main class="page">
+      
+      <section class="block">
+        <div class="form-embed">
+          <iframe src="https://tally.so/embed/J9EW5Y?alignLeft=1&hideTitle=1" title="Contact form" height="640" loading="lazy"></iframe>
+        </div>
+        <p style="margin-top:18px;">You can also post publicly or start a discussion on <a href="https://github.com/neonatlas1/political-dashboard/discussions" target="_blank" rel="noopener">GitHub Discussions</a>.</p>
+      </section>
+    </main>
+    <footer>
+      <div class="footer-nav"><a href="/">Home</a> · <a href="/methodology">About</a> · <a href="/support">Support</a> · <span aria-current="page">Contact</span></div>
+      <div class="built">Trump by Numbers</div>
+    </footer>
+  </div>
+  <script>
+(function () {
+  var ROOT = document.documentElement;
+  ROOT.classList.remove('no-js');
+  var mq = window.matchMedia ? window.matchMedia('(prefers-color-scheme: light)') : null;
+  function eff() {
+    var t = ROOT.getAttribute('data-theme');
+    if (t === 'light' || t === 'dark') return t;
+    return (mq && mq.matches) ? 'light' : 'dark';
+  }
+  var SUN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"></path></svg>';
+  var MOON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"></path></svg>';
+  var btn = document.getElementById('themeToggle');
+  function upd() {
+    if (!btn) return;
+    var light = eff() === 'light';
+    btn.innerHTML = light ? MOON : SUN;
+    btn.setAttribute('aria-label', light ? 'Switch to dark theme' : 'Switch to light theme');
+    btn.setAttribute('aria-pressed', light ? 'true' : 'false');
+  }
+  if (btn) btn.addEventListener('click', function () {
+    ROOT.setAttribute('data-theme', eff() === 'dark' ? 'light' : 'dark');
+    upd();
+  });
+  if (mq) {
+    var onSys = function () { if (!ROOT.getAttribute('data-theme')) upd(); };
+    if (mq.addEventListener) mq.addEventListener('change', onSys);
+    else if (mq.addListener) mq.addListener(onSys);
+  }
+  upd();
+})();
+</script>
+  <!-- Cloudflare Web Analytics --><script type="module" src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{"token": "d38cfd52e6ef4782a773d0e7b1f2e212"}'></script><!-- End Cloudflare Web Analytics -->
+</body>
+</html>
