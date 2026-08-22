@@ -128,6 +128,17 @@
   .detail-drawer { grid-column:1 / -1; background:var(--drawer); border:1px solid var(--hair);
     border-radius:16px; overflow:hidden; max-height:0; transition:max-height .34s ease; box-shadow:var(--drawer-shadow); }
   .detail-drawer > .detail { margin-top:0; border-top:0; padding:24px 26px 20px; }
+  /* ---- mobile (single-column): fuse the open card + its drawer into ONE panel ----
+     On a phone there are no side-by-side cards to compare the highlight against, and a
+     rounded, gapped drawer just reads as the next card. So we butt them together: drop
+     the gap, square the join, share one continuous outline, and run an accent spine down
+     the left of the whole unit — it reads as the card expanding, not a second card. */
+  @media (max-width:665px) {
+    .tile.open { border-bottom-left-radius:0; border-bottom-right-radius:0; border-bottom:0;
+                 border-left:3px solid var(--tile-open); }
+    .detail-drawer { margin-top:-18px; border-top-left-radius:0; border-top-right-radius:0;
+                 border-top:0; border-color:var(--tile-open); border-left:3px solid var(--tile-open); }
+  }
   /* whole collapsed card is clickable */
   .tile[data-id] { cursor:pointer; }
   .tile[data-id]:not(.open):hover { border-color:var(--tile-hover-border); background:var(--tile-hover); box-shadow:var(--tile-hover-shadow); }
@@ -579,12 +590,12 @@
       <section class="category" data-tab="public-finances" id="public-finances">
         <h2 class="cat-head">Public Finances</h2>
         <div class="grid">
-    <article class="tile" id="card-national_debt" data-id="national_debt" data-as-of="2026-08-19" data-stale-after="2026-08-24" data-cadence="daily">
+    <article class="tile" id="card-national_debt" data-id="national_debt" data-as-of="2026-08-20" data-stale-after="2026-08-25" data-cadence="daily">
       <h2 class="tile-name">National debt</h2>
-      <div class="hero">$40.01T</div>
-      <span class="delta bad">&#9650; $3.81T (+10.5%) since inauguration</span>
+      <div class="hero">$40.03T</div>
+      <span class="delta bad">&#9650; $3.83T (+10.6%) since inauguration</span>
       <div class="freshness">
-        <span class="asof">as of Aug 19, 2026</span>
+        <span class="asof">as of Aug 20, 2026</span>
         <span class="stale-flag" hidden>&#9888; data may be stale</span>
       </div>
       <div class="tile-sub">The total amount the federal government owes: total public debt outstanding.</div>
@@ -592,7 +603,7 @@
         <div class="bar-row">
           <div class="bar-label">Now</div>
           <div class="bar-track"><div class="bar-fill" style="width:100%;background:var(--critical)"></div></div>
-          <div class="bar-val">$40.01T</div>
+          <div class="bar-val">$40.03T</div>
         </div>
         <div class="bar-row">
           <div class="bar-label">Inauguration</div>
@@ -872,12 +883,12 @@
         <span>updates biweekly</span>
       </div>
     </article>
-    <article class="tile" id="card-ice_custody_deaths" data-id="ice_custody_deaths" data-as-of="2026-08-21" data-stale-after="2026-11-19" data-cadence="as posted">
+    <article class="tile" id="card-ice_custody_deaths" data-id="ice_custody_deaths" data-as-of="2026-08-22" data-stale-after="2026-11-20" data-cadence="as posted">
       <h2 class="tile-name">Deaths in ICE custody</h2>
       <div class="hero">34</div>
       <span class="delta neutral">FY2025 full year: 24</span>
       <div class="freshness">
-        <span class="asof">as of Aug 21, 2026</span>
+        <span class="asof">as of Aug 22, 2026</span>
         <span class="stale-flag" hidden>&#9888; data may be stale</span>
       </div>
       <div class="tile-sub">The number of people who have died while in ICE detention, from ICE's own death-reporting page.</div>
@@ -966,13 +977,13 @@
         <span>updates monthly</span>
       </div>
     </article>
-    <article class="tile" id="card-measles_cases" data-id="measles_cases" data-as-of="2026-08-13" data-stale-after="2026-09-27" data-cadence="weekly">
+    <article class="tile" id="card-measles_cases" data-id="measles_cases" data-as-of="2026-08-20" data-stale-after="2026-10-04" data-cadence="weekly">
       <h2 class="tile-name">Measles cases</h2>
       <div class="tile-qual">2026 to date</div>
-      <div class="hero">2,566</div>
-      <span class="delta bad">&#9650; 9&#215; the worst Biden-term year (2024: 285)</span>
+      <div class="hero">2,777</div>
+      <span class="delta bad">&#9650; 10&#215; the worst Biden-term year (2024: 285)</span>
       <div class="freshness">
-        <span class="asof">as of Aug 13, 2026</span>
+        <span class="asof">as of Aug 20, 2026</span>
         <span class="stale-flag" hidden>&#9888; data may be stale</span>
       </div>
       <div class="tile-sub">Confirmed measles cases reported to the Centers for Disease Control and Prevention this year.</div>
@@ -980,16 +991,16 @@
         <div class="bar-row">
           <div class="bar-label">This year so far</div>
           <div class="bar-track"><div class="bar-fill" style="width:100%;background:var(--critical)"></div></div>
-          <div class="bar-val">2,566</div>
+          <div class="bar-val">2,777</div>
         </div>
         <div class="bar-row">
           <div class="bar-label">2025 full year</div>
-          <div class="bar-track"><div class="bar-fill" style="width:89%;background:var(--muted)"></div></div>
+          <div class="bar-track"><div class="bar-fill" style="width:82%;background:var(--muted)"></div></div>
           <div class="bar-val">2,288</div>
         </div>
         <div class="bar-row">
           <div class="bar-label">Worst Biden-term year (2024)</div>
-          <div class="bar-track"><div class="bar-fill" style="width:11%;background:var(--muted)"></div></div>
+          <div class="bar-track"><div class="bar-fill" style="width:10%;background:var(--muted)"></div></div>
           <div class="bar-val">285</div>
         </div></div>
       <button class="expand-btn" type="button" aria-expanded="false"><span>See more</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg></button><div class="detail" hidden></div>
@@ -1059,12 +1070,12 @@
       <section class="category" data-tab="executive-power-governance" id="executive-power-governance">
         <h2 class="cat-head">Executive Power & Governance</h2>
         <div class="grid">
-    <article class="tile" id="card-executive_orders" data-id="executive_orders" data-as-of="2026-08-21" data-stale-after="2026-09-02" data-cadence="as signed">
+    <article class="tile" id="card-executive_orders" data-id="executive_orders" data-as-of="2026-08-22" data-stale-after="2026-09-03" data-cadence="as signed">
       <h2 class="tile-name">Executive orders signed</h2>
       <div class="hero">275</div>
       <span class="delta neutral">180 more than Biden (95) at the same point</span>
       <div class="freshness">
-        <span class="asof">as of Aug 21, 2026</span>
+        <span class="asof">as of Aug 22, 2026</span>
         <span class="stale-flag" hidden>&#9888; data may be stale</span>
       </div>
       <div class="tile-sub">The number of executive orders the president has signed since taking office, from the Federal Register.</div>
@@ -1085,13 +1096,13 @@
         <span>updates as signed</span>
       </div>
     </article>
-    <article class="tile" id="card-judges_confirmed" data-id="judges_confirmed" data-as-of="2026-08-21" data-stale-after="2026-09-04" data-cadence="as confirmed">
+    <article class="tile" id="card-judges_confirmed" data-id="judges_confirmed" data-as-of="2026-08-22" data-stale-after="2026-09-05" data-cadence="as confirmed">
       <h2 class="tile-name">Federal judges confirmed</h2>
       <div class="tile-qual">Article III</div>
       <div class="hero">54</div>
       <span class="delta neutral">+0 vs his first term at the same point (54)</span>
       <div class="freshness">
-        <span class="asof">as of Aug 21, 2026</span>
+        <span class="asof">as of Aug 22, 2026</span>
         <span class="stale-flag" hidden>&#9888; data may be stale</span>
       </div>
       <div class="tile-sub">Lifetime federal judges (Article III) confirmed by the Senate this term, from the Federal Judicial Center.</div>
@@ -1190,12 +1201,12 @@
         <span>updates as granted</span>
       </div>
     </article>
-    <article class="tile" id="card-national_emergencies" data-id="national_emergencies" data-as-of="2026-08-21" data-stale-after="2026-10-05" data-cadence="as signed">
+    <article class="tile" id="card-national_emergencies" data-id="national_emergencies" data-as-of="2026-08-22" data-stale-after="2026-10-06" data-cadence="as signed">
       <h2 class="tile-name">National emergencies declared</h2>
       <div class="hero">8</div>
       <span class="delta neutral">New declarations at the same point in term</span>
       <div class="freshness">
-        <span class="asof">as of Aug 21, 2026</span>
+        <span class="asof">as of Aug 22, 2026</span>
         <span class="stale-flag" hidden>&#9888; data may be stale</span>
       </div>
       <div class="tile-sub">New national emergencies the president has declared under the National Emergencies Act this term.</div>
@@ -1320,13 +1331,13 @@
         <span>updates as filed</span>
       </div>
     </article>
-    <article class="tile" id="card-military_deaths" data-id="military_deaths" data-as-of="2026-08-20" data-stale-after="2026-09-19" data-cadence="weekly">
+    <article class="tile" id="card-military_deaths" data-id="military_deaths" data-as-of="2026-08-21" data-stale-after="2026-09-20" data-cadence="weekly">
       <h2 class="tile-name">US military deaths</h2>
       <div class="tile-qual">current operations</div>
       <div class="hero">18</div>
-      <span class="delta neutral">Wounded in action: 756</span>
+      <span class="delta neutral">Wounded in action: 758</span>
       <div class="freshness">
-        <span class="asof">as of Aug 20, 2026</span>
+        <span class="asof">as of Aug 21, 2026</span>
         <span class="stale-flag" hidden>&#9888; data may be stale</span>
       </div>
       <div class="tile-sub">US military deaths in the current named operations, both hostile and non-hostile, from the Defense Casualty Analysis System.</div>
@@ -1355,7 +1366,7 @@
       <p class="fz-def">Each row shows the source, its last release, and how long it has been silent, recomputed daily. A source leaves the list by publishing again.</p>
       <table class="fz-table">
         <thead><tr><th>Source</th><th>Last official release</th><th>Silent for</th><th>What happened</th></tr></thead>
-        <tbody><tr><td><a href="https://www.war.gov/casualty.pdf" target="_blank" rel="noopener">DoD public casualty report (casualty.pdf)</a></td><td class="fz-date">Jan 30, 2025</td><td class="fz-days">568 days</td><td class="fz-note">Weekly PDF frozen ten days into the term; never extended to 2025–26 operations. The DCAS database (which this board uses) remains current.</td></tr><tr><td><a href="https://www.ice.gov/statistics" target="_blank" rel="noopener">ICE public enforcement dashboard</a></td><td class="fz-date">Jan 2025</td><td class="fz-days">567 days</td><td class="fz-note">Dashboard frozen; the biweekly detention workbook (which this board uses) continues.</td></tr><tr><td><a href="https://ohss.dhs.gov/topics/immigration/immigration-enforcement/monthly-tables" target="_blank" rel="noopener">DHS OHSS monthly enforcement tables</a></td><td class="fz-date">Jan 16, 2025</td><td class="fz-days">582 days</td><td class="fz-note">Final release carried data through Nov 2024; no release since.</td></tr><tr><td><a href="https://www.justice.gov/pardon/clemency-statistics" target="_blank" rel="noopener">DOJ clemency statistics</a></td><td class="fz-date">Jan 23, 2025</td><td class="fz-days">575 days</td><td class="fz-note">Historical statistics tables frozen; the grants pages (which this board uses) continue.</td></tr><tr><td><a href="https://www.justice.gov/usao-dc/capitol-breach-cases" target="_blank" rel="noopener">DOJ Capitol Breach (Jan 6) cases database</a></td><td class="fz-date">Jan 24, 2025</td><td class="fz-days">574 days</td><td class="fz-note">Removed days after the inauguration; deleted with ~1,100 case press releases in May 2026. Archived copies preserved by third parties.</td></tr><tr><td><a href="https://travel.state.gov/content/travel/en/legal/visa-law0/visa-statistics.html" target="_blank" rel="noopener">State Dept monthly visa issuances</a></td><td class="fz-date">Sep 2025</td><td class="fz-days">325 days</td><td class="fz-note">Monthly issuance statistics stalled.</td></tr><tr><td><a href="https://www.ice.gov/detain/detainee-death-reporting" target="_blank" rel="noopener">ICE detainee death reporting (full scope)</a></td><td class="fz-date">Jun 4, 2026</td><td class="fz-days">78 days</td><td class="fz-note">Not frozen but narrowed: deaths within 30 days of release are no longer reported (Directive 11003.6). The in-custody series (which this board uses) continues under the narrower rule.</td></tr><tr><td><a href="https://votehub.com/polls/" target="_blank" rel="noopener">VoteHub approval poll feed</a></td><td class="fz-date">Jun 29, 2026</td><td class="fz-days">53 days</td><td class="fz-note">Non-government source (poll aggregator): no new national approval polls ingested since late June; disclosed on the approval card, checked daily.</td></tr></tbody>
+        <tbody><tr><td><a href="https://www.war.gov/casualty.pdf" target="_blank" rel="noopener">DoD public casualty report (casualty.pdf)</a></td><td class="fz-date">Jan 30, 2025</td><td class="fz-days">569 days</td><td class="fz-note">Weekly PDF frozen ten days into the term; never extended to 2025–26 operations. The DCAS database (which this board uses) remains current.</td></tr><tr><td><a href="https://www.ice.gov/statistics" target="_blank" rel="noopener">ICE public enforcement dashboard</a></td><td class="fz-date">Jan 2025</td><td class="fz-days">568 days</td><td class="fz-note">Dashboard frozen; the biweekly detention workbook (which this board uses) continues.</td></tr><tr><td><a href="https://ohss.dhs.gov/topics/immigration/immigration-enforcement/monthly-tables" target="_blank" rel="noopener">DHS OHSS monthly enforcement tables</a></td><td class="fz-date">Jan 16, 2025</td><td class="fz-days">583 days</td><td class="fz-note">Final release carried data through Nov 2024; no release since.</td></tr><tr><td><a href="https://www.justice.gov/pardon/clemency-statistics" target="_blank" rel="noopener">DOJ clemency statistics</a></td><td class="fz-date">Jan 23, 2025</td><td class="fz-days">576 days</td><td class="fz-note">Historical statistics tables frozen; the grants pages (which this board uses) continue.</td></tr><tr><td><a href="https://www.justice.gov/usao-dc/capitol-breach-cases" target="_blank" rel="noopener">DOJ Capitol Breach (Jan 6) cases database</a></td><td class="fz-date">Jan 24, 2025</td><td class="fz-days">575 days</td><td class="fz-note">Removed days after the inauguration; deleted with ~1,100 case press releases in May 2026. Archived copies preserved by third parties.</td></tr><tr><td><a href="https://travel.state.gov/content/travel/en/legal/visa-law0/visa-statistics.html" target="_blank" rel="noopener">State Dept monthly visa issuances</a></td><td class="fz-date">Sep 2025</td><td class="fz-days">326 days</td><td class="fz-note">Monthly issuance statistics stalled.</td></tr><tr><td><a href="https://www.ice.gov/detain/detainee-death-reporting" target="_blank" rel="noopener">ICE detainee death reporting (full scope)</a></td><td class="fz-date">Jun 4, 2026</td><td class="fz-days">79 days</td><td class="fz-note">Not frozen but narrowed: deaths within 30 days of release are no longer reported (Directive 11003.6). The in-custody series (which this board uses) continues under the narrower rule.</td></tr><tr><td><a href="https://votehub.com/polls/" target="_blank" rel="noopener">VoteHub approval poll feed</a></td><td class="fz-date">Jun 29, 2026</td><td class="fz-days">54 days</td><td class="fz-note">Non-government source (poll aggregator): no new national approval polls ingested since late June; disclosed on the approval card, checked daily.</td></tr></tbody>
       </table>
     </section>
     <footer>
