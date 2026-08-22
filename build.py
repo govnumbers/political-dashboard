@@ -2081,6 +2081,17 @@ def build():
   .detail-drawer {{ grid-column:1 / -1; background:var(--drawer); border:1px solid var(--hair);
     border-radius:16px; overflow:hidden; max-height:0; transition:max-height .34s ease; box-shadow:var(--drawer-shadow); }}
   .detail-drawer > .detail {{ margin-top:0; border-top:0; padding:24px 26px 20px; }}
+  /* ---- mobile (single-column): fuse the open card + its drawer into ONE panel ----
+     On a phone there are no side-by-side cards to compare the highlight against, and a
+     rounded, gapped drawer just reads as the next card. So we butt them together: drop
+     the gap, square the join, share one continuous outline, and run an accent spine down
+     the left of the whole unit — it reads as the card expanding, not a second card. */
+  @media (max-width:665px) {{
+    .tile.open {{ border-bottom-left-radius:0; border-bottom-right-radius:0; border-bottom:0;
+                 border-left:3px solid var(--tile-open); }}
+    .detail-drawer {{ margin-top:-18px; border-top-left-radius:0; border-top-right-radius:0;
+                 border-top:0; border-color:var(--tile-open); border-left:3px solid var(--tile-open); }}
+  }}
   /* whole collapsed card is clickable */
   .tile[data-id] {{ cursor:pointer; }}
   .tile[data-id]:not(.open):hover {{ border-color:var(--tile-hover-border); background:var(--tile-hover); box-shadow:var(--tile-hover-shadow); }}
