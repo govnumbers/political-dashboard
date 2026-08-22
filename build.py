@@ -2092,6 +2092,18 @@ def build():
     .detail-drawer {{ margin-top:-18px; border-top-left-radius:0; border-top-right-radius:0;
                  border-top:0; border-color:var(--tile-open); border-left:3px solid var(--tile-open); }}
   }}
+  /* ---- desktop: caret under the open card points down at the full-width drawer ----
+     The drawer opens below the whole row, so on desktop the title + highlight alone
+     don't show which card it came from. A small pointer at the open card's bottom edge
+     draws the eye from the card to the panel below it. */
+  @media (min-width:666px) {{
+    .tile.open {{ position:relative; }}
+    .tile.open::after {{ content:""; position:absolute; left:50%; bottom:-9px;
+      transform:translateX(-50%); width:0; height:0;
+      border-left:10px solid transparent; border-right:10px solid transparent;
+      border-top:10px solid var(--drawer); filter:drop-shadow(0 1.5px 0 var(--tile-open));
+      pointer-events:none; z-index:2; }}
+  }}
   /* whole collapsed card is clickable */
   .tile[data-id] {{ cursor:pointer; }}
   .tile[data-id]:not(.open):hover {{ border-color:var(--tile-hover-border); background:var(--tile-hover); box-shadow:var(--tile-hover-shadow); }}
