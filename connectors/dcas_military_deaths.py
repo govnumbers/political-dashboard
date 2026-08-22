@@ -29,6 +29,7 @@ Legacy context: the DoD's public casualty PDF froze Jan 30 2025 (watch list,
 doc 04) — this API is the only current official channel."""
 import os
 import sys
+import time
 import datetime
 import requests
 
@@ -43,13 +44,25 @@ MONTHS = {m.upper(): i for i, m in enumerate(
      "August", "September", "October", "November", "December"], 1)}
 
 
-def _get_json(path):
-    r = requests.get(f"{BASE}/{path}", headers=dict(UA, Accept="application/json"), timeout=60)
-    r.raise_for_status()
-    js = r.json()
-    if js.get("apiStatusCode") != "SUCCESS":
-        raise RuntimeError(f"DCAS {path}: apiStatusCode={js.get('apiStatusCode')!r}")
-    return js["data"]
+def _get_json(path, attempts=3):
+    # DCAS occasionally drops the connection mid-request ("connection reset by
+    # peer"), which fails the whole connector and reddens the run even though the
+    # data is fine. Retry a few times with a short backoff to ride out these
+    # transient network blips; a genuine outage still fails loudly after retries.
+    last = None
+    for i in range(attempts):
+        try:
+            r = requests.get(f"{BASE}/{path}", headers=dict(UA, Accept="application/json"), timeout=60)
+            r.raise_for_status()
+            js = r.json()
+            if js.get("apiStatusCode") != "SUCCESS":
+                raise RuntimeError(f"DCAS {path}: apiStatusCode={js.get('apiStatusCode')!r}")
+            return js["data"]
+        except requests.exceptions.RequestException as e:  # network/HTTP only — not the status check
+            last = e
+            if i < attempts - 1:
+                time.sleep(2 * (i + 1))  # 2s, then 4s
+    raise last
 
 
 def table_total(data, field="total"):
