@@ -1552,6 +1552,9 @@ def frozen_strip(today=None):
     rows = []
     for e in entries:
         days = (today - effective_date(e["last_update"])).days
+        # One 4-column row per record. Desktop shows it as a normal table; on mobile
+        # CSS reflows each row so source/last/silent sit across the top and the note
+        # ("what happened") drops to a full-width line beneath — no cramped column, no scroll.
         rows.append(
             f'<tr><td><a href="{e["url"]}" target="_blank" rel="noopener">{e["name"]}</a></td>'
             f'<td class="fz-date">{pretty_date(e["last_update"])}</td>'
@@ -1559,8 +1562,8 @@ def frozen_strip(today=None):
             f'<td class="fz-note">{e["note"]}</td></tr>')
     return f"""
     <section class="frozen" id="frozen">
-      <h2>Official sources that have stopped updating</h2>
-      <p class="fz-def">Each row shows the source, its last release, and how long it has been silent, recomputed daily. A source leaves the list by publishing again.</p>
+      <h2>Official sources that stopped updating</h2>
+      <p class="fz-def">Recomputed daily. A source drops off the list once it starts publishing again.</p>
       <table class="fz-table">
         <thead><tr><th>Source</th><th>Last official release</th><th>Silent for</th><th>What happened</th></tr></thead>
         <tbody>{''.join(rows)}</tbody>
@@ -2193,6 +2196,19 @@ def build():
   .fz-date, .fz-days {{ white-space:nowrap; }}
   .fz-days {{ font-variant-numeric:tabular-nums; }}
   .fz-note {{ color:var(--muted); max-width:52ch; }}
+  /* mobile only: reflow each row → source/last/silent across the top, note full-width
+     beneath (headerless — obviously "what happened"). Desktop table is untouched. */
+  @media (max-width:665px) {{
+    .fz-table thead {{ border-bottom:1px solid var(--hair); }}
+    .fz-table thead th:nth-child(4) {{ display:none; }}
+    .fz-table thead tr, .fz-table tbody tr {{ display:grid;
+      grid-template-columns:minmax(0,1fr) 96px 72px; column-gap:12px; }}
+    .fz-table th {{ border-bottom:0; padding:0 0 8px; }}
+    .fz-table td {{ border-bottom:0; padding:10px 0 0; }}
+    .fz-note {{ grid-column:1 / -1; padding:5px 0 14px; margin:0; max-width:none;
+               border-bottom:1px solid var(--hair); }}
+    .fz-table tbody tr:last-child .fz-note {{ border-bottom:0; }}
+  }}
 </style>
 </head>
 <body>
